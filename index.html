@@ -57,9 +57,9 @@ button.imprimir-recibo:hover { background: #4a148c; }
     <div id="loginScreen">
         <form id="formLogin">
             <h1>Login</h1>
-            <label for="loginUsuario">Usuário:</label>
+            <label for="loginUsuario">Utilizador:</label>
             <input type="text" id="loginUsuario" required>
-            <label for="loginSenha">Senha:</label>
+            <label for="loginSenha">Palavra-passe:</label>
             <input type="password" id="loginSenha" required>
             <button type="submit">Entrar</button>
             <p id="loginErro" style="color:red;text-align:center;font-weight:bold;"></p>
@@ -67,12 +67,12 @@ button.imprimir-recibo:hover { background: #4a148c; }
     </div>
 
     <div id="app" style="display:none;">
-        <h1>Controle de Cascos e Caixas</h1>
+        <h1>Controlo de Cascos e Caixas</h1>
         
         <div id="boxContador" class="box">
             <h3>Resumo de Itens Pendentes</h3>
-            <div id="contadorConteudo" class="contador-grid">Carregando...</div>
-            <button id="btnImprimirRelatorio" class="secondary" style="margin-top: 20px;">Imprimir Relatório de Coleta</button>
+            <div id="contadorConteudo" class="contador-grid">A carregar...</div>
+            <button id="btnImprimirRelatorio" class="secondary" style="margin-top: 20px;">Imprimir Relatório de Recolha</button>
         </div>
 
         <div class="tabs">
@@ -83,7 +83,7 @@ button.imprimir-recibo:hover { background: #4a148c; }
 
         <div id="conteudoClientes">
             <form id="formCliente">
-                <h2 id="formClienteTitulo">Cadastrar Novo Cliente</h2>
+                <h2 id="formClienteTitulo">Registar Novo Cliente</h2>
                 <div class="grid-2-col">
                     <div><label for="nomeCliente">Nome:</label><input type="text" id="nomeCliente" required></div>
                     <div><label for="tipoCliente">Tipo:</label><select id="tipoCliente" required><option value="">Selecione</option><option value="fisico">Físico</option><option value="bar">Bar</option></select></div>
@@ -92,7 +92,7 @@ button.imprimir-recibo:hover { background: #4a148c; }
                     <div><label for="enderecoCliente">Endereço:</label><input type="text" id="enderecoCliente" required></div>
                     <div><label for="numeroCliente">Número:</label><input type="text" id="numeroCliente" required></div>
                 </div>
-                <button type="submit" id="btnSalvarCliente">Salvar Cliente</button>
+                <button type="submit" id="btnSalvarCliente">Guardar Cliente</button>
                 <button type="button" id="btnCancelarEdicao" class="secondary" style="display:none;">Cancelar Edição</button>
             </form>
 
@@ -117,7 +117,7 @@ button.imprimir-recibo:hover { background: #4a148c; }
         <h2 id="modalTituloCliente">Histórico do Cliente</h2>
         <div id="infoClienteModal" class="info-cliente-modal"></div>
         <form id="formEmprestimo">
-            <h3>Registrar Novo Empréstimo</h3>
+            <h3>Registar Novo Empréstimo</h3>
             <label for="dataEmprestimoManual">Data/Hora do Empréstimo (Opcional):</label>
             <input type="datetime-local" id="dataEmprestimoManual">
             <h4>Cascos de Cerveja</h4>
@@ -134,7 +134,7 @@ button.imprimir-recibo:hover { background: #4a148c; }
             <button type="submit">Adicionar Empréstimo</button>
         </form>
         <div class="box">
-            <h3>Empréstimos Registrados</h3>
+            <h3>Empréstimos Registados</h3>
             <div id="listaHistoricoCliente"></div>
         </div>
     </div>
@@ -160,8 +160,8 @@ const OPCOES_TAMANHO_CASCO = ["Nenhum", "300ml", "600ml", "1L"];
 const OPCOES_TIPO_CAIXA = ["Nenhuma", "Ambev Azul", "Brasil Kirin Amarela", "Itaipava Vermelha", "Coca Cola LS 1L", "Ambev 1L Caixa", "Heineken 600ml"];
 
 // ======= VARIÁVEIS GLOBAIS =======
-// ATUALIZADO: Aponta para o servidor online no Fly.io
-const API_URL = 'https://cascos.fly.dev/api';
+// ATUALIZADO: Usa um caminho relativo, pois o site e a API estão no mesmo endereço
+const API_URL = '/api';
 let clientes = [];
 let historico = [];
 let clienteTipoAtual = 'fisico';
@@ -201,7 +201,7 @@ const carregarDadosIniciais = async () => {
         setActiveTab(clienteTipoAtual === 'fisico' ? 'tabFisicos' : 'tabBares');
     } catch (error) {
         console.error('Erro ao carregar dados iniciais:', error);
-        alert('Não foi possível conectar ao servidor. Verifique se o backend está rodando e se o endereço da API está correto.');
+        alert('Não foi possível conectar ao servidor. Verifique se o backend está a funcionar e se o endereço da API está correto.');
     }
 };
 
@@ -233,7 +233,7 @@ document.getElementById('formLogin').addEventListener('submit', async e => {
             carregarDadosIniciais();
         } else {
             const data = await response.json();
-            loginErro.textContent = data.error || 'Usuário ou senha inválidos!';
+            loginErro.textContent = data.error || 'Utilizador ou palavra-passe inválidos!';
         }
     } catch(error) {
         loginErro.textContent = 'Erro de conexão com o servidor.';
@@ -301,7 +301,7 @@ function printHelper(printContents, title, isReceipt = false) {
     }, 250);
 }
 
-// Imprime o relatório geral de coleta
+// Imprime o relatório geral de recolha
 const gerarRelatorioImpressao = () => {
     const pendenciasPorCliente = {};
 
@@ -330,7 +330,7 @@ const gerarRelatorioImpressao = () => {
     });
 
     const dataAtual = new Date().toLocaleDateString('pt-BR');
-    let htmlRelatorio = `<div class="relatorio-pronto"><h1>Relatório de Coleta - ${dataAtual}</h1>`;
+    let htmlRelatorio = `<div class="relatorio-pronto"><h1>Relatório de Recolha - ${dataAtual}</h1>`;
 
     if (Object.keys(pendenciasPorCliente).length === 0) {
         htmlRelatorio += '<p>Nenhuma pendência encontrada.</p>';
@@ -341,7 +341,7 @@ const gerarRelatorioImpressao = () => {
                 <div class="item-relatorio">
                     <h3>${cliente.nome}</h3>
                     <p><strong>Endereço:</strong> ${cliente.endereco}</p>
-                    <p><strong>Itens para coletar:</strong></p>
+                    <p><strong>Itens para recolher:</strong></p>
                     <ul>
                         ${cliente.itens.map(item => `<li>${item}</li>`).join('')}
                     </ul>
@@ -351,13 +351,13 @@ const gerarRelatorioImpressao = () => {
     }
     htmlRelatorio += '</div>';
     
-    printHelper(htmlRelatorio, 'Relatório de Coleta', false);
+    printHelper(htmlRelatorio, 'Relatório de Recolha', false);
 };
 
 // Imprime um recibo para uma transação específica
 window.imprimirRecibo = (historicoId) => {
     const registro = historico.find(h => h.id === historicoId);
-    if (!registro) return alert('Registro não encontrado!');
+    if (!registro) return alert('Registo não encontrado!');
 
     const cliente = clientes.find(c => c.id === registro.cliente_id);
     if (!cliente) return alert('Cliente não encontrado!');
@@ -417,8 +417,8 @@ document.getElementById('tabHistorico').addEventListener('click', () => setActiv
 const resetarFormCliente = () => {
     formCliente.reset();
     editClienteId = null;
-    document.getElementById('formClienteTitulo').textContent = 'Cadastrar Novo Cliente';
-    document.getElementById('btnSalvarCliente').textContent = 'Salvar Cliente';
+    document.getElementById('formClienteTitulo').textContent = 'Registar Novo Cliente';
+    document.getElementById('btnSalvarCliente').textContent = 'Guardar Cliente';
     btnCancelarEdicao.style.display = 'none';
 };
 btnCancelarEdicao.addEventListener('click', resetarFormCliente);
@@ -431,7 +431,7 @@ window.editarCliente = (id) => {
     document.getElementById('tipoCliente').value = cliente.tipo;
     document.getElementById('enderecoCliente').value = cliente.endereco;
     document.getElementById('numeroCliente').value = cliente.numero;
-    document.getElementById('formClienteTitulo').textContent = 'Editando Cliente';
+    document.getElementById('formClienteTitulo').textContent = 'A editar Cliente';
     document.getElementById('btnSalvarCliente').textContent = 'Atualizar Cliente';
     btnCancelarEdicao.style.display = 'block';
     formCliente.scrollIntoView({ behavior: 'smooth' });
@@ -480,7 +480,7 @@ const renderClientes = () => {
     const lista = document.getElementById('listaClientes');
     lista.innerHTML = '';
     const filtrados = clientes.filter(c => c.tipo === clienteTipoAtual).sort((a,b) => a.nome.localeCompare(b.nome));
-    if(filtrados.length === 0) lista.innerHTML = '<p>Nenhum cliente cadastrado.</p>';
+    if(filtrados.length === 0) lista.innerHTML = '<p>Nenhum cliente registado.</p>';
     filtrados.forEach(c => {
         const div = document.createElement('div');
         div.className = 'item-lista';
@@ -537,7 +537,7 @@ function renderHistoricoGeral() {
     });
 
     if (historicoFiltrado.length === 0) {
-        lista.innerHTML = '<p>Nenhum registro encontrado.</p>';
+        lista.innerHTML = '<p>Nenhum registo encontrado.</p>';
         return;
     }
 
@@ -626,7 +626,7 @@ document.getElementById('formEmprestimo').addEventListener('submit', async e => 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(novoRegistro)
         });
-        if (!response.ok) throw new Error('Falha ao salvar empréstimo.');
+        if (!response.ok) throw new Error('Falha ao guardar empréstimo.');
 
         await carregarDadosIniciais();
         document.getElementById('formEmprestimo').reset();
@@ -650,7 +650,7 @@ document.getElementById('formDevolucao').addEventListener('submit', async e => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ qtdCascoDev, qtdCaixaDev })
         });
-        if (!response.ok) throw new Error('Falha ao registrar devolução.');
+        if (!response.ok) throw new Error('Falha ao registar devolução.');
 
         await carregarDadosIniciais();
         fecharModal('modalDevolucao');
@@ -666,7 +666,7 @@ const renderHistoricoCliente = (clienteId) => {
     const lista = document.getElementById('listaHistoricoCliente');
     lista.innerHTML = '';
     const registros = historico.filter(h => h.cliente_id === clienteId).sort((a, b) => new Date(b.data_emprestimo) - new Date(a.data_emprestimo));
-    if(registros.length === 0) lista.innerHTML = '<p>Nenhum empréstimo registrado.</p>';
+    if(registros.length === 0) lista.innerHTML = '<p>Nenhum empréstimo registado.</p>';
 
     registros.forEach(h => {
         const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);

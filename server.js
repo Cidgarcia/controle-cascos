@@ -1,26 +1,36 @@
-// server.js - Versão Final com SQLite
+// server.js - Versão Final para Deploy no Fly.io
 
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const path = require('path'); // Módulo para lidar com caminhos de ficheiros
 
 const app = express();
-const port = 3000; // Porta onde o servidor vai rodar
+const port = process.env.PORT || 3000;
 
 // --- CONFIGURAÇÃO ---
+app.use(cors());
+app.use(express.json());
 
-// Middleware
-app.use(cors()); // Permite requisições de outras origens
-app.use(express.json()); // Permite que o express entenda JSON no corpo das requisições
+// --- SERVIR O SITE (FRONTEND) ---
+// Esta linha diz ao servidor para mostrar o ficheiro index.html
+// e outros ficheiros (como imagens ou css, se existissem)
+// que estão na mesma pasta.
+const publicPath = path.join(__dirname);
+app.use(express.static(publicPath));
 
-// Conexão com o SQLite
-// Conecta (ou cria se não existir) ao arquivo do banco de dados.
-const db = new sqlite3.Database('./garcia_database.db', (err) => {
+
+// --- CONEXÃO COM O SQLITE (AJUSTADA PARA O FLY.IO) ---
+// O Fly.io guarda o nosso disco persistente em /data
+const dbPath = '/data';
+const dbFile = path.join(dbPath, 'garcia_database.db');
+
+const db = new sqlite3.Database(dbFile, (err) => {
     if (err) {
-        return console.error(err.message);
+        return console.error(`Erro ao conectar ao DB: ${err.message}`);
     }
-    console.log('Conectado ao banco de dados SQLite.');
+    console.log(`Conectado ao banco de dados SQLite em: ${dbFile}`);
 });
 
 // Cria as tabelas se elas não existirem
@@ -58,6 +68,8 @@ db.serialize(() => {
 
 
 // --- ROTAS DA API ---
+// O seu código da API continua aqui, sem alterações.
+// Note que as rotas começam com /api/ para não conflitarem com o site.
 
 // Rota de Login
 app.post('/api/login', (req, res) => {
@@ -184,7 +196,7 @@ app.post('/api/historico/devolver/:id', (req, res) => {
 
 // --- INICIAR SERVIDOR ---
 app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
+    console.log(`Servidor rodando na porta ${port}`);
 
     // Script para criar o usuário inicial, se não existir
     const initialUser = 'junior';
