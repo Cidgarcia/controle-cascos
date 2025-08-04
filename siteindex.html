@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Controle de Cascos e Caixas - Distribuidora Garcia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+/* Estilos Gerais (sem alterações) */
+body { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; }
+h1,h2,h3,h4 { text-align: center; color: #b71c1c; }
+h3 { margin-top: 0; }
+.container { max-width: 900px; margin: auto; padding: 10px; }
+form, .box { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+label { font-weight: bold; display: block; margin-top: 10px; }
+input, select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+button { background: #b71c1c; color: white; font-weight: bold; cursor: pointer; border: none; margin-top: 15px; }
+button:hover { background: #a31515; }
+button.secondary { background: #1976d2; }
+button.secondary:hover { background: #1565c0; }
+button.imprimir-recibo { background: #6a1b9a; }
+button.imprimir-recibo:hover { background: #4a148c; }
+.item-lista { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding: 10px 0; flex-wrap: wrap; gap: 10px;}
+.item-lista span { flex: 1; min-width: 150px; }
+.item-lista .botoes { display: flex; flex-wrap: wrap; gap: 5px; }
+.item-lista button { width: auto; margin: 0; padding: 5px 10px; }
+.item-lista button.editar { background: #f57c00; }
+.item-lista button.devolver { background: #388e3c; }
+.tabs { display: flex; justify-content: space-around; margin-bottom: 15px; }
+.tabs button { flex: 1; margin: 0 3px; padding: 10px; border-radius: 5px; background: #ccc; font-weight: bold; cursor: pointer; }
+.tabs button.active { background: #b71c1c; color: white; }
+.status-ok { color: green; font-weight: bold; }
+.status-pendente { color: #b71c1c; font-weight: bold; }
+.status-parcial { color: #f57c00; font-weight: bold; }
+.grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.grid-3-col { display: grid; grid-template-columns: 3fr 2fr 1fr; gap: 15px; }
+#boxContador h3 { color: #333; }
+#boxContador { background: #fffde7; border: 1px solid #ffc107; }
+.contador-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; text-align: center; }
+.contador-item { background: #fafafa; padding: 10px; border-radius: 5px; border: 1px solid #eee; }
+.contador-item strong { display: block; font-size: 1.5em; color: #b71c1c; }
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+.modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 700px; border-radius: 8px; position: relative; }
+.close-button { color: #aaa; position: absolute; right: 15px; top: 10px; font-size: 28px; font-weight: bold; cursor: pointer; }
+.close-button:hover, .close-button:focus { color: black; }
+.info-cliente-modal { background: #eee; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold; }
+
+@media(max-width:600px){
+    .item-lista { flex-direction: column; align-items: flex-start; }
+    .item-lista .botoes { width: 100%; margin-top: 10px; }
+    .grid-2-col, .grid-3-col { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div id="loginScreen">
+        <form id="formLogin">
+            <h1>Login</h1>
+            <label for="loginUsuario">Usuário:</label>
+            <input type="text" id="loginUsuario" required>
+            <label for="loginSenha">Senha:</label>
+            <input type="password" id="loginSenha" required>
+            <button type="submit">Entrar</button>
+            <p id="loginErro" style="color:red;text-align:center;font-weight:bold;"></p>
+        </form>
+    </div>
+
+    <div id="app" style="display:none;">
+        <h1>Controle de Cascos e Caixas</h1>
+        
+        <div id="boxContador" class="box">
+            <h3>Resumo de Itens Pendentes</h3>
+            <div id="contadorConteudo" class="contador-grid">Carregando...</div>
+            <button id="btnImprimirRelatorio" class="secondary" style="margin-top: 20px;">Imprimir Relatório de Coleta</button>
+        </div>
+
+        <div class="tabs">
+            <button id="tabFisicos" class="active">Clientes Físicos</button>
+            <button id="tabBares">Bares</button>
+            <button id="tabHistorico">Histórico Geral</button>
+        </div>
+
+        <div id="conteudoClientes">
+            <form id="formCliente">
+                <h2 id="formClienteTitulo">Cadastrar Novo Cliente</h2>
+                <div class="grid-2-col">
+                    <div><label for="nomeCliente">Nome:</label><input type="text" id="nomeCliente" required></div>
+                    <div><label for="tipoCliente">Tipo:</label><select id="tipoCliente" required><option value="">Selecione</option><option value="fisico">Físico</option><option value="bar">Bar</option></select></div>
+                </div>
+                <div class="grid-2-col">
+                    <div><label for="enderecoCliente">Endereço:</label><input type="text" id="enderecoCliente" required></div>
+                    <div><label for="numeroCliente">Número:</label><input type="text" id="numeroCliente" required></div>
+                </div>
+                <button type="submit" id="btnSalvarCliente">Salvar Cliente</button>
+                <button type="button" id="btnCancelarEdicao" class="secondary" style="display:none;">Cancelar Edição</button>
+            </form>
+
+            <div class="box">
+                <h2 id="tituloLista">Clientes Físicos</h2>
+                <div id="listaClientes"></div>
+            </div>
+        </div>
+
+        <div class="box" id="boxHistorico" style="display:none;">
+            <h2>Histórico Geral</h2>
+            <label for="filtroHistorico">Filtro:</label>
+            <select id="filtroHistorico"><option value="todos">Todos</option><option value="pendentes">Pendentes</option><option value="ok">Devolvidos</option></select>
+            <div id="listaHistoricoGeral"></div>
+        </div>
+    </div>
+</div>
+
+<div id="modalHistoricoCliente" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="fecharModal('modalHistoricoCliente')">&times;</span>
+        <h2 id="modalTituloCliente">Histórico do Cliente</h2>
+        <div id="infoClienteModal" class="info-cliente-modal"></div>
+        <form id="formEmprestimo">
+            <h3>Registrar Novo Empréstimo</h3>
+            <label for="dataEmprestimoManual">Data/Hora do Empréstimo (Opcional):</label>
+            <input type="datetime-local" id="dataEmprestimoManual">
+            <h4>Cascos de Cerveja</h4>
+            <div class="grid-3-col">
+                <div><label for="marcaCasco">Marca:</label><select id="marcaCasco"></select></div>
+                <div><label for="tamanhoCasco">Tamanho:</label><select id="tamanhoCasco"></select></div>
+                <div><label for="qtdCasco">Qtd:</label><input type="number" id="qtdCasco" min="0" value="0"></div>
+            </div>
+            <h4>Caixas</h4>
+            <div class="grid-2-col">
+                <div><label for="tipoCaixa">Tipo:</label><select id="tipoCaixa"></select></div>
+                <div><label for="qtdCaixa">Qtd:</label><input type="number" id="qtdCaixa" min="0" value="0"></div>
+            </div>
+            <button type="submit">Adicionar Empréstimo</button>
+        </form>
+        <div class="box">
+            <h3>Empréstimos Registrados</h3>
+            <div id="listaHistoricoCliente"></div>
+        </div>
+    </div>
+</div>
+
+<div id="modalDevolucao" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="fecharModal('modalDevolucao')">&times;</span>
+        <h3>Realizar Devolução</h3>
+        <form id="formDevolucao">
+            <div id="devolucaoItens"></div>
+            <button type="submit">Confirmar Devolução</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+// ======= DADOS E OPÇÕES PRÉ-DEFINIDAS =======
+const OPCOES_MARCA_CASCO = ["Nenhuma", "Brahma", "Skol", "Bohemia", "Budweiser", "Original", "Devassa", "Itaipava", "Heineken", "Stella", "Amstel"];
+const OPCOES_TAMANHO_CASCO = ["Nenhum", "300ml", "600ml", "1L"];
+const OPCOES_TIPO_CAIXA = ["Nenhuma", "Ambev Azul", "Brasil Kirin Amarela", "Itaipava Vermelha", "Coca Cola LS 1L", "Ambev 1L Caixa", "Heineken 600ml"];
+
+// ======= VARIÁVEIS GLOBAIS =======
+const API_URL = 'http://localhost:3000/api';
+let clientes = [];
+let historico = [];
+let clienteTipoAtual = 'fisico';
+let clienteAtualParaHistorico = null;
+let editClienteId = null; 
+let registroParaDevolverId = null;
+
+// ======= ELEMENTOS DO DOM =======
+const formCliente = document.getElementById('formCliente');
+const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
+const btnImprimirRelatorio = document.getElementById('btnImprimirRelatorio');
+
+// ======= FUNÇÕES DE UTILIDADE E INICIALIZAÇÃO =======
+const popularSelect = (selectId, opcoes) => {
+    const select = document.getElementById(selectId);
+    select.innerHTML = '';
+    opcoes.forEach(opt => select.add(new Option(opt, opt)));
+};
+
+const carregarDadosIniciais = async () => {
+    try {
+        const [clientesRes, historicoRes] = await Promise.all([
+            fetch(`${API_URL}/clientes`),
+            fetch(`${API_URL}/historico`)
+        ]);
+        if (!clientesRes.ok || !historicoRes.ok) {
+            throw new Error('Falha ao buscar dados do servidor.');
+        }
+        clientes = await clientesRes.json();
+        historico = await historicoRes.json();
+
+        historico.forEach(h => {
+             h.cliente = h.cliente_nome;
+        });
+
+        renderizarContadorPendentes();
+        setActiveTab(clienteTipoAtual === 'fisico' ? 'tabFisicos' : 'tabBares');
+    } catch (error) {
+        console.error('Erro ao carregar dados iniciais:', error);
+        alert('Não foi possível conectar ao servidor. Verifique se o backend (node server.js) está rodando.');
+    }
+};
+
+const inicializarFormularios = () => {
+    popularSelect('marcaCasco', OPCOES_MARCA_CASCO);
+    popularSelect('tamanhoCasco', OPCOES_TAMANHO_CASCO);
+    popularSelect('tipoCaixa', OPCOES_TIPO_CAIXA);
+};
+inicializarFormularios();
+
+// --- LÓGICA DE LOGIN ---
+document.getElementById('formLogin').addEventListener('submit', async e => {
+    e.preventDefault();
+    const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
+    const senha = document.getElementById('loginSenha').value;
+    const loginErro = document.getElementById('loginErro');
+    loginErro.textContent = '';
+
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, senha })
+        });
+
+        if (response.ok) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            carregarDadosIniciais();
+        } else {
+            const data = await response.json();
+            loginErro.textContent = data.error || 'Usuário ou senha inválidos!';
+        }
+    } catch(error) {
+        loginErro.textContent = 'Erro de conexão com o servidor.';
+    }
+});
+
+// ======= FUNÇÕES DE IMPRESSÃO (CORRIGIDAS) =======
+
+function printHelper(printContents, title, isReceipt = false) {
+    const printWindow = window.open('', '_blank');
+    
+    // Define os estilos CSS
+    let styles = `
+        body { 
+            font-family: Arial, sans-serif;
+        }
+        h1, h2, h3 { text-align: center; margin: 5px 0; }
+        p { margin: 2px 0; }
+        ul { list-style-position: inside; padding-left: 0; }
+        /* Estilos para o relatório A4 */
+        .relatorio-pronto { width: 100%; }
+        .relatorio-pronto .item-relatorio { 
+            border-bottom: 1px dashed #666; 
+            padding: 10px 0; 
+            page-break-inside: avoid; 
+        }
+    `;
+
+    // Adiciona estilos específicos para recibo
+    if (isReceipt) {
+        styles += `
+            @page {
+                size: 80mm; /* Define o tamanho do papel para o recibo */
+                margin: 2mm;
+            }
+            body { 
+                font-family: 'Courier New', Courier, monospace;
+                width: 80mm; /* Garante que o conteúdo não ultrapasse a largura */
+                font-size: 10pt;
+            }
+            .itens {
+                border-top: 1px dashed #000;
+                border-bottom: 1px dashed #000;
+                padding: 5px 0;
+                margin: 10px 0;
+            }
+            .footer { text-align: center; margin-top: 15px; }
+        `;
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>${styles}</style>
+        </head>
+        <body>
+          ${printContents}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 250);
+}
+
+// Imprime o relatório geral de coleta
+const gerarRelatorioImpressao = () => {
+    const pendenciasPorCliente = {};
+
+    historico.forEach(h => {
+        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+
+        if (cascosPendentes > 0 || caixasPendentes > 0) {
+            const clienteInfo = clientes.find(c => c.id === h.cliente_id);
+            if (!clienteInfo) return;
+
+            if (!pendenciasPorCliente[h.cliente_id]) {
+                pendenciasPorCliente[h.cliente_id] = {
+                    nome: clienteInfo.nome,
+                    endereco: `${clienteInfo.endereco}, ${clienteInfo.numero}`,
+                    itens: []
+                };
+            }
+            if (cascosPendentes > 0) {
+                pendenciasPorCliente[h.cliente_id].itens.push(`${cascosPendentes} Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
+            }
+            if (caixasPendentes > 0) {
+                pendenciasPorCliente[h.cliente_id].itens.push(`${caixasPendentes} Caixa(s) ${h.tipo_caixa}`);
+            }
+        }
+    });
+
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
+    let htmlRelatorio = `<div class="relatorio-pronto"><h1>Relatório de Coleta - ${dataAtual}</h1>`;
+
+    if (Object.keys(pendenciasPorCliente).length === 0) {
+        htmlRelatorio += '<p>Nenhuma pendência encontrada.</p>';
+    } else {
+        for (const id in pendenciasPorCliente) {
+            const cliente = pendenciasPorCliente[id];
+            htmlRelatorio += `
+                <div class="item-relatorio">
+                    <h3>${cliente.nome}</h3>
+                    <p><strong>Endereço:</strong> ${cliente.endereco}</p>
+                    <p><strong>Itens para coletar:</strong></p>
+                    <ul>
+                        ${cliente.itens.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+    }
+    htmlRelatorio += '</div>';
+    
+    printHelper(htmlRelatorio, 'Relatório de Coleta', false); // false = não é recibo
+};
+
+// Imprime um recibo para uma transação específica
+window.imprimirRecibo = (historicoId) => {
+    const registro = historico.find(h => h.id === historicoId);
+    if (!registro) return alert('Registro não encontrado!');
+
+    const cliente = clientes.find(c => c.id === registro.cliente_id);
+    if (!cliente) return alert('Cliente não encontrado!');
+    
+    let itensHtml = '';
+    if (registro.qtd_casco > 0) {
+        itensHtml += `<p>${registro.qtd_casco}x Casco ${registro.marca_casco} ${registro.tamanho_casco}</p>`;
+    }
+    if (registro.qtd_caixa > 0) {
+        itensHtml += `<p>${registro.qtd_caixa}x Caixa ${registro.tipo_caixa}</p>`;
+    }
+
+    const htmlRecibo = `
+        <div>
+            <h2>Distribuidora Garcia</h2>
+            <h3>Recibo de Empréstimo</h3>
+            <p>--------------------------------</p>
+            <p><strong>Data:</strong> ${registro.data_emprestimo}</p>
+            <p><strong>Cliente:</strong> ${cliente.nome}</p>
+            <p><strong>Endereço:</strong> ${cliente.endereco}, ${cliente.numero}</p>
+            <div class="itens">
+                ${itensHtml}
+            </div>
+            <p class="footer">Obrigado pela preferência!</p>
+            <p class="footer">.</p>
+        </div>
+    `;
+
+    printHelper(htmlRecibo, 'Recibo de Empréstimo', true); // true = é recibo
+};
+
+btnImprimirRelatorio.addEventListener('click', gerarRelatorioImpressao);
+
+
+// ======= O RESTANTE DO CÓDIGO PERMANECE IGUAL =======
+
+// CONTROLES DE ABAS
+const setActiveTab = (tabId) => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    const isHistoricoTab = tabId === 'tabHistorico';
+    document.getElementById('conteudoClientes').style.display = isHistoricoTab ? 'none' : 'block';
+    document.getElementById('boxHistorico').style.display = isHistoricoTab ? 'block' : 'none';
+    if (isHistoricoTab) {
+        renderHistoricoGeral();
+    } else {
+        clienteTipoAtual = tabId === 'tabFisicos' ? 'fisico' : 'bar';
+        document.getElementById('tituloLista').textContent = clienteTipoAtual === 'fisico' ? 'Clientes Físicos' : 'Bares';
+        renderClientes();
+    }
+};
+document.getElementById('tabFisicos').addEventListener('click', () => setActiveTab('tabFisicos'));
+document.getElementById('tabBares').addEventListener('click', () => setActiveTab('tabBares'));
+document.getElementById('tabHistorico').addEventListener('click', () => setActiveTab('tabHistorico'));
+
+// GESTÃO DE CLIENTES
+const resetarFormCliente = () => {
+    formCliente.reset();
+    editClienteId = null;
+    document.getElementById('formClienteTitulo').textContent = 'Cadastrar Novo Cliente';
+    document.getElementById('btnSalvarCliente').textContent = 'Salvar Cliente';
+    btnCancelarEdicao.style.display = 'none';
+};
+btnCancelarEdicao.addEventListener('click', resetarFormCliente);
+
+window.editarCliente = (id) => {
+    const cliente = clientes.find(c => c.id === id);
+    if (!cliente) return;
+    editClienteId = id;
+    document.getElementById('nomeCliente').value = cliente.nome;
+    document.getElementById('tipoCliente').value = cliente.tipo;
+    document.getElementById('enderecoCliente').value = cliente.endereco;
+    document.getElementById('numeroCliente').value = cliente.numero;
+    document.getElementById('formClienteTitulo').textContent = 'Editando Cliente';
+    document.getElementById('btnSalvarCliente').textContent = 'Atualizar Cliente';
+    btnCancelarEdicao.style.display = 'block';
+    formCliente.scrollIntoView({ behavior: 'smooth' });
+};
+
+formCliente.addEventListener('submit', async e => {
+    e.preventDefault();
+    const nome = document.getElementById('nomeCliente').value.trim();
+    const tipo = document.getElementById('tipoCliente').value;
+    const endereco = document.getElementById('enderecoCliente').value.trim();
+    const numero = document.getElementById('numeroCliente').value.trim();
+    if (!nome || !tipo || !endereco || !numero) return alert("Todos os campos são obrigatórios!");
+
+    const clienteData = { nome, tipo, endereco, numero };
+
+    try {
+        let response;
+        if (editClienteId !== null) {
+            response = await fetch(`${API_URL}/clientes/${editClienteId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(clienteData)
+            });
+        } else {
+            response = await fetch(`${API_URL}/clientes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(clienteData)
+            });
+        }
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Erro no servidor');
+        }
+        
+        await carregarDadosIniciais();
+        resetarFormCliente();
+
+    } catch(error) {
+        alert(`Erro: ${error.message}`);
+    }
+});
+
+const renderClientes = () => {
+    const lista = document.getElementById('listaClientes');
+    lista.innerHTML = '';
+    const filtrados = clientes.filter(c => c.tipo === clienteTipoAtual).sort((a,b) => a.nome.localeCompare(b.nome));
+    if(filtrados.length === 0) lista.innerHTML = '<p>Nenhum cliente cadastrado.</p>';
+    filtrados.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'item-lista';
+        div.innerHTML = `
+            <span><strong>${c.nome}</strong><br><small>${c.endereco}, ${c.numero}</small></span>
+            <div class="botoes">
+                <button class="secondary" onclick="abrirModal('modalHistoricoCliente', ${c.id})">Histórico</button>
+                <button class="editar" onclick="editarCliente(${c.id})">Editar</button>
+            </div>`;
+        lista.appendChild(div);
+    });
+};
+
+// CONTADOR DE PENDENTES
+const renderizarContadorPendentes = () => {
+    const contadores = { cascos: {}, caixas: {} };
+    OPCOES_TAMANHO_CASCO.slice(1).forEach(t => contadores.cascos[t] = 0);
+    OPCOES_TIPO_CAIXA.slice(1).forEach(c => contadores.caixas[c] = 0);
+
+    historico.forEach(item => {
+        const cascosPendentes = (item.qtd_casco || 0) - (item.qtd_casco_devolvido || 0);
+        if (cascosPendentes > 0 && item.tamanho_casco) {
+            contadores.cascos[item.tamanho_casco] = (contadores.cascos[item.tamanho_casco] || 0) + cascosPendentes;
+        }
+        const caixasPendentes = (item.qtd_caixa || 0) - (item.qtd_caixa_devolvido || 0);
+        if (caixasPendentes > 0 && item.tipo_caixa) {
+            contadores.caixas[item.tipo_caixa] = (contadores.caixas[item.tipo_caixa] || 0) + caixasPendentes;
+        }
+    });
+
+    const container = document.getElementById('contadorConteudo');
+    container.innerHTML = '<h4>Cascos</h4>';
+    Object.entries(contadores.cascos).forEach(([k, v]) => container.innerHTML += `<div class="contador-item">${k} <strong>${v}</strong></div>`);
+    container.innerHTML += '<h4 style="grid-column: 1 / -1; margin-top: 15px;">Caixas</h4>';
+    Object.entries(contadores.caixas).forEach(([k, v]) => container.innerHTML += `<div class="contador-item">${k} <strong>${v}</strong></div>`);
+};
+
+
+// HISTÓRICO GERAL
+document.getElementById('filtroHistorico').addEventListener('change', renderHistoricoGeral);
+function renderHistoricoGeral() {
+    const filtro = document.getElementById('filtroHistorico').value;
+    const lista = document.getElementById('listaHistoricoGeral');
+    lista.innerHTML = '';
+
+    const historicoFiltrado = historico.filter(h => {
+        if (filtro === 'todos') return true;
+        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+        const totalPendente = cascosPendentes + caixasPendentes;
+        if (filtro === 'pendentes') return totalPendente > 0;
+        if (filtro === 'ok') return totalPendente <= 0;
+        return false;
+    });
+
+    if (historicoFiltrado.length === 0) {
+        lista.innerHTML = '<p>Nenhum registro encontrado.</p>';
+        return;
+    }
+
+    historicoFiltrado.forEach(h => {
+        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+        const totalPendente = cascosPendentes + caixasPendentes;
+        
+        let statusClass = 'status-ok';
+        let statusText = 'OK';
+        if (totalPendente > 0) {
+            const totalDevolvido = (h.qtd_casco_devolvido || 0) + (h.qtd_caixa_devolvido || 0);
+            statusClass = totalDevolvido > 0 ? 'status-parcial' : 'status-pendente';
+            statusText = totalDevolvido > 0 ? 'Parcial' : 'Pendente';
+        }
+
+        const cascosInfo = h.qtd_casco > 0 ? `Cascos: ${h.qtd_casco_devolvido}/${h.qtd_casco} (${h.marca_casco} ${h.tamanho_casco})` : '';
+        const caixasInfo = h.qtd_caixa > 0 ? `Caixas: ${h.qtd_caixa_devolvido}/${h.qtd_caixa} (${h.tipo_caixa})` : '';
+
+        const div = document.createElement('div');
+        div.className = 'item-lista';
+        div.innerHTML = `
+            <span><strong>Cliente:</strong> ${h.cliente_nome}<br><small>${h.data_emprestimo}</small></span>
+            <span>${cascosInfo}<br>${caixasInfo}</span>
+            <span class="${statusClass}">${statusText}</span>
+        `;
+        lista.appendChild(div);
+    });
+}
+
+
+// GESTÃO DE MODAIS
+window.abrirModal = (modalId, id) => {
+    if (modalId === 'modalHistoricoCliente') {
+        clienteAtualParaHistorico = id;
+        const cliente = clientes.find(c => c.id === id);
+        document.getElementById('modalTituloCliente').textContent = `Histórico de: ${cliente.nome}`;
+        document.getElementById('infoClienteModal').textContent = `Endereço: ${cliente.endereco}, ${cliente.numero}`;
+        renderHistoricoCliente(id);
+    }
+    if (modalId === 'modalDevolucao') {
+        registroParaDevolverId = id;
+        const registro = historico.find(h => h.id === registroParaDevolverId);
+        const container = document.getElementById('devolucaoItens');
+        container.innerHTML = '';
+        const cascosPendentes = (registro.qtd_casco || 0) - (registro.qtd_casco_devolvido || 0);
+        const caixasPendentes = (registro.qtd_caixa || 0) - (registro.qtd_caixa_devolvido || 0);
+
+        if(cascosPendentes > 0) container.innerHTML += `<div><label>Devolver Cascos (${registro.marca_casco} ${registro.tamanho_casco}):</label><input type="number" id="qtdCascoDevolver" value="0" min="0" max="${cascosPendentes}"></div>`;
+        if(caixasPendentes > 0) container.innerHTML += `<div><label>Devolver Caixas (${registro.tipo_caixa}):</label><input type="number" id="qtdCaixaDevolver" value="0" min="0" max="${caixasPendentes}"></div>`;
+    }
+    document.getElementById(modalId).style.display = 'block';
+};
+
+window.fecharModal = (modalId) => {
+    document.getElementById(modalId).style.display = 'none';
+};
+
+// EMPRÉSTIMOS E DEVOLUÇÕES
+document.getElementById('formEmprestimo').addEventListener('submit', async e => {
+    e.preventDefault();
+    const marcaCasco = document.getElementById('marcaCasco').value;
+    const tamanhoCasco = document.getElementById('tamanhoCasco').value;
+    const qtdCasco = parseInt(document.getElementById('qtdCasco').value, 10) || 0;
+    const tipoCaixa = document.getElementById('tipoCaixa').value;
+    const qtdCaixa = parseInt(document.getElementById('qtdCaixa').value, 10) || 0;
+    const dataEmprestimo = document.getElementById('dataEmprestimoManual').value;
+
+    const temCasco = qtdCasco > 0 && marcaCasco !== 'Nenhuma' && tamanhoCasco !== 'Nenhum';
+    const temCaixa = qtdCaixa > 0 && tipoCaixa !== 'Nenhuma';
+    if (!temCasco && !temCaixa) return alert("Adicione pelo menos um item.");
+    
+    const novoRegistro = {
+        cliente_id: clienteAtualParaHistorico,
+        marcaCasco: temCasco ? marcaCasco : null,
+        tamanhoCasco: temCasco ? tamanhoCasco : null,
+        qtdCasco,
+        tipoCaixa: temCaixa ? tipoCaixa : null,
+        qtdCaixa,
+        dataEmprestimo: dataEmprestimo || null
+    };
+    
+    try {
+        const response = await fetch(`${API_URL}/historico`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(novoRegistro)
+        });
+        if (!response.ok) throw new Error('Falha ao salvar empréstimo.');
+
+        await carregarDadosIniciais();
+        document.getElementById('formEmprestimo').reset();
+        renderHistoricoCliente(clienteAtualParaHistorico);
+
+    } catch (error) {
+        alert(`Erro: ${error.message}`);
+    }
+});
+
+document.getElementById('formDevolucao').addEventListener('submit', async e => {
+    e.preventDefault();
+    const inputCascos = document.getElementById('qtdCascoDevolver');
+    const inputCaixas = document.getElementById('qtdCaixaDevolver');
+    const qtdCascoDev = inputCascos ? parseInt(inputCascos.value, 10) : 0;
+    const qtdCaixaDev = inputCaixas ? parseInt(inputCaixas.value, 10) : 0;
+
+    try {
+        const response = await fetch(`${API_URL}/historico/devolver/${registroParaDevolverId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qtdCascoDev, qtdCaixaDev })
+        });
+        if (!response.ok) throw new Error('Falha ao registrar devolução.');
+
+        await carregarDadosIniciais();
+        fecharModal('modalDevolucao');
+        renderHistoricoCliente(clienteAtualParaHistorico);
+
+    } catch (error) {
+        alert(`Erro: ${error.message}`);
+    }
+});
+
+// RENDERIZAÇÃO DO HISTÓRICO DO CLIENTE
+const renderHistoricoCliente = (clienteId) => {
+    const lista = document.getElementById('listaHistoricoCliente');
+    lista.innerHTML = '';
+    const registros = historico.filter(h => h.cliente_id === clienteId).sort((a, b) => new Date(b.data_emprestimo) - new Date(a.data_emprestimo));
+    if(registros.length === 0) lista.innerHTML = '<p>Nenhum empréstimo registrado.</p>';
+
+    registros.forEach(h => {
+        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+        const totalPendente = cascosPendentes + caixasPendentes;
+        
+        let statusClass = 'status-ok';
+        let statusText = 'OK';
+        if (totalPendente > 0) {
+            const totalDevolvido = (h.qtd_casco_devolvido || 0) + (h.qtd_caixa_devolvido || 0);
+            statusClass = totalDevolvido > 0 ? 'status-parcial' : 'status-pendente';
+            statusText = totalDevolvido > 0 ? 'Parcial' : 'Pendente';
+        }
+
+        const cascosInfo = h.qtd_casco > 0 ? `Cascos: ${h.qtd_casco_devolvido}/${h.qtd_casco} (${h.marca_casco} ${h.tamanho_casco})` : '';
+        const caixasInfo = h.qtd_caixa > 0 ? `Caixas: ${h.qtd_caixa_devolvido}/${h.qtd_caixa} (${h.tipo_caixa})` : '';
+
+        const div = document.createElement('div');
+        div.className = 'item-lista';
+        div.innerHTML = `
+            <span><strong>Empréstimo:</strong> ${h.data_emprestimo}<br><span class="${statusClass}">${statusText}</span></span>
+            <span>${cascosInfo}<br>${caixasInfo}</span>
+            <div class="botoes">
+                ${totalPendente > 0 ? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>` : ''}
+                <button class="imprimir-recibo" onclick="imprimirRecibo(${h.id})">Imprimir Recibo</button>
+            </div>
+        `;
+        lista.appendChild(div);
+    });
+};
+
+});
+</script>
+</body>
+</html>
