@@ -13,7 +13,7 @@ body { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; color: #3
 h1,h2,h3,h4 { text-align: center; color: var(--cor-principal); }
 h3 { margin-top: 0; }
 label { font-weight: bold; display: block; margin-top: 10px; }
-input, select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1em; }
+input, select, button, textarea { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1em; }
 button { background: var(--cor-principal); color: white; font-weight: bold; cursor: pointer; border: none; margin-top: 15px; }
 button:hover { opacity: 0.9; }
 button.secondary { background: var(--cor-secundaria); }
@@ -26,8 +26,8 @@ button.whatsapp { background: #25D366; }
 #loginScreen img { max-width: 200px; display: block; margin: 0 auto 20px; }
 
 /* Navegação por Abas */
-.tabs { display: flex; justify-content: space-around; margin-bottom: 15px; background: #ddd; padding: 5px; border-radius: 8px; }
-.tabs button { flex: 1; margin: 0 3px; padding: 10px; border-radius: 5px; background: #ccc; font-weight: bold; cursor: pointer; color: #333; border: none; }
+.tabs { display: flex; flex-wrap: wrap; justify-content: space-around; margin-bottom: 15px; background: #ddd; padding: 5px; border-radius: 8px; }
+.tabs button { flex: 1; min-width: 100px; margin: 3px; padding: 10px; border-radius: 5px; background: #ccc; font-weight: bold; cursor: pointer; color: #333; border: none; }
 .tabs button.active { background: var(--cor-principal); color: white; }
 
 /* Listas e Itens */
@@ -40,6 +40,7 @@ button.whatsapp { background: #25D366; }
 .item-lista button.editar { background: #f57c00; }
 .item-lista button.devolver { background: #388e3c; }
 .item-lista button.imprimir-recibo { background: #6a1b9a; }
+.item-lista button.apagar { background: #444; }
 
 /* Barra de Pesquisa */
 .barra-pesquisa { margin-bottom: 15px; }
@@ -53,6 +54,10 @@ button.whatsapp { background: #25D366; }
 /* Estoque */
 .estoque-item { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
 .estoque-item input { width: 100px; text-align: center; }
+
+/* Registos Apagados */
+.apagado-item { background: #f9f9f9; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+.apagado-item p { margin: 5px 0; }
 
 /* Modal */
 .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
@@ -89,6 +94,7 @@ button.whatsapp { background: #25D366; }
             <button id="tabFisicos">Clientes Físicos</button>
             <button id="tabBares">Bares</button>
             <button id="tabEstoque">Estoque</button>
+            <button id="tabApagados">Registos Apagados</button>
         </div>
 
         <!-- ECRÃ HOME -->
@@ -131,6 +137,14 @@ button.whatsapp { background: #25D366; }
             <div class="box">
                 <h2>Gestão de Estoque</h2>
                 <div id="listaEstoque"></div>
+            </div>
+        </div>
+
+        <!-- ECRÃ REGISTOS APAGADOS -->
+        <div id="conteudoApagados" style="display:none;">
+            <div class="box">
+                <h2>Registos de Empréstimo Apagados</h2>
+                <div id="listaRegistrosApagados"></div>
             </div>
         </div>
 
@@ -199,11 +213,24 @@ button.whatsapp { background: #25D366; }
     </div>
 </div>
 
+<div id="modalApagarRegistro" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="fecharModal('modalApagarRegistro')">&times;</span>
+        <h3>Apagar Registo</h3>
+        <p>Tem a certeza de que quer apagar este registo? Esta ação não pode ser desfeita. Os itens pendentes serão devolvidos ao estoque.</p>
+        <form id="formApagar">
+            <label for="justificativaApagar">Justificativa (obrigatório):</label>
+            <textarea id="justificativaApagar" rows="3" required></textarea>
+            <button type="submit">Confirmar e Apagar</button>
+        </form>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
 // ======= DADOS E OPÇÕES PRÉ-DEFINIDAS =======
-const OPCOES_MARCA_CASCO = ["Nenhuma", "Brahma", "Skol", "Bohemia", "Budweiser", "Original", "Devassa", "Itaipava", "Heineken", "Stella", "Amstel", "Coca Cola"];
+const OPCOES_MARCA_CASCO = ["Nenhuma", "Brahma", "Skol", "Bohemia", "Original", "Devassa", "Amstel", "Itaipava", "Heineken", "Stella", "Coca Cola"];
 const OPCOES_TAMANHO_CASCO = ["Nenhum", "300ml", "600ml", "1L"];
 const OPCOES_TIPO_CAIXA = ["Nenhuma", "Ambev Azul", "Brasil Kirin Amarela", "Itaipava Vermelha", "Coca Cola LS 1L", "Ambev 1L Caixa", "Heineken 600ml"];
 
@@ -212,9 +239,11 @@ const API_URL = '/api';
 let clientes = [];
 let historico = [];
 let estoque = [];
+let registrosApagados = [];
 let clienteAtualParaHistorico = null;
 let editClienteId = null; 
 let registroParaDevolverId = null;
+let registroParaApagarId = null;
 
 // ======= FUNÇÕES DE UTILIDADE E INICIALIZAÇÃO =======
 const popularSelect = (selectId, opcoes) => {
@@ -225,16 +254,18 @@ const popularSelect = (selectId, opcoes) => {
 
 const carregarDadosIniciais = async () => {
     try {
-        const [clientesRes, historicoRes, estoqueRes] = await Promise.all([
+        const [clientesRes, historicoRes, estoqueRes, apagadosRes] = await Promise.all([
             fetch(`${API_URL}/clientes`),
             fetch(`${API_URL}/historico`),
-            fetch(`${API_URL}/estoque`)
+            fetch(`${API_URL}/estoque`),
+            fetch(`${API_URL}/registros-apagados`)
         ]);
-        if (!clientesRes.ok || !historicoRes.ok || !estoqueRes.ok) throw new Error('Falha ao buscar dados do servidor.');
+        if (!clientesRes.ok || !historicoRes.ok || !estoqueRes.ok || !apagadosRes.ok) throw new Error('Falha ao buscar dados do servidor.');
         
         clientes = await clientesRes.json();
         historico = await historicoRes.json();
         estoque = await estoqueRes.json();
+        registrosApagados = await apagadosRes.json();
 
         mudarAba('tabHome');
     } catch (error) {
@@ -279,7 +310,7 @@ document.getElementById('formLogin').addEventListener('submit', async e => {
 });
 
 // ======= NAVEGAÇÃO POR ABAS =======
-const abas = ['Home', 'Fisicos', 'Bares', 'Estoque'];
+const abas = ['Home', 'Fisicos', 'Bares', 'Estoque', 'Apagados'];
 const mudarAba = (tabId) => {
     abas.forEach(aba => {
         document.getElementById(`conteudo${aba}`).style.display = 'none';
@@ -289,11 +320,11 @@ const mudarAba = (tabId) => {
     document.getElementById(`conteudo${abaAtiva}`).style.display = 'block';
     document.getElementById(tabId).classList.add('active');
 
-    // Renderiza o conteúdo da aba ativa
     if (abaAtiva === 'Home') renderizarHome();
     if (abaAtiva === 'Fisicos') renderizarClientes('fisico');
     if (abaAtiva === 'Bares') renderizarClientes('bar');
     if (abaAtiva === 'Estoque') renderizarEstoque();
+    if (abaAtiva === 'Apagados') renderizarRegistrosApagados();
 };
 
 abas.forEach(aba => {
@@ -366,11 +397,33 @@ const renderizarClientes = (tipo, filtroNome = '') => {
 const renderizarEstoque = () => {
     const container = document.getElementById('listaEstoque');
     container.innerHTML = '';
-    estoque.forEach(item => {
+    estoque.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(item => {
         container.innerHTML += `
             <div class="estoque-item item-lista">
                 <span>${item.nome}</span>
                 <input type="number" id="estoque-${item.id}" value="${item.quantidade}" onchange="atualizarEstoque('${item.id}')">
+            </div>
+        `;
+    });
+};
+
+const renderizarRegistrosApagados = () => {
+    const container = document.getElementById('listaRegistrosApagados');
+    container.innerHTML = '';
+    if (registrosApagados.length === 0) {
+        container.innerHTML = '<p>Nenhum registo apagado.</p>';
+        return;
+    }
+    registrosApagados.forEach(reg => {
+        const dados = JSON.parse(reg.dados_originais);
+        const cliente = clientes.find(c => c.id === dados.cliente_id);
+        container.innerHTML += `
+            <div class="apagado-item">
+                <p><strong>Data Apagado:</strong> ${reg.data_apagado}</p>
+                <p><strong>Justificativa:</strong> ${reg.justificativa}</p>
+                <p><strong>Cliente:</strong> ${cliente ? cliente.nome : 'Cliente Desconhecido'}</p>
+                <p><strong>Itens:</strong> Cascos: ${dados.qtd_casco}, Caixas: ${dados.qtd_caixa}</p>
+                <p><strong>Data Original:</strong> ${dados.data_emprestimo}</p>
             </div>
         `;
     });
@@ -447,19 +500,16 @@ window.atualizarEstoque = async (itemId) => {
             body: JSON.stringify({ quantidade })
         });
         if (!response.ok) throw new Error('Falha ao atualizar estoque.');
-        // Atualiza o valor localmente para feedback imediato
         const itemEstoque = estoque.find(i => i.id === itemId);
         if (itemEstoque) itemEstoque.quantidade = quantidade;
     } catch (error) {
         alert(error.message);
-        carregarDadosIniciais(); // Recarrega para reverter
+        carregarDadosIniciais();
     }
 };
 
 
 // ======= MODAIS, EMPRÉSTIMOS E DEVOLUÇÕES =======
-// (Lógica interna dos modais, empréstimos, devoluções, etc. continua aqui)
-// ...
 window.abrirModal = (modalId, id) => {
     if (modalId === 'modalHistoricoCliente') {
         clienteAtualParaHistorico = clientes.find(c => c.id === id);
@@ -479,6 +529,9 @@ window.abrirModal = (modalId, id) => {
 
         if(cascosPendentes > 0) container.innerHTML += `<div><label>Devolver Cascos (${registro.marca_casco} ${registro.tamanho_casco}):</label><input type="number" id="qtdCascoDevolver" value="0" min="0" max="${cascosPendentes}"></div>`;
         if(caixasPendentes > 0) container.innerHTML += `<div><label>Devolver Caixas (${registro.tipo_caixa}):</label><input type="number" id="qtdCaixaDevolver" value="0" min="0" max="${caixasPendentes}"></div>`;
+    }
+    if (modalId === 'modalApagarRegistro') {
+        registroParaApagarId = id;
     }
     document.getElementById(modalId).style.display = 'block';
 };
@@ -535,6 +588,30 @@ document.getElementById('formDevolucao').addEventListener('submit', async e => {
     }
 });
 
+document.getElementById('formApagar').addEventListener('submit', async e => {
+    e.preventDefault();
+    const justificativa = document.getElementById('justificativaApagar').value.trim();
+    if (!justificativa) return alert('A justificativa é obrigatória.');
+
+    try {
+        const response = await fetch(`${API_URL}/historico/${registroParaApagarId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ justificativa })
+        });
+        if (!response.ok) throw new Error((await response.json()).error || 'Falha ao apagar registo.');
+        
+        fecharModal('modalApagarRegistro');
+        document.getElementById('formApagar').reset();
+        await carregarDadosIniciais();
+        renderHistoricoCliente(clienteAtualParaHistorico.id);
+
+    } catch (error) {
+        alert(`Erro: ${error.message}`);
+    }
+});
+
+
 const renderHistoricoCliente = (clienteId) => {
     const lista = document.getElementById('listaHistoricoCliente');
     lista.innerHTML = '';
@@ -565,6 +642,7 @@ const renderHistoricoCliente = (clienteId) => {
             <div class="botoes">
                 ${totalPendente > 0 ? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>` : ''}
                 <button class="imprimir-recibo" onclick="imprimirRecibo(${h.id})">Imprimir Recibo</button>
+                <button class="apagar" onclick="abrirModal('modalApagarRegistro', ${h.id})">Apagar</button>
             </div>
         `;
         lista.appendChild(div);
@@ -583,7 +661,7 @@ document.getElementById('btnNotificarWhatsapp').addEventListener('click', () => 
     historico
         .filter(h => h.cliente_id === clienteAtualParaHistorico.id)
         .forEach(h => {
-            const dataEmprestimo = new Date(h.data_emprestimo.split(', ')[0].split('/').reverse().join('-') + 'T' + h.data_emprestimo.split(', ')[1]);
+            const dataEmprestimo = new Date(h.data_emprestimo.split(', ')[0].split('/').reverse().join('-'));
             const diffDias = Math.floor((agora - dataEmprestimo) / (1000 * 60 * 60 * 24));
 
             if (diffDias >= diasAtraso) {
@@ -605,8 +683,6 @@ document.getElementById('btnNotificarWhatsapp').addEventListener('click', () => 
 
 
 // ======= IMPRESSÃO =======
-// (A lógica de impressão permanece a mesma)
-// ...
 function printHelper(printContents, title, isReceipt = false) {
     const printWindow = window.open('', '_blank');
     let styles = `body { font-family: Arial, sans-serif; } h1, h2, h3 { text-align: center; margin: 5px 0; } p { margin: 2px 0; } ul { list-style-position: inside; padding-left: 0; } .relatorio-pronto { width: 100%; } .relatorio-pronto .item-relatorio { border-bottom: 1px dashed #666; padding: 10px 0; page-break-inside: avoid; }`;

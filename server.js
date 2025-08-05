@@ -1,4 +1,4 @@
-// server.js - Versão 2.0 com Gestão de Inventário e Melhorias
+// server.js - Versão 3.0 com Gestão de Inventário e Registos Apagados
 
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
@@ -28,9 +28,18 @@ const db = new sqlite3.Database(dbFile, (err) => {
     console.log(`Conectado ao banco de dados SQLite em: ${dbFile}`);
 });
 
-// --- ESTRUTURA DO BANCO DE DADOS (COM NOVAS TABELAS E CAMPOS) ---
+// --- ESTRUTURA DO BANCO DE DADOS (COM CORREÇÕES E NOVAS TABELAS) ---
 db.serialize(() => {
-    // Tabela de clientes agora tem um campo de telefone
+    // Garante que a tabela de clientes tem a coluna telefone
+    db.run(`ALTER TABLE clientes ADD COLUMN telefone TEXT`, (err) => {
+        if (err && !err.message.includes('duplicate column name')) {
+            console.error("Erro ao adicionar coluna 'telefone':", err.message);
+        } else {
+            console.log("Coluna 'telefone' verificada/adicionada em clientes.");
+        }
+    });
+
+    // Tabela de clientes (sem alterações na estrutura base)
     db.run(`
         CREATE TABLE IF NOT EXISTS clientes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,12 +73,21 @@ db.serialize(() => {
             qtd_caixa_devolvido INTEGER DEFAULT 0
         )`);
 
-    // NOVA: Tabela de Inventário (Estoque)
+    // Tabela de Inventário (Estoque)
     db.run(`
         CREATE TABLE IF NOT EXISTS estoque (
             id TEXT PRIMARY KEY,
             nome TEXT NOT NULL,
             quantidade INTEGER NOT NULL
+        )`);
+        
+    // NOVA: Tabela para registar empréstimos apagados
+    db.run(`
+        CREATE TABLE IF NOT EXISTS registros_apagados (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dados_originais TEXT NOT NULL,
+            justificativa TEXT NOT NULL,
+            data_apagado TEXT NOT NULL
         )`);
 
     // Inicializa o inventário se estiver vazio
@@ -258,7 +276,58 @@ app.post('/api/historico/devolver/:id', (req, res) => {
     });
 });
 
-// === NOVAS ROTAS PARA ESTOQUE ===
+// NOVA: Rota para apagar um registo de histórico
+app.delete('/api/historico/:id', (req, res) => {
+    const { id } = req.params;
+    const { justificativa } = req.body;
+
+    if (!justificativa) {
+        return res.status(400).json({ error: 'A justificativa é obrigatória.' });
+    }
+
+    db.get('SELECT * FROM historico WHERE id = ?', [id], (err, registro) => {
+        if (err || !registro) return res.status(404).json({ error: 'Registo não encontrado' });
+
+        // 1. Devolve os itens pendentes ao estoque
+        const cascosPendentes = (registro.qtd_casco || 0) - (registro.qtd_casco_devolvido || 0);
+        const caixasPendentes = (registro.qtd_caixa || 0) - (registro.qtd_caixa_devolvido || 0);
+
+        if (cascosPendentes > 0) {
+            const itemId = getItemDeEstoqueId('casco', registro.marca_casco);
+            atualizarEstoque(itemId, cascosPendentes);
+        }
+        if (caixasPendentes > 0) {
+            const itemId = getItemDeEstoqueId('caixa', registro.tipo_caixa);
+            atualizarEstoque(itemId, caixasPendentes);
+        }
+
+        // 2. Guarda o registo na tabela de apagados
+        const dadosOriginais = JSON.stringify(registro);
+        const dataApagado = new Date().toLocaleString('pt-BR');
+        const sqlInsertApagado = 'INSERT INTO registros_apagados (dados_originais, justificativa, data_apagado) VALUES (?, ?, ?)';
+        
+        db.run(sqlInsertApagado, [dadosOriginais, justificativa, dataApagado], (err) => {
+            if (err) return res.status(500).json({ error: 'Erro ao arquivar o registo apagado.' });
+
+            // 3. Apaga o registo original
+            db.run('DELETE FROM historico WHERE id = ?', [id], function(err) {
+                if (err) return res.status(500).json({ error: 'Erro ao apagar o registo original.' });
+                res.json({ message: 'Registo apagado e arquivado com sucesso.' });
+            });
+        });
+    });
+});
+
+// NOVA: Rota para obter os registos apagados
+app.get('/api/registros-apagados', (req, res) => {
+    db.all('SELECT * FROM registros_apagados ORDER BY id DESC', [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+
+// === ROTAS PARA ESTOQUE ===
 
 // Obter o estado atual do estoque
 app.get('/api/estoque', (req, res) => {
