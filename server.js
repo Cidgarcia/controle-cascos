@@ -1,4 +1,4 @@
-// server.js - Versão 3.0 com Gestão de Inventário e Registos Apagados
+// server.js - Versão 4.0 com Relatórios e Melhorias de UI
 
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
@@ -28,18 +28,9 @@ const db = new sqlite3.Database(dbFile, (err) => {
     console.log(`Conectado ao banco de dados SQLite em: ${dbFile}`);
 });
 
-// --- ESTRUTURA DO BANCO DE DADOS (COM CORREÇÕES E NOVAS TABELAS) ---
+// --- ESTRUTURA DO BANCO DE DADOS ---
 db.serialize(() => {
-    // Garante que a tabela de clientes tem a coluna telefone
-    db.run(`ALTER TABLE clientes ADD COLUMN telefone TEXT`, (err) => {
-        if (err && !err.message.includes('duplicate column name')) {
-            console.error("Erro ao adicionar coluna 'telefone':", err.message);
-        } else {
-            console.log("Coluna 'telefone' verificada/adicionada em clientes.");
-        }
-    });
-
-    // Tabela de clientes (sem alterações na estrutura base)
+    db.run(`ALTER TABLE clientes ADD COLUMN telefone TEXT`, () => {});
     db.run(`
         CREATE TABLE IF NOT EXISTS clientes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,16 +40,12 @@ db.serialize(() => {
             numero TEXT NOT NULL,
             telefone TEXT
         )`);
-
-    // Tabela de usuários (sem alterações)
     db.run(`
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT UNIQUE NOT NULL,
             senha TEXT NOT NULL
         )`);
-
-    // Tabela de histórico (sem alterações)
     db.run(`
         CREATE TABLE IF NOT EXISTS historico (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,16 +59,12 @@ db.serialize(() => {
             qtd_caixa INTEGER DEFAULT 0,
             qtd_caixa_devolvido INTEGER DEFAULT 0
         )`);
-
-    // Tabela de Inventário (Estoque)
     db.run(`
         CREATE TABLE IF NOT EXISTS estoque (
             id TEXT PRIMARY KEY,
             nome TEXT NOT NULL,
             quantidade INTEGER NOT NULL
         )`);
-        
-    // NOVA: Tabela para registar empréstimos apagados
     db.run(`
         CREATE TABLE IF NOT EXISTS registros_apagados (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -90,7 +73,6 @@ db.serialize(() => {
             data_apagado TEXT NOT NULL
         )`);
 
-    // Inicializa o inventário se estiver vazio
     const itensEstoque = [
         { id: 'vasilhame_ambev', nome: 'Vasilhame AMBEV (Brahma/Skol/Original/Bohemia)' },
         { id: 'vasilhame_brasilkirin', nome: 'Vasilhame BRASIL KIRIN (Devassa/Amstel)' },
@@ -105,7 +87,6 @@ db.serialize(() => {
         { id: 'caixa_ambev_1l', nome: 'Caixa Ambev 1L' },
         { id: 'caixa_heineken_600ml', nome: 'Caixa Heineken 600ml' }
     ];
-
     itensEstoque.forEach(item => {
         db.run('INSERT OR IGNORE INTO estoque (id, nome, quantidade) VALUES (?, ?, 0)', [item.id, item.nome]);
     });
@@ -140,7 +121,7 @@ const atualizarEstoque = (itemId, quantidade) => {
 
 // --- ROTAS DA API ---
 
-// Rota de Login (sem alterações)
+// Rota de Login
 app.post('/api/login', (req, res) => {
     const { usuario, senha } = req.body;
     const sql = "SELECT * FROM usuarios WHERE nome = ?";
@@ -153,9 +134,9 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// === ROTAS PARA CLIENTES (ATUALIZADAS) ===
+// === ROTAS PARA CLIENTES ===
 
-// Obter todos os clientes (agora calcula a dívida de cada um)
+// Obter todos os clientes (com cálculo de dívida)
 app.get('/api/clientes', (req, res) => {
     const sqlClientes = "SELECT * FROM clientes";
     const sqlHistorico = "SELECT cliente_id, qtd_casco, qtd_casco_devolvido, qtd_caixa, qtd_caixa_devolvido FROM historico";
@@ -181,7 +162,7 @@ app.get('/api/clientes', (req, res) => {
 });
 
 
-// Cadastrar novo cliente (agora inclui telefone)
+// Cadastrar novo cliente
 app.post('/api/clientes', (req, res) => {
     const { nome, tipo, endereco, numero, telefone } = req.body;
     const sql = 'INSERT INTO clientes (nome, tipo, endereco, numero, telefone) VALUES (?, ?, ?, ?, ?)';
@@ -191,7 +172,7 @@ app.post('/api/clientes', (req, res) => {
     });
 });
 
-// Editar cliente (agora inclui telefone)
+// Editar cliente
 app.put('/api/clientes/:id', (req, res) => {
     const { id } = req.params;
     const { nome, tipo, endereco, numero, telefone } = req.body;
@@ -202,9 +183,9 @@ app.put('/api/clientes/:id', (req, res) => {
     });
 });
 
-// === ROTAS PARA HISTÓRICO (ATUALIZADAS PARA CONTROLAR ESTOQUE) ===
+// === ROTAS PARA HISTÓRICO ===
 
-// Obter todo o histórico (sem alterações)
+// Obter todo o histórico
 app.get('/api/historico', (req, res) => {
     const sql = `
         SELECT h.*, c.nome as cliente_nome, c.endereco as cliente_endereco, c.numero as cliente_numero
@@ -218,11 +199,26 @@ app.get('/api/historico', (req, res) => {
     });
 });
 
-// Registrar novo empréstimo (agora diminui o estoque)
+// NOVA ROTA: Obter histórico de hoje
+app.get('/api/historico/hoje', (req, res) => {
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const sql = `
+        SELECT h.*, c.nome as cliente_nome
+        FROM historico h
+        JOIN clientes c ON h.cliente_id = c.id
+        WHERE SUBSTR(h.data_emprestimo, 1, 10) = ?
+        ORDER BY h.data_emprestimo DESC
+    `;
+    db.all(sql, [hoje], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Registrar novo empréstimo
 app.post('/api/historico', (req, res) => {
-    const { cliente_id, marcaCasco, tamanhoCasco, qtdCasco, tipoCaixa, qtdCaixa, dataEmprestimo } = req.body;
+    const { cliente_id, marcaCasco, tamanhoCasco, qtdCasco, tipoCaixa, qtdCaixa } = req.body;
     
-    // Diminui do estoque
     if (qtdCasco > 0) {
         const itemId = getItemDeEstoqueId('casco', marcaCasco);
         atualizarEstoque(itemId, -qtdCasco);
@@ -232,7 +228,7 @@ app.post('/api/historico', (req, res) => {
         atualizarEstoque(itemId, -qtdCaixa);
     }
 
-    const data = dataEmprestimo ? new Date(dataEmprestimo).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
+    const data = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     const sql = `
         INSERT INTO historico (cliente_id, marca_casco, tamanho_casco, qtd_casco, tipo_caixa, qtd_caixa, data_emprestimo)
         VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -245,12 +241,11 @@ app.post('/api/historico', (req, res) => {
     });
 });
 
-// Realizar devolução (agora aumenta o estoque)
+// Realizar devolução
 app.post('/api/historico/devolver/:id', (req, res) => {
     const { id } = req.params;
     const { qtdCascoDev, qtdCaixaDev } = req.body;
 
-    // Aumenta o estoque antes de registar a devolução
     db.get('SELECT * FROM historico WHERE id = ?', [id], (err, registro) => {
         if (err || !registro) return res.status(404).json({ error: 'Registo não encontrado' });
         
@@ -276,7 +271,7 @@ app.post('/api/historico/devolver/:id', (req, res) => {
     });
 });
 
-// NOVA: Rota para apagar um registo de histórico
+// Rota para apagar um registo de histórico
 app.delete('/api/historico/:id', (req, res) => {
     const { id } = req.params;
     const { justificativa } = req.body;
@@ -288,7 +283,6 @@ app.delete('/api/historico/:id', (req, res) => {
     db.get('SELECT * FROM historico WHERE id = ?', [id], (err, registro) => {
         if (err || !registro) return res.status(404).json({ error: 'Registo não encontrado' });
 
-        // 1. Devolve os itens pendentes ao estoque
         const cascosPendentes = (registro.qtd_casco || 0) - (registro.qtd_casco_devolvido || 0);
         const caixasPendentes = (registro.qtd_caixa || 0) - (registro.qtd_caixa_devolvido || 0);
 
@@ -301,15 +295,13 @@ app.delete('/api/historico/:id', (req, res) => {
             atualizarEstoque(itemId, caixasPendentes);
         }
 
-        // 2. Guarda o registo na tabela de apagados
         const dadosOriginais = JSON.stringify(registro);
-        const dataApagado = new Date().toLocaleString('pt-BR');
+        const dataApagado = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
         const sqlInsertApagado = 'INSERT INTO registros_apagados (dados_originais, justificativa, data_apagado) VALUES (?, ?, ?)';
         
         db.run(sqlInsertApagado, [dadosOriginais, justificativa, dataApagado], (err) => {
             if (err) return res.status(500).json({ error: 'Erro ao arquivar o registo apagado.' });
 
-            // 3. Apaga o registo original
             db.run('DELETE FROM historico WHERE id = ?', [id], function(err) {
                 if (err) return res.status(500).json({ error: 'Erro ao apagar o registo original.' });
                 res.json({ message: 'Registo apagado e arquivado com sucesso.' });
@@ -318,7 +310,7 @@ app.delete('/api/historico/:id', (req, res) => {
     });
 });
 
-// NOVA: Rota para obter os registos apagados
+// Rota para obter os registos apagados
 app.get('/api/registros-apagados', (req, res) => {
     db.all('SELECT * FROM registros_apagados ORDER BY id DESC', [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -352,7 +344,6 @@ app.post('/api/estoque/:id', (req, res) => {
 app.listen(port, () => {
     console.log(`Servidor a funcionar na porta ${port}`);
 
-    // Script para criar o utilizador inicial, se não existir
     const initialUser = 'junior';
     const initialPass = 'garcia2017';
 
