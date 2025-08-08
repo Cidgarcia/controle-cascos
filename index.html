@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -79,11 +80,12 @@ button.whatsapp { background: #25D366; }
 </head>
 <body>
 
+
 <div class="container">
     <div id="loginScreen">
         <div class="box">
-            <!-- LOGO CORRIGIDO -->
-            <img src="https://i.imgur.com/5v2e2s1.png" alt="Logo Distribuidora Garcia">
+            <img src="logo.png" alt="Logo Distribuidora Garcia" alt="Logo Distribuidora Garcia">
+
             <h1>Login</h1>
             <form id="formLogin">
                 <label for="loginUsuario">Utilizador:</label>
@@ -98,8 +100,7 @@ button.whatsapp { background: #25D366; }
 
     <div id="app" style="display:none;">
         <div class="header">
-            <!-- LOGO CORRIGIDO -->
-            <img src="https://i.imgur.com/5v2e2s1.png" alt="Logo Distribuidora Garcia">
+            <img src="logo.png" alt="Logo Distribuidora Garcia" alt="Logo Distribuidora Garcia">
         </div>
         <div class="tabs">
             <button id="tabHome" class="active">Home</button>
@@ -110,7 +111,6 @@ button.whatsapp { background: #25D366; }
             <button id="tabApagados">Registos Apagados</button>
         </div>
 
-        <!-- ECRÃ HOME -->
         <div id="conteudoHome">
             <div class="box">
                 <h2>Relatórios e Extratos</h2>
@@ -125,7 +125,6 @@ button.whatsapp { background: #25D366; }
             </div>
         </div>
 
-        <!-- ECRÃS DE LISTA DE CLIENTES -->
         <div id="conteudoFisicos" style="display:none;">
             <div class="box">
                 <h2>Clientes Físicos</h2>
@@ -141,7 +140,6 @@ button.whatsapp { background: #25D366; }
             </div>
         </div>
         
-        <!-- ECRÃ ADICIONAR CLIENTE -->
         <div id="conteudoAdicionarCliente" style="display:none;">
             <form id="formCliente" class="box">
                 <h2 id="formClienteTitulo">Registar Novo Cliente</h2>
@@ -159,7 +157,6 @@ button.whatsapp { background: #25D366; }
             </form>
         </div>
 
-        <!-- ECRÃ ESTOQUE -->
         <div id="conteudoEstoque" style="display:none;">
             <div class="box">
                 <h2>Gestão de Estoque</h2>
@@ -168,7 +165,6 @@ button.whatsapp { background: #25D366; }
             </div>
         </div>
 
-        <!-- ECRÃ REGISTOS APAGADOS -->
         <div id="conteudoApagados" style="display:none;">
             <div class="box">
                 <h2>Registos de Empréstimo Apagados</h2>
@@ -178,7 +174,6 @@ button.whatsapp { background: #25D366; }
     </div>
 </div>
 
-<!-- MODAIS -->
 <div id="modalHistoricoCliente" class="modal">
     <div class="modal-content">
         <span class="close-button" onclick="fecharModal('modalHistoricoCliente')">&times;</span>
@@ -243,8 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
 const OPCOES_MARCA_CASCO = ["Nenhuma", "Brahma", "Skol", "Bohemia", "Original", "Devassa", "Amstel", "Itaipava", "Heineken", "Stella", "Coca Cola"];
 const OPCOES_TAMANHO_CASCO = ["Nenhum", "300ml", "600ml", "1L"];
 const OPCOES_TIPO_CAIXA = ["Nenhuma", "Ambev Azul", "Brasil Kirin Amarela", "Itaipava Vermelha", "Coca Cola LS 1L", "Ambev 1L Caixa", "Heineken 600ml"];
-// LOGO CORRIGIDO
-const LOGO_URL = 'https://i.imgur.com/5v2e2s1.png';
 
 // ======= VARIÁVEIS GLOBAIS =======
 const API_URL = '/api';
@@ -289,12 +282,12 @@ const carregarDadosIniciais = async () => {
     }
 };
 
-const inicializarFormularios = () => {
+const inicializarApp = () => {
     popularSelect('marcaCasco', OPCOES_MARCA_CASCO);
     popularSelect('tamanhoCasco', OPCOES_TAMANHO_CASCO);
     popularSelect('tipoCaixa', OPCOES_TIPO_CAIXA);
 };
-inicializarFormularios();
+inicializarApp();
 
 // --- LÓGICA DE LOGIN ---
 document.getElementById('formLogin').addEventListener('submit', async e => {
@@ -668,7 +661,6 @@ document.getElementById('btnNotificarWhatsapp').addEventListener('click', () => 
     window.open(urlWhatsapp, '_blank');
 });
 
-
 // ======= IMPRESSÃO =======
 function printHelper(printContents, title, isReceipt = false) {
     const printWindow = window.open('', '_blank');
@@ -686,82 +678,107 @@ function printHelper(printContents, title, isReceipt = false) {
     if (isReceipt) {
         styles += `
             @page { size: 80mm; margin: 2mm; } 
-            body { 
-                font-family: 'Courier New', Courier, monospace; 
-                width: 80mm; 
-                font-size: 10pt; 
-                font-weight: bold; /* APLICA NEGRIto A TUDO */
-            } 
-            .itens { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; margin: 10px 0; } 
-            .footer { text-align: center; margin-top: 15px; }
-            .logo-print { max-width: 60mm; display: block; margin: 0 auto 10px; }
+            body { font-size: 10pt; }
+            h1 { font-size: 14pt; }
+            h2 { font-size: 12pt; }
         `;
+    } else {
+         styles += `@media print { @page { size: A4; margin: 20mm; } }`;
     }
-    const logoHtml = isReceipt ? `<img src="${LOGO_URL}" class="logo-print" alt="Logo">` : '';
-    printWindow.document.write(`<html><head><title>${title}</title><style>${styles}</style></head><body>${logoHtml}${printContents}</body></html>`);
+
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>${title}</title>
+                <style>${styles}</style>
+            </head>
+            <body>
+                <h1>Distribuidora Garcia</h1>
+                <h2>${title}</h2>
+                <p>Data: ${new Date().toLocaleString('pt-BR')}</p>
+                <hr>
+                ${printContents}
+            </body>
+        </html>
+    `);
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
 }
+
 window.imprimirRecibo = (historicoId) => {
     const registro = historico.find(h => h.id === historicoId);
     const cliente = clientes.find(c => c.id === registro.cliente_id);
-    let itensHtml = '';
-    if (registro.qtd_casco > 0) itensHtml += `<p>${registro.qtd_casco}x Casco ${registro.marca_casco} ${registro.tamanho_casco}</p>`;
-    if (registro.qtd_caixa > 0) itensHtml += `<p>${registro.qtd_caixa}x Caixa ${registro.tipo_caixa}</p>`;
-    const htmlRecibo = `<div><h3>Recibo de Empréstimo</h3><p>--------------------------------</p><p><strong>Data:</strong> ${registro.data_emprestimo}</p><p><strong>Cliente:</strong> ${cliente.nome}</p><div class="itens">${itensHtml}</div><p class="footer">Obrigado pela preferência!</p></div>`;
-    printHelper(htmlRecibo, 'Recibo de Empréstimo', true);
+    if (!registro || !cliente) return;
+    
+    let conteudo = `
+        <h3>Recibo de Empréstimo</h3>
+        <p><strong>Cliente:</strong> ${cliente.nome}</p>
+        <p><strong>Data do Empréstimo:</strong> ${registro.data_emprestimo}</p>
+        <br>
+        <h4>Itens Emprestados:</h4>
+        <ul>
+    `;
+    if(registro.qtd_casco > 0) conteudo += `<li>${registro.qtd_casco} x Casco ${registro.marca_casco} ${registro.tamanho_casco}</li>`;
+    if(registro.qtd_caixa > 0) conteudo += `<li>${registro.qtd_caixa} x Caixa ${registro.tipo_caixa}</li>`;
+    conteudo += `</ul><br><p><strong>Assinatura do Cliente:</strong></p><br><p>___________________________</p>`;
+
+    printHelper(conteudo, 'Recibo de Empréstimo', true);
 };
 
 document.getElementById('btnImprimirResumoDiario').addEventListener('click', () => {
-    let conteudo = `<h2>Resumo do Dia</h2><p>${new Date().toLocaleDateString('pt-BR')}</p><p>--------------------------------</p>`;
-    if (historicoHoje.length === 0) {
+    let conteudo = '<h3>Empréstimos Realizados Hoje</h3>';
+    if(historicoHoje.length === 0) {
         conteudo += '<p>Nenhum empréstimo hoje.</p>';
     } else {
         historicoHoje.forEach(h => {
-            conteudo += `<p><strong>Cliente:</strong> ${h.cliente_nome}</p>`;
-            if (h.qtd_casco > 0) conteudo += `<p>- ${h.qtd_casco}x Casco ${h.marca_casco}</p>`;
-            if (h.qtd_caixa > 0) conteudo += `<p>- ${h.qtd_caixa}x Caixa ${h.tipo_caixa}</p>`;
-            conteudo += `<p><small>${h.data_emprestimo.split(', ')[1]}</small></p><p>---</p>`;
+            conteudo += `
+                <div class="item-relatorio">
+                    <p><strong>Cliente:</strong> ${h.cliente_nome}</p>
+                    <p><strong>Itens:</strong> ${h.qtd_casco > 0 ? h.qtd_casco + ' Casco(s) ' + h.marca_casco : ''} ${h.qtd_caixa > 0 ? h.qtd_caixa + ' Caixa(s) ' + h.tipo_caixa : ''}</p>
+                    <p><strong>Horário:</strong> ${h.data_emprestimo.split(', ')[1]}</p>
+                </div>`;
         });
     }
-    printHelper(conteudo, 'Resumo do Dia', true);
+    printHelper(conteudo, 'Resumo do Dia');
 });
 
 document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click', () => {
-    const pendencias = {};
-    historico.forEach(h => {
-        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-        if (cascosPendentes > 0) {
-            const key = `Casco ${h.marca_casco} ${h.tamanho_casco}`;
-            pendencias[key] = (pendencias[key] || 0) + cascosPendentes;
-        }
-        if (caixasPendentes > 0) {
-            const key = `Caixa ${h.tipo_caixa}`;
-            pendencias[key] = (pendencias[key] || 0) + caixasPendentes;
-        }
+    let conteudo = '<div class="relatorio-pronto">';
+    const clientesComDivida = clientes.filter(c => c.dividaTotal > 0).sort((a, b) => a.nome.localeCompare(b.nome));
+
+    clientesComDivida.forEach(c => {
+        conteudo += `<div class="item-relatorio"><h3>Cliente: ${c.nome}</h3>`;
+        const registrosCliente = historico.filter(h => h.cliente_id === c.id);
+        registrosCliente.forEach(r => {
+            const cascosPendentes = (r.qtd_casco || 0) - (r.qtd_casco_devolvido || 0);
+            const caixasPendentes = (r.qtd_caixa || 0) - (r.qtd_caixa_devolvido || 0);
+            if(cascosPendentes > 0 || caixasPendentes > 0) {
+                conteudo += `<p><small>${r.data_emprestimo}:</small> `;
+                if(cascosPendentes > 0) conteudo += `${cascosPendentes} casco(s) (${r.marca_casco}), `;
+                if(caixasPendentes > 0) conteudo += `${caixasPendentes} caixa(s) (${r.tipo_caixa})`;
+                conteudo += `</p>`;
+            }
+        });
+        conteudo += `</div>`;
     });
-    let conteudo = `<h2>Extrato Geral de Empréstimos</h2><p>${new Date().toLocaleDateString('pt-BR')}</p><p>--------------------------------</p>`;
-    if (Object.keys(pendencias).length === 0) {
-        conteudo += '<p>Nenhuma pendência encontrada.</p>';
-    } else {
-        for (const [item, qtd] of Object.entries(pendencias)) {
-            conteudo += `<p>${qtd}x ${item}</p>`;
-        }
-    }
-    printHelper(conteudo, 'Extrato Geral de Empréstimos', true);
+    conteudo += '</div>';
+    printHelper(conteudo, 'Extrato Geral de Empréstimos');
 });
 
 document.getElementById('btnImprimirExtratoEstoque').addEventListener('click', () => {
-    let conteudo = `<h2>Extrato de Estoque</h2><p>${new Date().toLocaleDateString('pt-BR')}</p><p>--------------------------------</p>`;
-    estoque.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(item => {
-        conteudo += `<p>${item.quantidade}x ${item.nome}</p>`;
+    let conteudo = '<ul>';
+    estoque.forEach(item => {
+        conteudo += `<li><strong>${item.nome}:</strong> ${item.quantidade}</li>`;
     });
-    printHelper(conteudo, 'Extrato de Estoque', true);
+    conteudo += '</ul>';
+    printHelper(conteudo, 'Extrato de Estoque');
 });
 
-});
+}); // Fim do addEventListener 'DOMContentLoaded'
 </script>
+
+
+
 </body>
 </html>
