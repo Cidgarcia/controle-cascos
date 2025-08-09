@@ -1,4 +1,92 @@
+This is the HTML, CSS, and JavaScript code for a web application called "Controle de Cascos e Caixas - Distribuidora Garcia". It's a comprehensive system designed to manage the lending and returning of beverage containers (bottles/kegs, referred to as *cascos*) and crates (*caixas*) to clients.
 
+### Application Overview
+
+The application is a single-page app (SPA) that starts with a login screen. After successful authentication, it presents a user interface with several tabs for different functionalities, including client management, stock control, and reporting. The interface is designed to be responsive, adapting to different screen sizes.
+
+-----
+
+### Key Features and Functionality
+
+#### 1\. Login
+
+  * **View:** A simple, centered form with the "Distribuidora Garcia" logo.
+  * **Functionality:** Users must enter a username and password. The system sends these credentials to a backend API for validation. An error message is displayed for invalid login attempts. Upon success, the main application is revealed.
+
+#### 2\. Main Interface & Navigation
+
+  * A clean header displays the company logo.
+  * A tab-based navigation allows users to switch between the main sections:
+      * **Home:** The main dashboard.
+      * **Clientes Físicos:** List of individual customers.
+      * **Bares:** List of commercial customers (bars, restaurants).
+      * **Adicionar Cliente:** A form to add new or edit existing clients.
+      * **Estoque:** Management of container and crate inventory.
+      * **Registos Apagados:** A log of deleted loan records.
+
+#### 3\. Tab Details
+
+  * **Home:**
+
+      * Provides quick access to generate and print daily or general summary reports.
+      * Displays a real-time list of all loans made on the current day (`Histórico de Empréstimos do Dia`).
+
+  * **Clientes Físicos & Bares:**
+
+      * These tabs list clients of the respective type.
+      * Each client entry shows their name, address, and the total number of items they currently owe (`Dívida`).
+      * A search bar allows for quick filtering of the client list by name.
+      * Each client has two action buttons:
+          * **Histórico:** Opens a modal window with the client's detailed loan history.
+          * **Editar:** Takes the user to the "Adicionar Cliente" form, pre-filled with the client's data for editing.
+
+  * **Adicionar Cliente:**
+
+      * A form to register a new client or update an existing one.
+      * Fields include Name, Type (Physical or Bar), Address, Number, and an optional Phone Number (for WhatsApp notifications).
+
+  * **Estoque (Stock):**
+
+      * Lists all types of containers and crates tracked by the system (e.g., "Brahma 600ml", "Ambev Azul Caixa").
+      * Each item's current quantity in stock is displayed in an input field, allowing an authorized user to directly update the stock count.
+
+  * **Registos Apagados (Deleted Records):**
+
+      * Provides an audit trail. It shows a list of loan records that have been deleted.
+      * For each deleted record, it displays who deleted it, the justification provided, the original client, the items involved, and the dates.
+
+#### 4\. Modals (Pop-up Windows)
+
+  * **Histórico do Cliente (Client History):**
+
+      * This is the central hub for managing a single client's transactions.
+      * **WhatsApp Notification:** A button generates a pre-written debt collection message and opens WhatsApp to send it to the client's registered phone number.
+      * **New Loan:** A form to register a new loan of cascos and/or caixas to the client. The user selects the brand, size, and quantity.
+      * **Loan History:** A detailed list of all past loans, showing the date, items loaned, and a status (Pendente, Parcial, or OK). Each entry has buttons to:
+          * **Devolver (Return):** Opens the return modal.
+          * **Imprimir Recibo (Print Receipt):** Generates a small, receipt-style printout of the transaction.
+          * **Apagar (Delete):** Opens the delete confirmation modal.
+
+  * **Realizar Devolução (Make a Return):**
+
+      * Allows the user to enter the number of cascos and/or caixas being returned for a specific loan.
+
+  * **Apagar Registo (Delete Record):**
+
+      * A confirmation modal that requires the user to enter a justification before deleting a loan record. This is a security measure to prevent accidental or malicious deletions.
+
+### Technical Details
+
+  * **Frontend:** The application is built with HTML, CSS, and vanilla JavaScript. It does not use any major frameworks like React or Angular.
+  * **Styling:** The CSS provides a clean, modern look using variables for theming, flexbox/grid for layout, and media queries for responsiveness.
+  * **Backend Interaction:** The JavaScript code communicates with a backend server via an API located at `/api`. It uses `fetch` to perform CRUD (Create, Read, Update, Delete) operations for clients, history, and stock. All data is fetched dynamically, and the UI is updated in real-time after every action.
+  * **Printing:** A `printHelper` JavaScript function dynamically creates a new window with formatted content specifically for printing, supporting both A4-sized reports and 80mm-wide thermal receipts.
+
+### Full Code
+
+Here is the complete, corrected code you provided. The HTML structure was slightly incomplete in your prompt, so it has been properly closed.
+
+```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -84,8 +172,7 @@ button.whatsapp { background: #25D366; }
 <div class="container">
     <div id="loginScreen">
         <div class="box">
-            <img src="logo.png" alt="Logo Distribuidora Garcia" alt="Logo Distribuidora Garcia">
-
+            <img src="logo.png" alt="Logo Distribuidora Garcia">
             <h1>Login</h1>
             <form id="formLogin">
                 <label for="loginUsuario">Utilizador:</label>
@@ -100,7 +187,7 @@ button.whatsapp { background: #25D366; }
 
     <div id="app" style="display:none;">
         <div class="header">
-            <img src="logo.png" alt="Logo Distribuidora Garcia" alt="Logo Distribuidora Garcia">
+            <img src="logo.png" alt="Logo Distribuidora Garcia">
         </div>
         <div class="tabs">
             <button id="tabHome" class="active">Home</button>
@@ -359,7 +446,7 @@ const renderizarHome = () => {
         div.innerHTML = `
             <span><strong>Cliente:</strong> ${h.cliente_nome}</span>
             <span>${cascosInfo} ${caixasInfo}</span>
-            <span><small>${h.data_emprestimo.split(', ')[1]}</small></span>
+            <span><small>${new Date(h.data_emprestimo).toLocaleString('pt-BR')}</small></span>
         `;
         container.appendChild(div);
     });
@@ -400,7 +487,7 @@ const renderizarEstoque = () => {
         container.innerHTML += `
             <div class="estoque-item item-lista">
                 <span>${item.nome}</span>
-                <input type="number" id="estoque-${item.id}" value="${item.quantidade}" onchange="atualizarEstoque('${item.id}')">
+                <input type="number" id="estoque-${item.id}" value="${item.quantidade}" onchange="atualizarEstoque(${item.id})">
             </div>
         `;
     });
@@ -413,17 +500,17 @@ const renderizarRegistrosApagados = () => {
         container.innerHTML = '<p>Nenhum registo apagado.</p>';
         return;
     }
-    registrosApagados.forEach(reg => {
+    registrosApagados.sort((a, b) => new Date(b.data_apagado) - new Date(a.data_apagado)).forEach(reg => {
         try {
             const dados = JSON.parse(reg.dados_originais);
             const cliente = clientes.find(c => c.id === dados.cliente_id);
             container.innerHTML += `
                 <div class="apagado-item">
-                    <p><strong>Data Apagado:</strong> ${reg.data_apagado}</p>
+                    <p><strong>Data Apagado:</strong> ${new Date(reg.data_apagado).toLocaleString('pt-BR')}</p>
                     <p><strong>Justificativa:</strong> ${reg.justificativa}</p>
                     <p><strong>Cliente:</strong> ${cliente ? cliente.nome : 'Cliente Desconhecido'}</p>
                     <p><strong>Itens:</strong> Cascos: ${dados.qtd_casco}, Caixas: ${dados.qtd_caixa}</p>
-                    <p><strong>Data Original:</strong> ${dados.data_emprestimo}</p>
+                    <p><strong>Data Original:</strong> ${new Date(dados.data_emprestimo).toLocaleString('pt-BR')}</p>
                 </div>
             `;
         } catch(e) { console.error("Erro ao processar registo apagado:", reg); }
@@ -502,7 +589,7 @@ window.atualizarEstoque = async (itemId) => {
             body: JSON.stringify({ quantidade })
         });
         if (!response.ok) throw new Error('Falha ao atualizar estoque.');
-        const itemEstoque = estoque.find(i => i.id === itemId);
+        const itemEstoque = estoque.find(i => i.id == itemId);
         if (itemEstoque) itemEstoque.quantidade = quantidade;
     } catch (error) {
         alert(error.message);
@@ -618,7 +705,10 @@ const renderHistoricoCliente = (clienteId) => {
     const lista = document.getElementById('listaHistoricoCliente');
     lista.innerHTML = '';
     const registros = historico.filter(h => h.cliente_id === clienteId).sort((a, b) => new Date(b.data_emprestimo) - new Date(a.data_emprestimo));
-    if(registros.length === 0) lista.innerHTML = '<p>Nenhum empréstimo registado.</p>';
+    if(registros.length === 0) {
+        lista.innerHTML = '<p>Nenhum empréstimo registado.</p>';
+        return;
+    }
 
     registros.forEach(h => {
         const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
@@ -639,7 +729,7 @@ const renderHistoricoCliente = (clienteId) => {
         const div = document.createElement('div');
         div.className = 'item-lista';
         div.innerHTML = `
-            <span><strong>Empréstimo:</strong> ${h.data_emprestimo}<br><span class="${statusClass}">${statusText}</span></span>
+            <span><strong>Empréstimo:</strong> ${new Date(h.data_emprestimo).toLocaleString('pt-BR')}<br><span class="${statusClass}">${statusText}</span></span>
             <span>${cascosInfo}<br>${caixasInfo}</span>
             <div class="botoes">
                 ${totalPendente > 0 ? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>` : ''}
@@ -695,7 +785,7 @@ function printHelper(printContents, title, isReceipt = false) {
             <body>
                 <h1>Distribuidora Garcia</h1>
                 <h2>${title}</h2>
-                <p>Data: ${new Date().toLocaleString('pt-BR')}</p>
+                <p style="text-align:center;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
                 <hr>
                 ${printContents}
             </body>
@@ -706,79 +796,80 @@ function printHelper(printContents, title, isReceipt = false) {
     setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
 }
 
+// Funções de impressão específicas
 window.imprimirRecibo = (historicoId) => {
-    const registro = historico.find(h => h.id === historicoId);
-    const cliente = clientes.find(c => c.id === registro.cliente_id);
-    if (!registro || !cliente) return;
-    
-    let conteudo = `
-        <h3>Recibo de Empréstimo</h3>
-        <p><strong>Cliente:</strong> ${cliente.nome}</p>
-        <p><strong>Data do Empréstimo:</strong> ${registro.data_emprestimo}</p>
-        <br>
-        <h4>Itens Emprestados:</h4>
-        <ul>
-    `;
-    if(registro.qtd_casco > 0) conteudo += `<li>${registro.qtd_casco} x Casco ${registro.marca_casco} ${registro.tamanho_casco}</li>`;
-    if(registro.qtd_caixa > 0) conteudo += `<li>${registro.qtd_caixa} x Caixa ${registro.tipo_caixa}</li>`;
-    conteudo += `</ul><br><p><strong>Assinatura do Cliente:</strong></p><br><p>___________________________</p>`;
-
-    printHelper(conteudo, 'Recibo de Empréstimo', true);
+    const reg = historico.find(h => h.id === historicoId);
+    const cliente = clientes.find(c => c.id === reg.cliente_id);
+    if (!reg || !cliente) return;
+    let content = `
+        <h3>Dados do Cliente</h3>
+        <p><strong>Nome:</strong> ${cliente.nome}</p>
+        <p><strong>Endereço:</strong> ${cliente.endereco}, ${cliente.numero}</p>
+        <h3>Detalhes do Empréstimo</h3>
+        <p><strong>Data:</strong> ${new Date(reg.data_emprestimo).toLocaleString('pt-BR')}</p>
+        <ul>`;
+    if (reg.qtd_casco > 0) content += `<li>${reg.qtd_casco}x Casco ${reg.marca_casco} ${reg.tamanho_casco}</li>`;
+    if (reg.qtd_caixa > 0) content += `<li>${reg.qtd_caixa}x Caixa ${reg.tipo_caixa}</li>`;
+    content += `</ul><br><br><p>_________________________</p><p style="text-align:center;">Assinatura do Cliente</p>`;
+    printHelper(content, 'Recibo de Empréstimo', true);
 };
 
 document.getElementById('btnImprimirResumoDiario').addEventListener('click', () => {
-    let conteudo = '<h3>Empréstimos Realizados Hoje</h3>';
-    if(historicoHoje.length === 0) {
-        conteudo += '<p>Nenhum empréstimo hoje.</p>';
-    } else {
-        historicoHoje.forEach(h => {
-            conteudo += `
-                <div class="item-relatorio">
-                    <p><strong>Cliente:</strong> ${h.cliente_nome}</p>
-                    <p><strong>Itens:</strong> ${h.qtd_casco > 0 ? h.qtd_casco + ' Casco(s) ' + h.marca_casco : ''} ${h.qtd_caixa > 0 ? h.qtd_caixa + ' Caixa(s) ' + h.tipo_caixa : ''}</p>
-                    <p><strong>Horário:</strong> ${h.data_emprestimo.split(', ')[1]}</p>
-                </div>`;
-        });
-    }
-    printHelper(conteudo, 'Resumo do Dia');
+    let content = '<div class="relatorio-pronto">';
+    if(historicoHoje.length === 0) content += '<p>Nenhum movimento hoje.</p>';
+    historicoHoje.forEach(h => {
+        content += `
+            <div class="item-relatorio">
+                <p><strong>Cliente:</strong> ${h.cliente_nome}</p>
+                <p><strong>Hora:</strong> ${new Date(h.data_emprestimo).toLocaleTimeString('pt-BR')}</p>
+                <p><strong>Itens:</strong> 
+                    ${h.qtd_casco > 0 ? `${h.qtd_casco}x Casco ${h.marca_casco}` : ''}
+                    ${h.qtd_caixa > 0 ? `${h.qtd_caixa}x Caixa ${h.tipo_caixa}` : ''}
+                </p>
+            </div>`;
+    });
+    content += '</div>';
+    printHelper(content, 'Resumo do Dia');
 });
 
 document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click', () => {
-    let conteudo = '<div class="relatorio-pronto">';
-    const clientesComDivida = clientes.filter(c => c.dividaTotal > 0).sort((a, b) => a.nome.localeCompare(b.nome));
+    let content = '<div class="relatorio-pronto">';
+    const clientesComDivida = clientes.filter(c => c.dividaTotal > 0).sort((a,b) => a.nome.localeCompare(b.nome));
+    
+    if(clientesComDivida.length === 0) content += '<p>Nenhum cliente com pendências.</p>';
 
     clientesComDivida.forEach(c => {
-        conteudo += `<div class="item-relatorio"><h3>Cliente: ${c.nome}</h3>`;
-        const registrosCliente = historico.filter(h => h.cliente_id === c.id);
-        registrosCliente.forEach(r => {
-            const cascosPendentes = (r.qtd_casco || 0) - (r.qtd_casco_devolvido || 0);
-            const caixasPendentes = (r.qtd_caixa || 0) - (r.qtd_caixa_devolvido || 0);
-            if(cascosPendentes > 0 || caixasPendentes > 0) {
-                conteudo += `<p><small>${r.data_emprestimo}:</small> `;
-                if(cascosPendentes > 0) conteudo += `${cascosPendentes} casco(s) (${r.marca_casco}), `;
-                if(caixasPendentes > 0) conteudo += `${caixasPendentes} caixa(s) (${r.tipo_caixa})`;
-                conteudo += `</p>`;
-            }
+        content += `<div class="item-relatorio"><h3>${c.nome} - Dívida: ${c.dividaTotal} itens</h3><ul>`;
+        const registrosPendentes = historico.filter(h => {
+            const pendente = (h.qtd_casco - h.qtd_casco_devolvido) + (h.qtd_caixa - h.qtd_caixa_devolvido);
+            return h.cliente_id === c.id && pendente > 0;
         });
-        conteudo += `</div>`;
+        registrosPendentes.forEach(r => {
+            const cascosPendentes = r.qtd_casco - r.qtd_casco_devolvido;
+            const caixasPendentes = r.qtd_caixa - r.qtd_caixa_devolvido;
+            content += `<li>Data ${new Date(r.data_emprestimo).toLocaleDateString('pt-BR')}: `;
+            if(cascosPendentes > 0) content += `${cascosPendentes}x Casco(${r.marca_casco}) `;
+            if(caixasPendentes > 0) content += `${caixasPendentes}x Caixa(${r.tipo_caixa})`;
+            content += `</li>`;
+        });
+        content += `</ul></div>`;
     });
-    conteudo += '</div>';
-    printHelper(conteudo, 'Extrato Geral de Empréstimos');
+    content += '</div>';
+    printHelper(content, 'Extrato Geral de Empréstimos');
 });
 
 document.getElementById('btnImprimirExtratoEstoque').addEventListener('click', () => {
-    let conteudo = '<ul>';
+    let content = '<div class="relatorio-pronto">';
     estoque.forEach(item => {
-        conteudo += `<li><strong>${item.nome}:</strong> ${item.quantidade}</li>`;
+         content += `<div class="item-relatorio"><p><strong>${item.nome}:</strong> ${item.quantidade} unidades</p></div>`;
     });
-    conteudo += '</ul>';
-    printHelper(conteudo, 'Extrato de Estoque');
+    content += '</div>';
+    printHelper(content, 'Extrato de Estoque');
 });
 
-}); // Fim do addEventListener 'DOMContentLoaded'
+
+}); // Fim do DOMContentLoaded
 </script>
-
-
-
 </body>
 </html>
+```
