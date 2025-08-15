@@ -113,14 +113,14 @@ button.whatsapp { background: #25D366; }
 
         <div id="conteudoHome">
              <div class="box home-grid">
-                <div class="box">
-                    <h3>Total de Itens Pendentes</h3>
-                    <p id="totalItensPendentes" class="stat-number">0</p>
-                </div>
-                <div class="box">
-                    <h3>Clientes com Débitos</h3>
-                    <p id="totalClientesComDebitos" class="stat-number">0</p>
-                </div>
+                 <div class="box">
+                     <h3>Total de Itens Pendentes</h3>
+                     <p id="totalItensPendentes" class="stat-number">0</p>
+                 </div>
+                 <div class="box">
+                     <h3>Clientes com Débitos</h3>
+                     <p id="totalClientesComDebitos" class="stat-number">0</p>
+                 </div>
             </div>
             <div class="box">
                 <h2>Relatórios e Extratos</h2>
@@ -261,11 +261,20 @@ let historicoHoje = [];
 let estoque = [];
 let registrosApagados = [];
 let clienteAtualParaHistorico = null;
-let editClienteId = null; 
+let editClienteId = null;
 let registroParaDevolverId = null;
 let registroParaApagarId = null;
 
 // ======= FUNÇÕES DE UTILIDADE E INICIALIZAÇÃO =======
+
+// Função para garantir que a data esteja no formato ISO 8601 que o JavaScript entende.
+const corrigirFormatoData = (dataString) => {
+    if (typeof dataString === 'string' && dataString.includes(' ') && !dataString.includes('T')) {
+        return dataString.replace(' ', 'T');
+    }
+    return dataString;
+};
+
 const popularSelect = (selectId, opcoes) => {
     const select = document.getElementById(selectId);
     select.innerHTML = '';
@@ -289,7 +298,6 @@ const carregarDadosIniciais = async () => {
         registrosApagados = await apagadosRes.json();
         historicoHoje = await hojeRes.json();
 
-        // Adiciona a dívida total a cada cliente para facilitar a ordenação e exibição
         clientes.forEach(c => {
             const registrosCliente = historico.filter(h => h.cliente_id === c.id);
             c.dividaTotal = registrosCliente.reduce((acc, h) => {
@@ -330,7 +338,7 @@ document.getElementById('formLogin').addEventListener('submit', async e => {
         if (response.ok) {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('app').style.display = 'block';
-            await carregarDadosIniciais(); // Aguarda o carregamento dos dados
+            await carregarDadosIniciais();
         } else {
             const data = await response.json();
             loginErro.textContent = data.error || 'Utilizador ou palavra-passe inválidos!';
@@ -353,7 +361,6 @@ const mudarAba = (tabId) => {
     if (elAtivo) elAtivo.style.display = 'block';
     document.getElementById(tabId).classList.add('active');
 
-    // Renderiza o conteúdo específico da aba
     if (abaAtiva === 'Home') renderizarHome();
     if (abaAtiva === 'Fisicos') renderizarClientes('fisico');
     if (abaAtiva === 'Bares') renderizarClientes('bar');
@@ -370,7 +377,6 @@ abas.forEach(aba => {
 // ======= RENDERIZAÇÃO DAS SECÇÕES =======
 
 const renderizarHome = () => {
-    // Renderiza histórico do dia
     const container = document.getElementById('historicoDoDia');
     container.innerHTML = '';
     if (historicoHoje.length === 0) {
@@ -381,16 +387,16 @@ const renderizarHome = () => {
             const caixasInfo = h.qtd_caixa > 0 ? `${h.qtd_caixa} Caixa(s) (${h.tipo_caixa})` : '';
             const div = document.createElement('div');
             div.className = 'item-lista';
+            const dataEmprestimo = new Date(corrigirFormatoData(h.data_emprestimo));
             div.innerHTML = `
                 <span><strong>Cliente:</strong> ${h.cliente_nome}</span>
                 <span>${cascosInfo} ${caixasInfo}</span>
-                <span><small>${new Date(h.data_emprestimo).toLocaleString('pt-BR')}</small></span>
+                <span><small>${dataEmprestimo.toLocaleString('pt-BR')}</small></span>
             `;
             container.appendChild(div);
         });
     }
 
-    // NOVA LÓGICA: Atualiza estatísticas da Home
     const totalPendentes = clientes.reduce((acc, c) => acc + c.dividaTotal, 0);
     const clientesComDebitos = clientes.filter(c => c.dividaTotal > 0).length;
     document.getElementById('totalItensPendentes').textContent = totalPendentes;
@@ -404,7 +410,7 @@ const renderizarClientes = (tipo, filtroNome = '') => {
     
     const filtrados = clientes
         .filter(c => c.tipo === tipo && c.nome.toLowerCase().includes(filtroNome.toLowerCase()))
-        .sort((a, b) => b.dividaTotal - a.dividaTotal); // Ordena por maior dívida
+        .sort((a, b) => b.dividaTotal - a.dividaTotal);
 
     if (filtrados.length === 0) {
         container.innerHTML = '<p>Nenhum cliente encontrado.</p>';
@@ -445,20 +451,25 @@ const renderizarRegistrosApagados = () => {
         container.innerHTML = '<p>Nenhum registo apagado.</p>';
         return;
     }
-    registrosApagados.sort((a, b) => new Date(b.data_apagado) - new Date(a.data_apagado)).forEach(reg => {
+    registrosApagados
+    .sort((a, b) => new Date(corrigirFormatoData(b.data_apagado)) - new Date(corrigirFormatoData(a.data_apagado)))
+    .forEach(reg => {
         try {
             const dados = JSON.parse(reg.dados_originais);
             const cliente = clientes.find(c => c.id === dados.cliente_id);
+            const dataApagado = new Date(corrigirFormatoData(reg.data_apagado));
+            const dataOriginal = new Date(corrigirFormatoData(dados.data_emprestimo));
+
             container.innerHTML += `
                 <div class="apagado-item">
-                    <p><strong>Data Apagado:</strong> ${new Date(reg.data_apagado).toLocaleString('pt-BR')}</p>
+                    <p><strong>Data Apagado:</strong> ${dataApagado.toLocaleString('pt-BR')}</p>
                     <p><strong>Justificativa:</strong> ${reg.justificativa}</p>
                     <p><strong>Cliente:</strong> ${cliente ? cliente.nome : 'Cliente Desconhecido'}</p>
                     <p><strong>Itens:</strong> Cascos: ${dados.qtd_casco}, Caixas: ${dados.qtd_caixa}</p>
-                    <p><strong>Data Original:</strong> ${new Date(dados.data_emprestimo).toLocaleString('pt-BR')}</p>
+                    <p><strong>Data Original:</strong> ${dataOriginal.toLocaleString('pt-BR')}</p>
                 </div>
             `;
-        } catch(e) { console.error("Erro ao processar registo apagado:", reg); }
+        } catch(e) { console.error("Erro ao processar registo apagado:", reg, e); }
     });
 };
 
@@ -544,7 +555,6 @@ window.atualizarEstoque = async (itemId) => {
 
 
 // ======= MODAIS, EMPRÉSTIMOS E DEVOLUÇÕES =======
-// Função para formatar a data para o input datetime-local
 const formatarDataParaInput = (date) => {
     const d = new Date(date);
     const ano = d.getFullYear();
@@ -564,9 +574,7 @@ window.abrirModal = (modalId, id) => {
         document.getElementById('modalTituloCliente').textContent = `Histórico de: ${clienteAtualParaHistorico.nome}`;
         document.getElementById('infoClienteModal').textContent = `Endereço: ${clienteAtualParaHistorico.endereco}, ${clienteAtualParaHistorico.numero}`;
         
-        // NOVO: Adiciona a data atual ao abrir o modal de empréstimo
         document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date());
-
         renderHistoricoCliente(id);
     }
     if (modalId === 'modalDevolucao') {
@@ -599,7 +607,6 @@ document.getElementById('formEmprestimo').addEventListener('submit', async e => 
         qtdCasco: parseInt(document.getElementById('qtdCasco').value, 10) || 0,
         tipoCaixa: document.getElementById('tipoCaixa').value,
         qtdCaixa: parseInt(document.getElementById('qtdCaixa').value, 10) || 0,
-        // NOVO: Captura a data do formulário
         data_emprestimo: document.getElementById('dataEmprestimo').value 
     };
     const temCasco = novoRegistro.qtdCasco > 0 && novoRegistro.marcaCasco !== 'Nenhuma' && novoRegistro.tamanhoCasco !== 'Nenhum';
@@ -615,7 +622,7 @@ document.getElementById('formEmprestimo').addEventListener('submit', async e => 
         if (!response.ok) throw new Error('Falha ao guardar empréstimo.');
         await carregarDadosIniciais();
         document.getElementById('formEmprestimo').reset();
-        document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date()); // Reseta para data atual
+        document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date());
         renderHistoricoCliente(clienteAtualParaHistorico.id);
     } catch (error) {
         alert(`Erro: ${error.message}`);
@@ -664,7 +671,6 @@ document.getElementById('formApagar').addEventListener('submit', async e => {
     }
 });
 
-
 const renderHistoricoCliente = (clienteId) => {
     const lista = document.getElementById('listaHistoricoCliente');
     const resumoContainer = document.getElementById('resumoDividaCliente');
@@ -672,7 +678,7 @@ const renderHistoricoCliente = (clienteId) => {
     
     const registros = historico
         .filter(h => h.cliente_id === clienteId)
-        .sort((a, b) => new Date(b.data_emprestimo) - new Date(a.data_emprestimo));
+        .sort((a, b) => new Date(corrigirFormatoData(b.data_emprestimo)) - new Date(corrigirFormatoData(a.data_emprestimo)));
 
     if(registros.length === 0) {
         lista.innerHTML = '<p>Nenhum empréstimo registado.</p>';
@@ -680,36 +686,57 @@ const renderHistoricoCliente = (clienteId) => {
         return;
     }
     
-    // NOVO: Calcula e exibe o resumo da dívida do cliente
     const dividaCliente = registros.reduce((acc, h) => {
-        acc.cascos += (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-        acc.caixas += (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-        return acc;
-    }, {cascos: 0, caixas: 0});
+        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
 
-    if (dividaCliente.cascos > 0 || dividaCliente.caixas > 0) {
-         resumoContainer.innerHTML = `DÍVIDA ATUAL: ${dividaCliente.cascos} Casco(s) e ${dividaCliente.caixas} Caixa(s)`;
-         resumoContainer.style.display = 'block';
+        if (cascosPendentes > 0) {
+            const key = `Casco ${h.marca_casco} ${h.tamanho_casco}`;
+            acc[key] = (acc[key] || 0) + cascosPendentes;
+        }
+        if (caixasPendentes > 0) {
+            const key = `Caixa ${h.tipo_caixa}`;
+            acc[key] = (acc[key] || 0) + caixasPendentes;
+        }
+        return acc;
+    }, {});
+
+    const resumoTexto = Object.entries(dividaCliente)
+        .map(([item, qtd]) => `${qtd}x ${item}`)
+        .join(' / ');
+
+    if (resumoTexto) {
+        resumoContainer.textContent = `Dívida Total: ${resumoTexto}`;
+        resumoContainer.style.display = 'block';
     } else {
-         resumoContainer.style.display = 'none';
+        resumoContainer.textContent = 'Nenhuma dívida pendente.';
+        resumoContainer.style.display = 'block';
     }
 
 
     registros.forEach(h => {
         const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
         const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-        const totalPendente = cascosPendentes + caixasPendentes;
-        
-        const cascosInfo = h.qtd_casco > 0 ? `Cascos: ${h.qtd_casco_devolvido}/${h.qtd_casco} (${h.marca_casco})` : '';
-        const caixasInfo = h.qtd_caixa > 0 ? `Caixas: ${h.qtd_caixa_devolvido}/${h.qtd_caixa} (${h.tipo_caixa})` : '';
+        const temPendencia = cascosPendentes > 0 || caixasPendentes > 0;
+
+        let info = '';
+        if (h.qtd_casco > 0) {
+            info += `<li>${h.qtd_casco} Casco(s) ${h.marca_casco} ${h.tamanho_casco} (Devolvido: ${h.qtd_casco_devolvido || 0})</li>`;
+        }
+        if (h.qtd_caixa > 0) {
+            info += `<li>${h.qtd_caixa} Caixa(s) ${h.tipo_caixa} (Devolvido: ${h.qtd_caixa_devolvido || 0})</li>`;
+        }
+        const dataEmprestimo = new Date(corrigirFormatoData(h.data_emprestimo));
 
         const div = document.createElement('div');
         div.className = 'item-lista';
         div.innerHTML = `
-            <span><strong>Data:</strong> ${new Date(h.data_emprestimo).toLocaleString('pt-BR')}<br><strong>Pendente:</strong> ${totalPendente}</span>
-            <span>${cascosInfo}<br>${caixasInfo}</span>
+            <span>
+                <strong>Data: ${dataEmprestimo.toLocaleString('pt-BR')}</strong>
+                <ul>${info}</ul>
+            </span>
             <div class="botoes">
-                ${totalPendente > 0 ? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>` : ''}
+                ${temPendencia ? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>` : ''}
                 <button class="imprimir-recibo" onclick="imprimirRecibo(${h.id})">Recibo</button>
                 <button class="apagar" onclick="abrirModal('modalApagarRegistro', ${h.id})">Apagar</button>
             </div>
@@ -718,206 +745,165 @@ const renderHistoricoCliente = (clienteId) => {
     });
 };
 
-// ======= WHATSAPP =======
 document.getElementById('btnNotificarWhatsapp').addEventListener('click', () => {
-    if (!clienteAtualParaHistorico || !clienteAtualParaHistorico.telefone) {
-        return alert('Este cliente não tem um número de telefone registado.');
-    }
-    const mensagem = `📢 Olá, tudo bem?\n\nAqui é o sistema de controle de vasilhames da Distribuidora Garcia.\n🔎 Notamos uma pendência de cascos e/ou caixas em seu cadastro.\n📅 Por favor, entre em contato para agendarmos a devolução.\n\nSe você já devolveu, é só ignorar esta mensagem.\nObrigado pela atenção!\nDistribuidora Garcia ✅`;
-    const urlWhatsapp = `https://wa.me/${clienteAtualParaHistorico.telefone}?text=${encodeURIComponent(mensagem)}`;
-    window.open(urlWhatsapp, '_blank');
-});
+    if (!clienteAtualParaHistorico) return;
 
-// ======= IMPRESSÃO =======
-function printHelper(printContents, title, isReceipt = false) {
-    const printWindow = window.open('', '_blank');
-    let styles = `
-        body { 
-            font-family: Arial, sans-serif;
-            font-weight: bold; /* APLICA NEGRITO A TUDO */
-        } 
-        h1, h2, h3 { text-align: center; margin: 10px 0; } 
-        p, li { margin: 4px 0; } 
-        ul { list-style-position: inside; padding-left: 0; } 
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; } 
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; page-break-inside: avoid; }
-        th { background-color: #f2f2f2; }
-        .logo-print { max-width: 150px; display: block; margin: 0 auto 10px; }
-        .summary-section { margin-top: 20px; padding: 15px; border-top: 2px solid black;}
-        .summary-section h3 { text-align: left; }
-        .no-print { display: none; }
-    `;
-    if (isReceipt) {
-        styles += `
-            @page { size: 80mm; margin: 2mm; } 
-            body { font-size: 10pt; }
-            h1 { font-size: 14pt; }
-            h2 { font-size: 12pt; }
-        `;
+    const telefone = clienteAtualParaHistorico.telefone?.replace(/\D/g, '');
+    if (!telefone) {
+        alert('Este cliente não possui um número de telefone cadastrado.');
+        return;
     }
 
-    printWindow.document.write(`
-        <html>
-            <head>
-                <title>${title}</title>
-                <style>${styles}</style>
-            </head>
-            <body>${printContents}</body>
-        </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
-}
-
-// NOVO: Botão para imprimir Resumo do Dia
-document.getElementById('btnImprimirResumoDiario').addEventListener('click', () => {
-    let content = `
-        <img src="logo.png" alt="Logo Distribuidora Garcia" class="logo-print">
-        <h1>Resumo do Dia</h1>
-        <p>Data do Relatório: ${new Date().toLocaleDateString('pt-BR')}</p>
-        <hr>
-    `;
-
-    const registrosDeHoje = historico.filter(h => new Date(h.data_emprestimo).toDateString() === new Date().toDateString());
-
-    if (registrosDeHoje.length === 0) {
-        content += '<p>Nenhuma movimentação registrada hoje.</p>';
-    } else {
-        content += '<h2>Empréstimos Realizados Hoje</h2><table><thead><tr><th>Cliente</th><th>Itens</th><th>Horário</th></tr></thead><tbody>';
-        registrosDeHoje.forEach(h => {
-            const cliente = clientes.find(c => c.id === h.cliente_id);
-            let itens = '<ul>';
-            if (h.qtd_casco > 0) itens += `<li>${h.qtd_casco} x Casco ${h.marca_casco}</li>`;
-            if (h.qtd_caixa > 0) itens += `<li>${h.qtd_caixa} x Caixa ${h.tipo_caixa}</li>`;
-            itens += '</ul>';
-
-            content += `
-                <tr>
-                    <td>${cliente ? cliente.nome : 'Cliente não encontrado'}</td>
-                    <td>${itens}</td>
-                    <td>${new Date(h.data_emprestimo).toLocaleTimeString('pt-BR')}</td>
-                </tr>
-            `;
-        });
-        content += '</tbody></table>';
-    }
-
-    printHelper(content, 'Resumo do Dia');
-});
-
-
-// Botão para imprimir Extrato Geral de Empréstimos
-document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click', () => {
-    const totais = { cascos: {}, caixas: {}, totalGeral: 0 };
-
-    let content = `
-        <img src="logo.png" alt="Logo Distribuidora Garcia" class="logo-print">
-        <h1>Extrato Geral de Empréstimos Pendentes</h1>
-        <p>Data do Relatório: ${new Date().toLocaleDateString('pt-BR')}</p>
-        <hr>
-    `;
-
-    const clientesComDivida = clientes.filter(c => c.dividaTotal > 0).sort((a,b) => a.nome.localeCompare(b.nome));
-    let htmlClientes = '<table><thead><tr><th>Cliente</th><th>Itens Pendentes</th></tr></thead><tbody>';
-
-    clientesComDivida.forEach(cliente => {
-        let itensCliente = '<ul>';
-        historico.filter(h => h.cliente_id === cliente.id).forEach(h => {
-            const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-            const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-
-            if (cascosPendentes > 0) {
-                const key = `${h.marca_casco} ${h.tamanho_casco}`;
-                totais.cascos[key] = (totais.cascos[key] || 0) + cascosPendentes;
-                totais.totalGeral += cascosPendentes;
-                itensCliente += `<li>${cascosPendentes} x Casco ${key}</li>`;
-            }
-            if (caixasPendentes > 0) {
-                const key = h.tipo_caixa;
-                totais.caixas[key] = (totais.caixas[key] || 0) + caixasPendentes;
-                totais.totalGeral += caixasPendentes;
-                itensCliente += `<li>${caixasPendentes} x Caixa ${key}</li>`;
-            }
-        });
-        itensCliente += '</ul>';
-        htmlClientes += `<tr><td><strong>${cliente.nome}</strong><br><small>${cliente.endereco}, ${cliente.numero}</small></td><td>${itensCliente}</td></tr>`;
-    });
-    htmlClientes += '</tbody></table>';
+    const registros = historico.filter(h => h.cliente_id === clienteAtualParaHistorico.id);
+    const dividaCliente = registros.reduce((acc, h) => {
+        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+        if (cascosPendentes > 0) {
+            const key = `Casco ${h.marca_casco} ${h.tamanho_casco}`;
+            acc[key] = (acc[key] || 0) + cascosPendentes;
+        }
+        if (caixasPendentes > 0) {
+            const key = `Caixa ${h.tipo_caixa}`;
+            acc[key] = (acc[key] || 0) + caixasPendentes;
+        }
+        return acc;
+    }, {});
     
-    let resumoHtml = '<div class="summary-section"><h2>Resumo Total de Itens Pendentes</h2>';
-    resumoHtml += '<h3>Cascos:</h3><ul>';
-    Object.keys(totais.cascos).sort().forEach(key => resumoHtml += `<li><strong>${totais.cascos[key]}</strong> x ${key}</li>`);
-    resumoHtml += '</ul><h3>Caixas:</h3><ul>';
-    Object.keys(totais.caixas).sort().forEach(key => resumoHtml += `<li><strong>${totais.caixas[key]}</strong> x ${key}</li>`);
-    resumoHtml += `</ul><hr><h3>TOTAL GERAL DE ITENS PENDENTES: ${totais.totalGeral}</h3></div>`;
+    const resumoItens = Object.entries(dividaCliente).map(([item, qtd]) => `  - ${qtd}x ${item}`).join('\n');
 
-    content += resumoHtml + htmlClientes;
-    printHelper(content, 'Extrato Geral de Empréstimos');
+    if (!resumoItens) {
+        alert('Este cliente não possui débitos pendentes.');
+        return;
+    }
+
+    const mensagem = encodeURIComponent(
+`Olá ${clienteAtualParaHistorico.nome}, tudo bem?
+Da Distribuidora Garcia, estamos passando para lembrar sobre os seguintes itens pendentes em seu nome:
+${resumoItens}
+
+Por favor, verifique a possibilidade de devolução. Agradecemos a sua atenção!`
+    );
+
+    window.open(`https://wa.me/${telefone}?text=${mensagem}`, '_blank');
 });
 
-// NOVO: Botão para imprimir Extrato de Estoque
-document.getElementById('btnImprimirExtratoEstoque').addEventListener('click', () => {
-    let content = `
-        <img src="logo.png" alt="Logo Distribuidora Garcia" class="logo-print">
-        <h1>Extrato de Estoque</h1>
-        <p>Data do Relatório: ${new Date().toLocaleDateString('pt-BR')}</p>
-        <hr>
-        <table>
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Quantidade em Estoque</th>
-                </tr>
-            </thead>
-            <tbody>
+// ======= LÓGICA DE IMPRESSÃO =======
+const gerarConteudoImpressao = (titulo, corpo) => {
+    return `
+        <html>
+        <head>
+            <title>${titulo}</title>
+            <style>
+                body { font-family: sans-serif; margin: 20px; }
+                h1, h2, h3 { text-align: center; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .nao-imprimir { display: none; }
+                @media print {
+                    button { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <img src="logo.png" style="display:block; margin:auto; height: 60px;">
+            <h1>${titulo}</h1>
+            <h3>Data: ${new Date().toLocaleDateString('pt-BR')}</h3>
+            ${corpo}
+            <script>setTimeout(() => window.print(), 500);</script>
+        </body>
+        </html>
     `;
-    estoque.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(item => {
-        content += `
-            <tr>
-                <td>${item.nome}</td>
-                <td>${item.quantidade}</td>
-            </tr>
-        `;
-    });
-    content += '</tbody></table>';
-    printHelper(content, 'Extrato de Estoque');
-});
+};
 
-
-// Função de impressão de recibo individual (ATUALIZADA COM LOGO)
 window.imprimirRecibo = (registroId) => {
     const registro = historico.find(h => h.id === registroId);
     const cliente = clientes.find(c => c.id === registro.cliente_id);
     if (!registro || !cliente) return;
-    
-    let conteudo = `
-        <img src="logo.png" alt="Logo Distribuidora Garcia" class="logo-print">
-        <h1>Distribuidora Garcia</h1>
+
+    let itensHtml = '';
+    if (registro.qtd_casco > 0) itensHtml += `<tr><td>Casco ${registro.marca_casco} ${registro.tamanho_casco}</td><td>${registro.qtd_casco}</td></tr>`;
+    if (registro.qtd_caixa > 0) itensHtml += `<tr><td>Caixa ${registro.tipo_caixa}</td><td>${registro.qtd_caixa}</td></tr>`;
+
+    const dataEmprestimo = new Date(corrigirFormatoData(registro.data_emprestimo));
+
+    const corpo = `
         <h2>Recibo de Empréstimo</h2>
-        <p>--------------------------------</p>
         <p><strong>Cliente:</strong> ${cliente.nome}</p>
-        <p><strong>Data:</strong> ${new Date(registro.data_emprestimo).toLocaleString('pt-BR')}</p>
-        <p>--------------------------------</p>
-        <h3>Itens Emprestados:</h3>
-        <ul>
-    `;
-    if(registro.qtd_casco > 0) conteudo += `<li>${registro.qtd_casco} x Casco ${registro.marca_casco} ${registro.tamanho_casco}</li>`;
-    if(registro.qtd_caixa > 0) conteudo += `<li>${registro.qtd_caixa} x Caixa ${registro.tipo_caixa}</li>`;
-    
-    conteudo += `
-        </ul>
-        <p>--------------------------------</p>
-        <p>Assinatura do Cliente:</p>
+        <p><strong>Endereço:</strong> ${cliente.endereco}, ${cliente.numero}</p>
+        <p><strong>Data do Empréstimo:</strong> ${dataEmprestimo.toLocaleString('pt-BR')}</p>
+        <table>
+            <thead><tr><th>Item</th><th>Quantidade</th></tr></thead>
+            <tbody>${itensHtml}</tbody>
+        </table>
         <br><br>
-        <p>_________________________</p>
+        <p>_________________________________________</p>
+        <p style="text-align:center;">Assinatura do Cliente</p>
     `;
+    const win = window.open('', '_blank');
+    win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo));
+    win.document.close();
+};
+
+document.getElementById('btnImprimirResumoDiario').addEventListener('click', () => {
+    let corpo = '<h2>Empréstimos Realizados Hoje</h2><table><thead><tr><th>Cliente</th><th>Itens</th><th>Horário</th></tr></thead><tbody>';
+    if(historicoHoje.length === 0) {
+        corpo += '<tr><td colspan="3">Nenhum empréstimo hoje.</td></tr>';
+    } else {
+        historicoHoje.forEach(h => {
+            const cascos = h.qtd_casco > 0 ? `${h.qtd_casco} Casco(s) ${h.marca_casco}` : '';
+            const caixas = h.qtd_caixa > 0 ? `${h.qtd_caixa} Caixa(s) ${h.tipo_caixa}` : '';
+            const dataEmprestimo = new Date(corrigirFormatoData(h.data_emprestimo));
+            corpo += `<tr><td>${h.cliente_nome}</td><td>${cascos} ${caixas}</td><td>${dataEmprestimo.toLocaleTimeString('pt-BR')}</td></tr>`;
+        });
+    }
+    corpo += '</tbody></table>';
+
+    const win = window.open('', '_blank');
+    win.document.write(gerarConteudoImpressao('Resumo Diário de Empréstimos', corpo));
+    win.document.close();
+});
+
+document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click', () => {
+    let corpo = '<h2>Extrato Geral de Dívidas</h2>';
+    const clientesComDebitos = clientes.filter(c => c.dividaTotal > 0);
+
+    if(clientesComDebitos.length === 0){
+        corpo += '<p>Nenhum cliente com débitos pendentes.</p>';
+    } else {
+        clientesComDebitos.forEach(c => {
+            corpo += `<h3>${c.nome} (Total: ${c.dividaTotal} itens)</h3>`;
+            corpo += '<table><thead><tr><th>Item</th><th>Qtd. Pendente</th><th>Data Original</th></tr></thead><tbody>';
+            historico.filter(h => h.cliente_id === c.id).forEach(h => {
+                const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+                const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+                const dataEmprestimo = new Date(corrigirFormatoData(h.data_emprestimo));
+
+                if(cascosPendentes > 0) corpo += `<tr><td>Casco ${h.marca_casco} ${h.tamanho_casco}</td><td>${cascosPendentes}</td><td>${dataEmprestimo.toLocaleDateString('pt-BR')}</td></tr>`;
+                if(caixasPendentes > 0) corpo += `<tr><td>Caixa ${h.tipo_caixa}</td><td>${caixasPendentes}</td><td>${dataEmprestimo.toLocaleDateString('pt-BR')}</td></tr>`;
+            });
+            corpo += '</tbody></table>';
+        });
+    }
     
-    printHelper(conteudo, 'Recibo', true);
-}
+    const win = window.open('', '_blank');
+    win.document.write(gerarConteudoImpressao('Extrato Geral de Empréstimos', corpo));
+    win.document.close();
+});
+
+document.getElementById('btnImprimirExtratoEstoque').addEventListener('click', () => {
+    let corpo = '<table><thead><tr><th>Item</th><th>Quantidade em Estoque</th></tr></thead><tbody>';
+    estoque.forEach(item => {
+        corpo += `<tr><td>${item.nome}</td><td>${item.quantidade}</td></tr>`;
+    });
+    corpo += '</tbody></table>';
+    const win = window.open('', '_blank');
+    win.document.write(gerarConteudoImpressao('Extrato de Estoque', corpo));
+    win.document.close();
+});
 
 
-}); // Fim do DOMContentLoaded
+});
 </script>
 
 </body>
