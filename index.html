@@ -21,14 +21,40 @@ button.whatsapp { background: #25D366; }
 .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .grid-3-col { display: grid; grid-template-columns: 3fr 2fr 1fr; gap: 15px; }
 
-/* Header e Logo */
-.header { display: flex; align-items: center; padding: 10px; background: white; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
-.header img { height: 50px; }
+/* Header e Logo (VOLT à esquerda, título centralizado) */
+.header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+.header img {
+  height: 120px;     /* controla a altura fixa */
+  width: auto;      /* mantém proporção */
+  object-fit: contain;
+}
+
+
 
 /* Login */
-#loginScreen { padding-top: 50px; }
+#loginScreen { padding-top: 50px; position: relative; }
 #loginScreen .box { max-width: 400px; margin: auto; }
-#loginScreen img { max-width: 250px; display: block; margin: 0 auto 20px; }
+#loginScreen .box img { max-width: 250px; display: block; margin: 0 auto 20px; }
+/* Watermark VOLT no canto inferior direito do login */
+.login-watermark {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  width: 160px;
+  opacity: .8;
+  pointer-events: none;
+  z-index: 15;
+}
 
 /* Navegação por Abas */
 .tabs { display: flex; flex-wrap: wrap; justify-content: space-around; margin-bottom: 20px; background: #e9ecef; padding: 5px; border-radius: 8px; }
@@ -64,845 +90,1174 @@ button.whatsapp { background: #25D366; }
 .apagado-item p { margin: 5px 0; }
 .apagado-item strong { color: #555; }
 
-/* Modal */
-.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
-.modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 700px; border-radius: 8px; position: relative; animation: slide-down 0.3s ease-out; }
-@keyframes slide-down { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.close-button { color: #aaa; position: absolute; right: 15px; top: 10px; font-size: 28px; font-weight: bold; cursor: pointer; }
-.info-cliente-modal { background: #e9ecef; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; }
-.resumo-divida-cliente { background: var(--cor-principal); color: white; padding: 10px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold;}
+/* Notificações */
+.notificacao { background:#fff7f7; border:1px solid #f3dada; padding:12px; border-radius:8px; margin-bottom:10px; cursor:pointer; }
+.notificacao:hover { background:#ffecec; }
+.badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; }
+.badge-hoje { background:#fff3cd; color:#856404; }
+.badge-atraso { background:#f8d7da; color:#721c24; }
 
+/* Modais — escondidos por padrão (para não aparecer “Histórico do Cliente” sozinho) */
+.modal { 
+  display: none;
+  position: fixed; 
+  z-index: 9999; 
+  left: 0; top: 0; width: 100%; height: 100%; 
+  overflow: auto; background: rgba(0,0,0,0.4);
+}
+.modal-content {
+  background: #fff; margin: 6% auto; padding: 20px; border-radius: 8px; 
+  max-width: 720px; box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+.close-button { float: right; font-size: 28px; cursor: pointer; }
 
 @media(max-width:768px){
-    .grid-2-col, .home-grid { grid-template-columns: 1fr; }
-    .item-lista { flex-direction: column; align-items: flex-start; }
-    .item-lista .botoes { width: 100%; margin-top: 10px; }
+  .grid-2-col, .home-grid { grid-template-columns: 1fr; }
+  .item-lista { flex-direction: column; align-items: flex-start; }
+  .item-lista .botoes { width: 100%; margin-top: 10px; }
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="loginScreen">
-        <div class="box">
-            <img src="logo.png" alt="Logo Distribuidora Garcia">
-            <h1>Login</h1>
-            <form id="formLogin">
-                <label for="loginUsuario">Utilizador:</label>
-                <input type="text" id="loginUsuario" required>
-                <label for="loginSenha">Palavra-passe:</label>
-                <input type="password" id="loginSenha" required>
-                <button type="submit">Entrar</button>
-                <p id="loginErro" style="color:red;text-align:center;font-weight:bold;"></p>
-            </form>
-        </div>
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <div class="box">
+      <!-- Mantém a logo da Distribuidora no topo do card -->
+      <img src="logo.png" alt="Logo Distribuidora Garcia">
+      <h1>Login</h1>
+      <form id="formLogin">
+        <label for="loginUsuario">Utilizador:</label>
+        <input type="text" id="loginUsuario" required>
+        <label for="loginSenha">Palavra-passe:</label>
+        <input type="password" id="loginSenha" required>
+        <button type="submit">Entrar</button>
+        <p id="loginErro" style="color:red;text-align:center;font-weight:bold;"></p>
+      </form>
     </div>
+    <!-- Watermark VOLT no canto inferior direito do login -->
+    <img src="volt.png" alt="VOLT" class="login-watermark">
+  </div>
 
-    <div id="app" style="display:none;">
-        <div class="header">
-            <img src="logo.png" alt="Logo Distribuidora Garcia">
-        </div>
-        <div class="tabs">
-            <button id="tabHome" class="active">Home</button>
-            <button id="tabFisicos">Clientes Físicos</button>
-            <button id="tabBares">Bares</button>
-            <button id="tabAdicionarCliente">Adicionar Cliente</button>
-            <button id="tabEstoque">Estoque</button>
-            <button id="tabApagados">Registos Apagados</button>
-        </div>
-
-        <div id="conteudoHome">
-             <div class="box home-grid">
-                 <div class="box">
-                     <h3>Total de Itens Pendentes</h3>
-                     <p id="totalItensPendentes" class="stat-number">0</p>
-                 </div>
-                 <div class="box">
-                     <h3>Clientes com Débitos</h3>
-                     <p id="totalClientesComDebitos" class="stat-number">0</p>
-                 </div>
-            </div>
-            <div class="box">
-                <h2>Relatórios e Extratos</h2>
-                <div class="grid-2-col">
-                    <button id="btnImprimirResumoDiario">Imprimir Resumo do Dia</button>
-                    <button id="btnImprimirExtratoEmprestimos" class="secondary">Imprimir Extrato Geral de Empréstimos</button>
-                </div>
-            </div>
-            <div class="box">
-                <h2>Histórico de Empréstimos do Dia</h2>
-                <div id="historicoDoDia"></div>
-            </div>
-        </div>
-
-        <div id="conteudoFisicos" style="display:none;">
-            <div class="box">
-                <h2>Clientes Físicos</h2>
-                <input type="search" id="pesquisaFisicos" class="barra-pesquisa" placeholder="Pesquisar por nome...">
-                <div id="listaClientesFisicos"></div>
-            </div>
-        </div>
-        <div id="conteudoBares" style="display:none;">
-            <div class="box">
-                <h2>Bares</h2>
-                <input type="search" id="pesquisaBares" class="barra-pesquisa" placeholder="Pesquisar por nome...">
-                <div id="listaClientesBares"></div>
-            </div>
-        </div>
-        
-        <div id="conteudoAdicionarCliente" style="display:none;">
-            <form id="formCliente" class="box">
-                <h2 id="formClienteTitulo">Registar Novo Cliente</h2>
-                <div class="grid-2-col">
-                    <div><label for="nomeCliente">Nome:</label><input type="text" id="nomeCliente" required></div>
-                    <div><label for="tipoCliente">Tipo:</label><select id="tipoCliente" required><option value="">Selecione</option><option value="fisico">Físico</option><option value="bar">Bar</option></select></div>
-                </div>
-                <div class="grid-2-col">
-                    <div><label for="enderecoCliente">Endereço:</label><input type="text" id="enderecoCliente" required></div>
-                    <div><label for="numeroCliente">Número:</label><input type="text" id="numeroCliente" required></div>
-                </div>
-                <div><label for="telefoneCliente">Telefone (com código do país, ex: 55119...):</label><input type="tel" id="telefoneCliente" placeholder="Ex: 5511987654321"></div>
-                <button type="submit" id="btnSalvarCliente">Guardar Cliente</button>
-                <button type="button" id="btnCancelarEdicao" class="secondary" style="display:none;">Cancelar Edição</button>
-            </form>
-        </div>
-
-        <div id="conteudoEstoque" style="display:none;">
-            <div class="box">
-                <h2>Gestão de Estoque</h2>
-                <div id="listaEstoque"></div>
-                <button id="btnImprimirExtratoEstoque" class="secondary">Imprimir Extrato de Estoque</button>
-            </div>
-        </div>
-
-        <div id="conteudoApagados" style="display:none;">
-            <div class="box">
-                <h2>Registos de Empréstimo Apagados</h2>
-                <div id="listaRegistrosApagados"></div>
-            </div>
-        </div>
-    </div>
+  <!-- APP -->
+  <div id="app" style="display:none;">
+    <!-- Barra com logo VOLT à esquerda e título VOLT central -->
+<div class="header">
+  <img src="logo.png?v=1" class="logo-garcia" alt="Distribuidora Garcia">
+  <h1 class="app-title"></h1>
+  <img src="volt.png?v=1" class="logo-volt" alt="VOLT">
 </div>
 
-<div id="modalHistoricoCliente" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="fecharModal('modalHistoricoCliente')">&times;</span>
-        <h2 id="modalTituloCliente">Histórico do Cliente</h2>
-        <div id="infoClienteModal" class="info-cliente-modal"></div>
-        <div id="resumoDividaCliente" class="resumo-divida-cliente"></div>
-        
-        <div class="box">
-            <h3>Notificar Cliente via WhatsApp</h3>
-            <button class="whatsapp" id="btnNotificarWhatsapp">Gerar Mensagem de Cobrança</button>
-        </div>
 
-        <form id="formEmprestimo">
-            <h3>Registar Novo Empréstimo</h3>
-            
-            <div><label for="dataEmprestimo">Data e Hora do Empréstimo:</label><input type="datetime-local" id="dataEmprestimo" required></div>
-            
-            <div class="grid-3-col">
-                <div><label for="marcaCasco">Marca:</label><select id="marcaCasco"></select></div>
-                <div><label for="tamanhoCasco">Tamanho:</label><select id="tamanhoCasco"></select></div>
-                <div><label for="qtdCasco">Qtd:</label><input type="number" id="qtdCasco" min="0" value="0"></div>
-            </div>
-            <h4>Caixas</h4>
-            <div class="grid-2-col">
-                <div><label for="tipoCaixa">Tipo:</label><select id="tipoCaixa"></select></div>
-                <div><label for="qtdCaixa">Qtd:</label><input type="number" id="qtdCaixa" min="0" value="0"></div>
-            </div>
-            <button type="submit">Adicionar Empréstimo</button>
-        </form>
 
-        <div class="box">
-            <h3>Empréstimos Registados</h3>
-            <div id="listaHistoricoCliente"></div>
-        </div>
+    <div class="tabs">
+      <button id="tabHome" class="active">Home</button>
+      <button id="tabNotificacoes">Notificações</button>
+      <button id="tabFisicos">Clientes Físicos</button>
+      <button id="tabBares">Bares</button>
+      <button id="tabAdicionarCliente">Adicionar Cliente</button>
+      <button id="tabEstoque">Estoque</button>
+      <button id="tabApagados">Registos Apagados</button>
     </div>
+
+    <div id="conteudoHome">
+      <div class="box home-grid">
+        <div class="box">
+          <h3>Total de Itens Pendentes</h3>
+          <p id="totalItensPendentes" class="stat-number">0</p>
+        </div>
+        <div class="box">
+          <h3>Clientes com Débitos</h3>
+          <p id="totalClientesComDebitos" class="stat-number">0</p>
+        </div>
+      </div>
+      <div class="box">
+        <h2>Relatórios e Extratos</h2>
+        <div class="grid-2-col">
+          <button id="btnImprimirResumoDiario">Imprimir Resumo do Dia</button>
+          <button id="btnImprimirExtratoEmprestimos" class="secondary">Imprimir Extrato Geral de Empréstimos</button>
+        </div>
+      </div>
+      <div class="box">
+        <h2>Histórico de Empréstimos do Dia</h2>
+        <div id="historicoDoDia"></div>
+      </div>
+    </div>
+
+    <div id="conteudoNotificacoes" style="display:none;">
+      <div class="box">
+        <h2>Notificações</h2>
+        <div id="listaNotificacoes"></div>
+      </div>
+    </div>
+
+    <div id="conteudoFisicos" style="display:none;">
+      <div class="box">
+        <h2>Clientes Físicos</h2>
+        <input type="search" id="pesquisaFisicos" class="barra-pesquisa" placeholder="Pesquisar por nome...">
+        <div id="listaClientesFisicos"></div>
+      </div>
+    </div>
+
+    <div id="conteudoBares" style="display:none;">
+      <div class="box">
+        <h2>Bares</h2>
+        <input type="search" id="pesquisaBares" class="barra-pesquisa" placeholder="Pesquisar por nome...">
+        <div id="listaClientesBares"></div>
+      </div>
+    </div>
+    
+    <div id="conteudoAdicionarCliente" style="display:none;">
+      <form id="formCliente" class="box">
+        <h2 id="formClienteTitulo">Registar Novo Cliente</h2>
+        <div class="grid-2-col">
+          <div><label for="nomeCliente">Nome:</label><input type="text" id="nomeCliente" required></div>
+          <div><label for="tipoCliente">Tipo:</label><select id="tipoCliente" required><option value="">Selecione</option><option value="fisico">Físico</option><option value="bar">Bar</option></select></div>
+        </div>
+        <div class="grid-2-col">
+          <div><label for="enderecoCliente">Endereço:</label><input type="text" id="enderecoCliente" required></div>
+          <div><label for="numeroCliente">Número:</label><input type="text" id="numeroCliente" required></div>
+        </div>
+        <div><label for="telefoneCliente">Telefone (com código do país, ex: 55119...):</label><input type="tel" id="telefoneCliente" placeholder="Ex: 5511987654321"></div>
+        <button type="submit" id="btnSalvarCliente">Guardar Cliente</button>
+        <button type="button" id="btnCancelarEdicao" class="secondary" style="display:none;">Cancelar Edição</button>
+      </form>
+    </div>
+
+    <div id="conteudoEstoque" style="display:none;">
+      <div class="box">
+        <h2>Gestão de Estoque</h2>
+        <div id="listaEstoque"></div>
+        <button id="btnImprimirExtratoEstoque" class="secondary">Imprimir Extrato de Estoque</button>
+      </div>
+    </div>
+
+    <div id="conteudoApagados" style="display:none;">
+      <div class="box">
+        <h2>Registos de Empréstimo Apagados</h2>
+        <div id="listaRegistrosApagados"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modais (ESCONDIDOS por padrão) -->
+<div id="modalHistoricoCliente" class="modal">
+  <div class="modal-content">
+    <span class="close-button" onclick="fecharModal('modalHistoricoCliente')">&times;</span>
+    <h2 id="modalTituloCliente">Histórico do Cliente</h2>
+    <div id="infoClienteModal" class="info-cliente-modal"></div>
+    <div id="resumoDividaCliente" class="resumo-divida-cliente"></div>
+    
+    <div class="box">
+      <h3>Notificar Cliente via WhatsApp</h3>
+      <button class="whatsapp" id="btnNotificarWhatsapp">Gerar Mensagem de Cobrança</button>
+    </div>
+
+    <form id="formEmprestimo">
+      <h3>Registar Novo Empréstimo</h3>
+      <div><label for="dataEmprestimo">Data e Hora do Empréstimo:</label><input type="datetime-local" id="dataEmprestimo" required></div>
+
+      <div><label for="dataDevolucao">Data de Devolução (prevista):</label><input type="date" id="dataDevolucao" required></div>
+
+      <div class="grid-3-col">
+        <div><label for="marcaCasco">Marca:</label><select id="marcaCasco"></select></div>
+        <div><label for="tamanhoCasco">Tamanho:</label><select id="tamanhoCasco"></select></div>
+        <div><label for="qtdCasco">Qtd:</label><input type="number" id="qtdCasco" min="0" value="0"></div>
+      </div>
+      <h4>Caixas</h4>
+      <div class="grid-2-col">
+        <div><label for="tipoCaixa">Tipo:</label><select id="tipoCaixa"></select></div>
+        <div><label for="qtdCaixa">Qtd:</label><input type="number" id="qtdCaixa" min="0" value="0"></div>
+      </div>
+      <button type="submit">Adicionar Empréstimo</button>
+    </form>
+
+    <div class="box">
+      <h3>Empréstimos Registados</h3>
+      <div id="listaHistoricoCliente"></div>
+    </div>
+  </div>
 </div>
 
 <div id="modalDevolucao" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="fecharModal('modalDevolucao')">&times;</span>
-        <h3>Realizar Devolução</h3>
-        <form id="formDevolucao">
-            <div id="devolucaoItens"></div>
-            <button type="submit">Confirmar Devolução</button>
-        </form>
-    </div>
+  <div class="modal-content">
+    <span class="close-button" onclick="fecharModal('modalDevolucao')">&times;</span>
+    <h3>Realizar Devolução</h3>
+    <form id="formDevolucao">
+      <div id="devolucaoItens"></div>
+      <button type="submit">Confirmar Devolução</button>
+    </form>
+  </div>
 </div>
 
 <div id="modalApagarRegistro" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="fecharModal('modalApagarRegistro')">&times;</span>
-        <h3>Apagar Registo</h3>
-        <p>Tem a certeza de que quer apagar este registo? Esta ação não pode ser desfeita. Os itens pendentes serão devolvidos ao estoque.</p>
-        <form id="formApagar">
-            <label for="justificativaApagar">Justificativa (obrigatório):</label>
-            <textarea id="justificativaApagar" rows="3" required></textarea>
-            <button type="submit">Confirmar e Apagar</button>
-        </form>
-    </div>
+  <div class="modal-content">
+    <span class="close-button" onclick="fecharModal('modalApagarRegistro')">&times;</span>
+    <h3>Apagar Registo</h3>
+    <p>Tem a certeza de que quer apagar este registo? Esta ação não pode ser desfeita. Os itens pendentes serão devolvidos ao estoque.</p>
+    <form id="formApagar">
+      <label for="justificativaApagar">Justificativa (obrigatório):</label>
+      <textarea id="justificativaApagar" rows="3" required></textarea>
+      <button type="submit">Confirmar e Apagar</button>
+    </form>
+  </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-// ======= DADOS E OPÇÕES PRÉ-DEFINIDAS =======
-const OPCOES_MARCA_CASCO = ["Nenhuma", "Brahma", "Skol", "Bohemia", "Budweiser", "Original", "Devassa", "Amstel", "Itaipava", "Heineken", "Stella", "Coca Cola"];
-const OPCOES_TAMANHO_CASCO = ["Nenhum", "300ml", "600ml", "1L"];
-const OPCOES_TIPO_CAIXA = ["Nenhuma", "Ambev Azul", "Brasil Kirin Amarela", "Itaipava Vermelha", "Coca Cola LS 1L", "Ambev 1L Caixa", "Heineken 600ml"];
-
-// ======= VARIÁVEIS GLOBAIS =======
+/* ===================== MODO OFFLINE ===================== */
+const OFFLINE = false;                 // <- mude para false para usar a API real
 const API_URL = '/api';
+
 let clientes = [];
 let historico = [];
 let historicoHoje = [];
 let estoque = [];
 let registrosApagados = [];
+let notificacoes = [];
+
 let clienteAtualParaHistorico = null;
 let editClienteId = null;
 let registroParaDevolverId = null;
 let registroParaApagarId = null;
 
-// ======= FUNÇÕES DE UTILIDADE E INICIALIZAÇÃO =======
+/* ===================== OPÇÕES PADRÃO ===================== */
+const OPCOES_MARCA_CASCO = ["Nenhuma", "Brahma", "Skol", "Bohemia", "Budweiser", "Original", "Devassa", "Amstel", "Itaipava", "Heineken", "Stella", "Coca Cola"];
+const OPCOES_TAMANHO_CASCO = ["Nenhum", "300ml", "600ml", "1L"];
+const OPCOES_TIPO_CAIXA = ["Nenhuma", "Ambev Azul", "Brasil Kirin Amarela", "Itaipava Vermelha", "Coca Cola LS 1L", "Ambev 1L Caixa", "Heineken 600ml"];
 
-// Função para garantir que a data esteja no formato ISO 8601 que o JavaScript entende.
-const corrigirFormatoData = (dataString) => {
-    if (typeof dataString === 'string' && dataString.includes(' ') && !dataString.includes('T')) {
-        return dataString.replace(' ', 'T');
+/* ===================== PARSE E FORMATAÇÃO DE DATAS ===================== */
+const parseDataSeguro = (valor) => {
+  if (valor == null) return null;
+  if (valor instanceof Date) return isNaN(valor) ? null : valor;
+  if (typeof valor === 'number') {
+    const d = new Date(valor);
+    return isNaN(d) ? null : d;
+  }
+  if (typeof valor === 'string') {
+    const s = valor.trim();
+
+    let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (m) {
+      const [, dd, mm, yyyy, hh='00', mi='00', ss='00'] = m;
+      const d = new Date(+yyyy, +mm - 1, +dd, +hh, +mi, +ss);
+      return isNaN(d) ? null : d;
     }
-    return dataString;
+
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (m) {
+      const [, yyyy, mm, dd, hh='00', mi='00', ss='00'] = m;
+      const d = new Date(+yyyy, +mm - 1, +dd, +hh, +mi, +ss);
+      return isNaN(d) ? null : d;
+    }
+
+    const d = new Date(s.replace(' ', 'T'));
+    return isNaN(d) ? null : d;
+  }
+  return null;
+};
+const formatarDataHoraBR = (v) => {
+  const d = parseDataSeguro(v);
+  return d ? d.toLocaleString('pt-BR') : '—';
+};
+const formatarDataBR = (v) => {
+  const d = parseDataSeguro(v);
+  return d ? d.toLocaleDateString('pt-BR') : '—';
+};
+const formatarHoraBR = (v) => {
+  const d = parseDataSeguro(v);
+  return d ? d.toLocaleTimeString('pt-BR') : '—';
+};
+const fimDoDia = (d) => {
+  const x = parseDataSeguro(d) || new Date();
+  x.setHours(23,59,59,999);
+  return x;
 };
 
+/* ===================== MOCKS OFFLINE ===================== */
+const carregarMocks = () => {
+  clientes = [
+    { id: 1, nome: 'João Silva', tipo: 'fisico', endereco: 'Rua A', numero: '123', telefone: '5511999999999' },
+    { id: 2, nome: 'Bar do Zé', tipo: 'bar', endereco: 'Av. B', numero: '45', telefone: '5511888888888' },
+  ];
+  estoque = [
+    { id: 1, nome: 'Casco Brahma 600ml', quantidade: 20 },
+    { id: 2, nome: 'Caixa Ambev Azul', quantidade: 10 },
+  ];
+  const hoje = new Date();
+  const hojeISODate = hoje.toISOString().slice(0,10);
+
+  historico = [
+    {
+      id: 1, cliente_id: 1,
+      marca_casco: 'Brahma', tamanho_casco: '600ml', qtd_casco: 2, qtd_casco_devolvido: 0,
+      tipo_caixa: 'Ambev Azul', qtd_caixa: 1, qtd_caixa_devolvido: 0,
+      data_emprestimo: new Date().toISOString(),
+      data_devolucao: hojeISODate
+    },
+    {
+      id: 2, cliente_id: 2,
+      marca_casco: 'Skol', tamanho_casco: '600ml', qtd_casco: 1, qtd_casco_devolvido: 0,
+      tipo_caixa: 'Nenhuma', qtd_caixa: 0, qtd_caixa_devolvido: 0,
+      data_emprestimo: new Date(Date.now()-3600*1000).toISOString(),
+      data_devolucao: '2025-01-01'
+    },
+    {
+      id: 3, cliente_id: 1,
+      marca_casco: 'Heineken', tamanho_casco: '600ml', qtd_casco: 0, qtd_casco_devolvido: 0,
+      tipo_caixa: 'Heineken 600ml', qtd_caixa: 1, qtd_caixa_devolvido: 0,
+      data_emprestimo: new Date().toISOString().slice(0,19).replace('T',' '),
+      data_devolucao: '2099-12-31'
+    }
+  ];
+  registrosApagados = [];
+
+  clientes.forEach(c => {
+    const regs = historico.filter(h => h.cliente_id === c.id);
+    c.dividaTotal = regs.reduce((acc, h) => {
+      const cascosPend = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+      const caixasPend = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+      return acc + cascosPend + caixasPend;
+    }, 0);
+  });
+
+  const y=hoje.getFullYear(), m=hoje.getMonth(), d=hoje.getDate();
+  const ini = new Date(y,m,d).getTime(), fim = new Date(y,m,d+1).getTime();
+  historicoHoje = historico.map(h=>{
+    const t = parseDataSeguro(h.data_emprestimo)?.getTime() || 0;
+    if (t>=ini && t<fim) {
+      const cli = clientes.find(c=>c.id===h.cliente_id);
+      return { ...h, cliente_nome: cli ? cli.nome : 'Desconhecido' };
+    }
+    return null;
+  }).filter(Boolean);
+};
+
+/* ===================== UI HELPERS ===================== */
 const popularSelect = (selectId, opcoes) => {
-    const select = document.getElementById(selectId);
-    select.innerHTML = '';
-    opcoes.forEach(opt => select.add(new Option(opt, opt)));
+  const select = document.getElementById(selectId);
+  select.innerHTML = '';
+  opcoes.forEach(opt => select.add(new Option(opt, opt)));
 };
-
-const carregarDadosIniciais = async () => {
-    try {
-        const [clientesRes, historicoRes, estoqueRes, apagadosRes, hojeRes] = await Promise.all([
-            fetch(`${API_URL}/clientes`),
-            fetch(`${API_URL}/historico`),
-            fetch(`${API_URL}/estoque`),
-            fetch(`${API_URL}/registros-apagados`),
-            fetch(`${API_URL}/historico/hoje`)
-        ]);
-        if (!clientesRes.ok || !historicoRes.ok || !estoqueRes.ok || !apagadosRes.ok || !hojeRes.ok) throw new Error('Falha ao buscar dados do servidor.');
-        
-        clientes = await clientesRes.json();
-        historico = await historicoRes.json();
-        estoque = await estoqueRes.json();
-        registrosApagados = await apagadosRes.json();
-        historicoHoje = await hojeRes.json();
-
-        clientes.forEach(c => {
-            const registrosCliente = historico.filter(h => h.cliente_id === c.id);
-            c.dividaTotal = registrosCliente.reduce((acc, h) => {
-                const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-                const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-                return acc + cascosPendentes + caixasPendentes;
-            }, 0);
-        });
-
-        mudarAba('tabHome');
-    } catch (error) {
-        console.error('Erro ao carregar dados iniciais:', error);
-        alert('Não foi possível conectar ao servidor.');
-    }
-};
-
 const inicializarApp = () => {
-    popularSelect('marcaCasco', OPCOES_MARCA_CASCO);
-    popularSelect('tamanhoCasco', OPCOES_TAMANHO_CASCO);
-    popularSelect('tipoCaixa', OPCOES_TIPO_CAIXA);
+  popularSelect('marcaCasco', OPCOES_MARCA_CASCO);
+  popularSelect('tamanhoCasco', OPCOES_TAMANHO_CASCO);
+  popularSelect('tipoCaixa', OPCOES_TIPO_CAIXA);
 };
 inicializarApp();
 
-// --- LÓGICA DE LOGIN ---
+/* ===================== NOTIFICAÇÕES ===================== */
+const gerarNotificacoes = () => {
+  notificacoes = [];
+  const hoje = new Date();
+  const hojeFim = fimDoDia(hoje).getTime();
+
+  historico.forEach(h => {
+    const pendCascos = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+    const pendCaixas = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+    const pend = pendCascos + pendCaixas;
+
+    if (!h.data_devolucao || pend <= 0) return;
+
+    const dev = fimDoDia(h.data_devolucao).getTime();
+    if (dev <= hojeFim) {
+      const cli = clientes.find(c => c.id === h.cliente_id);
+      const dias = Math.ceil((hojeFim - dev) / (24*3600*1000));
+      const status = dias <= 0 ? 'Vence hoje' : `Atrasado ${dias} dia(s)`;
+      const resumo = [];
+      if (pendCascos > 0) resumo.push(`${pendCascos}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
+      if (pendCaixas > 0) resumo.push(`${pendCaixas}x Caixa(s) ${h.tipo_caixa}`);
+
+      notificacoes.push({
+        clienteId: h.cliente_id,
+        clienteNome: cli ? cli.nome : 'Desconhecido',
+        dataDevolucao: h.data_devolucao,
+        status,
+        resumo: resumo.join(' / ')
+      });
+    }
+  });
+
+  const porCliente = {};
+  notificacoes.forEach(n => {
+    if (!porCliente[n.clienteId]) porCliente[n.clienteId] = { ...n };
+    else porCliente[n.clienteId].resumo += ' | ' + n.resumo;
+  });
+  notificacoes = Object.values(porCliente)
+    .sort((a,b) => a.status.includes('Atrasado') === b.status.includes('Atrasado')
+      ? a.clienteNome.localeCompare(b.clienteNome)
+      : (b.status.includes('Atrasado') - a.status.includes('Atrasado')));
+};
+
+const renderizarNotificacoes = () => {
+  gerarNotificacoes();
+  const box = document.getElementById('listaNotificacoes');
+  box.innerHTML = '';
+  if (notificacoes.length === 0) {
+    box.innerHTML = '<p>Nenhuma notificação no momento.</p>';
+    return;
+  }
+  notificacoes.forEach(n => {
+    const ehAtraso = n.status.startsWith('Atrasado');
+    const badgeClass = ehAtraso ? 'badge-atraso' : 'badge-hoje';
+    const el = document.createElement('div');
+    el.className = 'notificacao';
+    el.innerHTML = `
+      <div><span class="badge ${badgeClass}">${n.status}</span></div>
+      <div><strong>${n.clienteNome}</strong></div>
+      <div><small>Devolução: ${formatarDataBR(n.dataDevolucao)}</small></div>
+      <div><small>${n.resumo}</small></div>
+    `;
+    el.onclick = () => abrirModal('modalHistoricoCliente', n.clienteId);
+    box.appendChild(el);
+  });
+};
+
+/* ===================== CARREGAR DADOS ===================== */
+const carregarDadosIniciais = async () => {
+  if (OFFLINE) {
+    carregarMocks();
+    mudarAba('tabHome');
+    return;
+  }
+  try {
+    const [clientesRes, historicoRes, estoqueRes, apagadosRes, hojeRes] = await Promise.all([
+      fetch(`${API_URL}/clientes`),
+      fetch(`${API_URL}/historico`),
+      fetch(`${API_URL}/estoque`),
+      fetch(`${API_URL}/registros-apagados`),
+      fetch(`${API_URL}/historico/hoje`)
+    ]);
+    if (!clientesRes.ok || !historicoRes.ok || !estoqueRes.ok || !apagadosRes.ok || !hojeRes.ok) throw new Error('Falha ao buscar dados do servidor.');
+    
+    clientes = await clientesRes.json();
+    historico = await historicoRes.json();
+    estoque = await estoqueRes.json();
+    registrosApagados = await apagadosRes.json();
+    historicoHoje = await hojeRes.json();
+
+    clientes.forEach(c => {
+      const registrosCliente = historico.filter(h => h.cliente_id === c.id);
+      c.dividaTotal = registrosCliente.reduce((acc, h) => {
+        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+        return acc + cascosPendentes + caixasPendentes;
+      }, 0);
+    });
+
+    mudarAba('tabHome');
+  } catch (error) {
+    console.error('Erro ao carregar dados iniciais:', error);
+    alert('Não foi possível conectar ao servidor.');
+  }
+};
+
+/* ===================== LOGIN ===================== */
 document.getElementById('formLogin').addEventListener('submit', async e => {
-    e.preventDefault();
+  e.preventDefault();
+  const loginErro = document.getElementById('loginErro');
+  loginErro.textContent = '';
+
+  if (OFFLINE) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    // some a watermark VOLT após login
+    const wm = document.querySelector('.login-watermark'); if (wm) wm.style.display = 'none';
+    await carregarDadosIniciais();
+    return;
+  }
+
+  try {
     const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
     const senha = document.getElementById('loginSenha').value;
-    const loginErro = document.getElementById('loginErro');
-    loginErro.textContent = '';
-
-    try {
-        const response = await fetch(`${API_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ usuario, senha })
-        });
-        if (response.ok) {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            await carregarDadosIniciais();
-        } else {
-            const data = await response.json();
-            loginErro.textContent = data.error || 'Utilizador ou palavra-passe inválidos!';
-        }
-    } catch(error) {
-        loginErro.textContent = 'Erro de conexão com o servidor.';
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario, senha })
+    });
+    if (response.ok) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      const wm = document.querySelector('.login-watermark'); if (wm) wm.style.display = 'none';
+      await carregarDadosIniciais();
+    } else {
+      const data = await response.json();
+      loginErro.textContent = data.error || 'Utilizador ou palavra-passe inválidos!';
     }
+  } catch(error) {
+    loginErro.textContent = 'Erro de conexão com o servidor.';
+  }
 });
 
-// ======= NAVEGAÇÃO POR ABAS =======
-const abas = ['Home', 'Fisicos', 'Bares', 'AdicionarCliente', 'Estoque', 'Apagados'];
+/* ===================== ABAS ===================== */
+const abas = ['Home', 'Notificacoes', 'Fisicos', 'Bares', 'AdicionarCliente', 'Estoque', 'Apagados'];
 const mudarAba = (tabId) => {
-    abas.forEach(aba => {
-        const el = document.getElementById(`conteudo${aba}`);
-        if (el) el.style.display = 'none';
-        document.getElementById(`tab${aba}`).classList.remove('active');
-    });
-    const abaAtiva = tabId.replace('tab', '');
-    const elAtivo = document.getElementById(`conteudo${abaAtiva}`);
-    if (elAtivo) elAtivo.style.display = 'block';
-    document.getElementById(tabId).classList.add('active');
+  abas.forEach(aba => {
+    const el = document.getElementById(`conteudo${aba}`);
+    if (el) el.style.display = 'none';
+    document.getElementById(`tab${aba}`).classList.remove('active');
+  });
+  const abaAtiva = tabId.replace('tab', '');
+  const elAtivo = document.getElementById(`conteudo${abaAtiva}`);
+  if (elAtivo) elAtivo.style.display = 'block';
+  document.getElementById(tabId).classList.add('active');
 
-    if (abaAtiva === 'Home') renderizarHome();
-    if (abaAtiva === 'Fisicos') renderizarClientes('fisico');
-    if (abaAtiva === 'Bares') renderizarClientes('bar');
-    if (abaAtiva === 'Estoque') renderizarEstoque();
-    if (abaAtiva === 'Apagados') renderizarRegistrosApagados();
-    if (abaAtiva === 'AdicionarCliente') resetarFormCliente();
+  if (abaAtiva === 'Home') renderizarHome();
+  if (abaAtiva === 'Notificacoes') renderizarNotificacoes();
+  if (abaAtiva === 'Fisicos') renderizarClientes('fisico');
+  if (abaAtiva === 'Bares') renderizarClientes('bar');
+  if (abaAtiva === 'Estoque') renderizarEstoque();
+  if (abaAtiva === 'Apagados') renderizarRegistrosApagados();
+  if (abaAtiva === 'AdicionarCliente') resetarFormCliente();
 };
 
 abas.forEach(aba => {
-    const btn = document.getElementById(`tab${aba}`);
-    if (btn) btn.addEventListener('click', () => mudarAba(`tab${aba}`));
+  const btn = document.getElementById(`tab${aba}`);
+  if (btn) btn.addEventListener('click', () => mudarAba(`tab${aba}`));
 });
 
-// ======= RENDERIZAÇÃO DAS SECÇÕES =======
-
+/* ===================== RENDER HOME ===================== */
 const renderizarHome = () => {
-    const container = document.getElementById('historicoDoDia');
-    container.innerHTML = '';
-    if (historicoHoje.length === 0) {
-        container.innerHTML = '<p>Nenhum empréstimo registado hoje.</p>';
-    } else {
-        historicoHoje.forEach(h => {
-            const cascosInfo = h.qtd_casco > 0 ? `${h.qtd_casco} Casco(s) (${h.marca_casco})` : '';
-            const caixasInfo = h.qtd_caixa > 0 ? `${h.qtd_caixa} Caixa(s) (${h.tipo_caixa})` : '';
-            const div = document.createElement('div');
-            div.className = 'item-lista';
-            const dataEmprestimo = new Date(corrigirFormatoData(h.data_emprestimo));
-            div.innerHTML = `
-                <span><strong>Cliente:</strong> ${h.cliente_nome}</span>
-                <span>${cascosInfo} ${caixasInfo}</span>
-                <span><small>${dataEmprestimo.toLocaleString('pt-BR')}</small></span>
-            `;
-            container.appendChild(div);
-        });
-    }
+  const container = document.getElementById('historicoDoDia');
+  container.innerHTML = '';
+  if (historicoHoje.length === 0) {
+    container.innerHTML = '<p>Nenhum empréstimo registado hoje.</p>';
+  } else {
+    historicoHoje.forEach(h => {
+      const cascosInfo = h.qtd_casco > 0 ? `${h.qtd_casco} Casco(s) (${h.marca_casco})` : '';
+      const caixasInfo = h.qtd_caixa > 0 ? `${h.qtd_caixa} Caixa(s) (${h.tipo_caixa})` : '';
+      const div = document.createElement('div');
+      div.className = 'item-lista';
+      const dataEmp = formatarDataHoraBR(h.data_emprestimo);
+      div.innerHTML = `
+        <span><strong>Cliente:</strong> ${h.cliente_nome}</span>
+        <span>${cascosInfo} ${caixasInfo}</span>
+        <span><small>${dataEmp}</small></span>
+      `;
+      container.appendChild(div);
+    });
+  }
 
-    const totalPendentes = clientes.reduce((acc, c) => acc + c.dividaTotal, 0);
-    const clientesComDebitos = clientes.filter(c => c.dividaTotal > 0).length;
-    document.getElementById('totalItensPendentes').textContent = totalPendentes;
-    document.getElementById('totalClientesComDebitos').textContent = clientesComDebitos;
+  const totalPendentes = clientes.reduce((acc, c) => acc + c.dividaTotal, 0);
+  const clientesComDebitos = clientes.filter(c => c.dividaTotal > 0).length;
+  document.getElementById('totalItensPendentes').textContent = totalPendentes;
+  document.getElementById('totalClientesComDebitos').textContent = clientesComDebitos;
 };
 
+/* ===================== RENDER CLIENTES ===================== */
 const renderizarClientes = (tipo, filtroNome = '') => {
-    const containerId = tipo === 'fisico' ? 'listaClientesFisicos' : 'listaClientesBares';
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
-    
-    const filtrados = clientes
-        .filter(c => c.tipo === tipo && c.nome.toLowerCase().includes(filtroNome.toLowerCase()))
-        .sort((a, b) => b.dividaTotal - a.dividaTotal);
+  const containerId = tipo === 'fisico' ? 'listaClientesFisicos' : 'listaClientesBares';
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  
+  const filtrados = clientes
+    .filter(c => c.tipo === tipo && c.nome.toLowerCase().includes(filtroNome.toLowerCase()))
+    .sort((a, b) => b.dividaTotal - a.dividaTotal);
 
-    if (filtrados.length === 0) {
-        container.innerHTML = '<p>Nenhum cliente encontrado.</p>';
-        return;
-    }
+  if (filtrados.length === 0) {
+    container.innerHTML = '<p>Nenhum cliente encontrado.</p>';
+    return;
+  }
 
-    filtrados.forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'item-lista';
-        div.innerHTML = `
-            <span><strong>${c.nome}</strong><br><small>${c.endereco}, ${c.numero}</small></span>
-            <span class="divida">Dívida: ${c.dividaTotal} itens</span>
-            <div class="botoes">
-                <button class="secondary" onclick="abrirModal('modalHistoricoCliente', ${c.id})">Histórico</button>
-                <button class="editar" onclick="editarCliente(${c.id})">Editar</button>
-            </div>`;
-        container.appendChild(div);
-    });
+  filtrados.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'item-lista';
+    div.innerHTML = `
+      <span><strong>${c.nome}</strong><br><small>${c.endereco}, ${c.numero}</small></span>
+      <span class="divida">Dívida: ${c.dividaTotal} itens</span>
+      <div class="botoes">
+        <button class="secondary" onclick="abrirModal('modalHistoricoCliente', ${c.id})">Histórico</button>
+        <button class="editar" onclick="editarCliente(${c.id})">Editar</button>
+      </div>`;
+    container.appendChild(div);
+  });
 };
 
+/* ===================== RENDER ESTOQUE ===================== */
 const renderizarEstoque = () => {
-    const container = document.getElementById('listaEstoque');
-    container.innerHTML = '';
-    estoque.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(item => {
-        container.innerHTML += `
-            <div class="estoque-item item-lista">
-                <span>${item.nome}</span>
-                <input type="number" id="estoque-${item.id}" value="${item.quantidade}" onchange="atualizarEstoque(${item.id})">
-            </div>
-        `;
-    });
+  const container = document.getElementById('listaEstoque');
+  container.innerHTML = '';
+  estoque.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(item => {
+    container.innerHTML += `
+      <div class="estoque-item item-lista">
+        <span>${item.nome}</span>
+        <input type="number" id="estoque-${item.id}" value="${item.quantidade}" onchange="atualizarEstoque(${item.id})">
+      </div>
+    `;
+  });
 };
 
+/* ===================== RENDER APAGADOS ===================== */
 const renderizarRegistrosApagados = () => {
-    const container = document.getElementById('listaRegistrosApagados');
-    container.innerHTML = '';
-    if (registrosApagados.length === 0) {
-        container.innerHTML = '<p>Nenhum registo apagado.</p>';
-        return;
-    }
-    registrosApagados
-    .sort((a, b) => new Date(corrigirFormatoData(b.data_apagado)) - new Date(corrigirFormatoData(a.data_apagado)))
+  const container = document.getElementById('listaRegistrosApagados');
+  container.innerHTML = '';
+  if (registrosApagados.length === 0) {
+    container.innerHTML = '<p>Nenhum registo apagado.</p>';
+    return;
+  }
+  registrosApagados
+    .sort((a, b) => {
+      const da = parseDataSeguro(a.data_apagado)?.getTime() || 0;
+      const db = parseDataSeguro(b.data_apagado)?.getTime() || 0;
+      return db - da;
+    })
     .forEach(reg => {
-        try {
-            const dados = JSON.parse(reg.dados_originais);
-            const cliente = clientes.find(c => c.id === dados.cliente_id);
-            const dataApagado = new Date(corrigirFormatoData(reg.data_apagado));
-            const dataOriginal = new Date(corrigirFormatoData(dados.data_emprestimo));
+      try {
+        const dados = JSON.parse(reg.dados_originais);
+        const cliente = clientes.find(c => c.id === dados.cliente_id);
+        const dataApagado = formatarDataHoraBR(reg.data_apagado);
+        const dataOriginal = formatarDataHoraBR(dados.data_emprestimo);
 
-            container.innerHTML += `
-                <div class="apagado-item">
-                    <p><strong>Data Apagado:</strong> ${dataApagado.toLocaleString('pt-BR')}</p>
-                    <p><strong>Justificativa:</strong> ${reg.justificativa}</p>
-                    <p><strong>Cliente:</strong> ${cliente ? cliente.nome : 'Cliente Desconhecido'}</p>
-                    <p><strong>Itens:</strong> Cascos: ${dados.qtd_casco}, Caixas: ${dados.qtd_caixa}</p>
-                    <p><strong>Data Original:</strong> ${dataOriginal.toLocaleString('pt-BR')}</p>
-                </div>
-            `;
-        } catch(e) { console.error("Erro ao processar registo apagado:", reg, e); }
+        container.innerHTML += `
+          <div class="apagado-item">
+            <p><strong>Data Apagado:</strong> ${dataApagado}</p>
+            <p><strong>Justificativa:</strong> ${reg.justificativa}</p>
+            <p><strong>Cliente:</strong> ${cliente ? cliente.nome : 'Cliente Desconhecido'}</p>
+            <p><strong>Itens:</strong> Cascos: ${dados.qtd_casco || 0}, Caixas: ${dados.qtd_caixa || 0}</p>
+            <p><strong>Data Original:</strong> ${dataOriginal}</p>
+          </div>
+        `;
+      } catch(e) { console.error("Erro ao processar registo apagado:", reg, e); }
     });
 };
 
-// ======= LÓGICA DE PESQUISA =======
+/* ===================== PESQUISA ===================== */
 document.getElementById('pesquisaFisicos').addEventListener('input', (e) => renderizarClientes('fisico', e.target.value));
 document.getElementById('pesquisaBares').addEventListener('input', (e) => renderizarClientes('bar', e.target.value));
 
-// ======= GESTÃO DE CLIENTES =======
+/* ===================== CLIENTES (CRUD) ===================== */
 const resetarFormCliente = () => {
-    document.getElementById('formCliente').reset();
-    editClienteId = null;
-    document.getElementById('formClienteTitulo').textContent = 'Registar Novo Cliente';
-    document.getElementById('btnSalvarCliente').textContent = 'Guardar Cliente';
-    document.getElementById('btnCancelarEdicao').style.display = 'none';
+  document.getElementById('formCliente').reset();
+  editClienteId = null;
+  document.getElementById('formClienteTitulo').textContent = 'Registar Novo Cliente';
+  document.getElementById('btnSalvarCliente').textContent = 'Guardar Cliente';
+  document.getElementById('btnCancelarEdicao').style.display = 'none';
 };
 
 document.getElementById('btnCancelarEdicao').addEventListener('click', resetarFormCliente);
 
 window.editarCliente = (id) => {
-    mudarAba('tabAdicionarCliente');
-    const cliente = clientes.find(c => c.id === id);
-    if (!cliente) return;
-    editClienteId = id;
-    document.getElementById('nomeCliente').value = cliente.nome;
-    document.getElementById('tipoCliente').value = cliente.tipo;
-    document.getElementById('enderecoCliente').value = cliente.endereco;
-    document.getElementById('numeroCliente').value = cliente.numero;
-    document.getElementById('telefoneCliente').value = cliente.telefone || '';
-    document.getElementById('formClienteTitulo').textContent = 'A editar Cliente';
-    document.getElementById('btnSalvarCliente').textContent = 'Atualizar Cliente';
-    document.getElementById('btnCancelarEdicao').style.display = 'block';
-    document.getElementById('formCliente').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  mudarAba('tabAdicionarCliente');
+  const cliente = clientes.find(c => c.id === id);
+  if (!cliente) return;
+  editClienteId = id;
+  document.getElementById('nomeCliente').value = cliente.nome;
+  document.getElementById('tipoCliente').value = cliente.tipo;
+  document.getElementById('enderecoCliente').value = cliente.endereco;
+  document.getElementById('numeroCliente').value = cliente.numero;
+  document.getElementById('telefoneCliente').value = cliente.telefone || '';
+  document.getElementById('formClienteTitulo').textContent = 'A editar Cliente';
+  document.getElementById('btnSalvarCliente').textContent = 'Atualizar Cliente';
+  document.getElementById('btnCancelarEdicao').style.display = 'block';
+  document.getElementById('formCliente').scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
 document.getElementById('formCliente').addEventListener('submit', async e => {
-    e.preventDefault();
-    const clienteData = {
-        nome: document.getElementById('nomeCliente').value.trim(),
-        tipo: document.getElementById('tipoCliente').value,
-        endereco: document.getElementById('enderecoCliente').value.trim(),
-        numero: document.getElementById('numeroCliente').value.trim(),
-        telefone: document.getElementById('telefoneCliente').value.trim()
-    };
-    if (!clienteData.nome || !clienteData.tipo || !clienteData.endereco || !clienteData.numero) return alert("Todos os campos, exceto telefone, são obrigatórios!");
+  e.preventDefault();
+  const clienteData = {
+    nome: document.getElementById('nomeCliente').value.trim(),
+    tipo: document.getElementById('tipoCliente').value,
+    endereco: document.getElementById('enderecoCliente').value.trim(),
+    numero: document.getElementById('numeroCliente').value.trim(),
+    telefone: document.getElementById('telefoneCliente').value.trim()
+  };
+  if (!clienteData.nome || !clienteData.tipo || !clienteData.endereco || !clienteData.numero) return alert("Todos os campos, exceto telefone, são obrigatórios!");
 
-    try {
-        const url = editClienteId ? `${API_URL}/clientes/${editClienteId}` : `${API_URL}/clientes`;
-        const method = editClienteId ? 'PUT' : 'POST';
-        const response = await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(clienteData)
-        });
-        if (!response.ok) throw new Error((await response.json()).error || 'Erro no servidor');
-        
-        await carregarDadosIniciais();
-        mudarAba(clienteData.tipo === 'fisico' ? 'tabFisicos' : 'tabBares');
-    } catch(error) {
-        alert(`Erro: ${error.message}`);
+  if (OFFLINE) {
+    if (editClienteId) {
+      const i = clientes.findIndex(c => c.id === editClienteId);
+      clientes[i] = { ...clientes[i], ...clienteData };
+    } else {
+      const novoId = clientes.length ? Math.max(...clientes.map(c=>c.id)) + 1 : 1;
+      clientes.push({ id: novoId, ...clienteData, dividaTotal: 0 });
     }
+    mudarAba(clienteData.tipo === 'fisico' ? 'tabFisicos' : 'tabBares');
+    return;
+  }
+
+  try {
+    const url = editClienteId ? `${API_URL}/clientes/${editClienteId}` : `${API_URL}/clientes`;
+    const method = editClienteId ? 'PUT' : 'POST';
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(clienteData)
+    });
+    if (!response.ok) throw new Error((await response.json()).error || 'Erro no servidor');
+    await carregarDadosIniciais();
+    mudarAba(clienteData.tipo === 'fisico' ? 'tabFisicos' : 'tabBares');
+  } catch(error) {
+    alert(`Erro: ${error.message}`);
+  }
 });
 
-// ======= GESTÃO DE ESTOQUE =======
+/* ===================== ESTOQUE ===================== */
 window.atualizarEstoque = async (itemId) => {
-    const input = document.getElementById(`estoque-${itemId}`);
-    const quantidade = parseInt(input.value, 10);
-    if (isNaN(quantidade)) return;
+  const input = document.getElementById(`estoque-${itemId}`);
+  const quantidade = parseInt(input.value, 10);
+  if (isNaN(quantidade)) return;
 
-    try {
-        const response = await fetch(`${API_URL}/estoque/${itemId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quantidade })
-        });
-        if (!response.ok) throw new Error('Falha ao atualizar estoque.');
-        const itemEstoque = estoque.find(i => i.id == itemId);
-        if (itemEstoque) itemEstoque.quantidade = quantidade;
-    } catch (error) {
-        alert(error.message);
-        carregarDadosIniciais();
-    }
+  if (OFFLINE) {
+    const item = estoque.find(i => i.id == itemId);
+    if (item) item.quantidade = quantidade;
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/estoque/${itemId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantidade })
+    });
+    if (!response.ok) throw new Error('Falha ao atualizar estoque.');
+  } catch (error) {
+    alert(error.message);
+    carregarDadosIniciais();
+  }
 };
 
-
-// ======= MODAIS, EMPRÉSTIMOS E DEVOLUÇÕES =======
+/* ===================== MODAIS, EMPRÉSTIMOS, DEVOLUÇÕES ===================== */
 const formatarDataParaInput = (date) => {
-    const d = new Date(date);
-    const ano = d.getFullYear();
-    const mes = (d.getMonth() + 1).toString().padStart(2, '0');
-    const dia = d.getDate().toString().padStart(2, '0');
-    const horas = d.getHours().toString().padStart(2, '0');
-    const minutos = d.getMinutes().toString().padStart(2, '0');
-    return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
+  const d = parseDataSeguro(date) || new Date();
+  const ano = d.getFullYear();
+  const mes = (d.getMonth() + 1).toString().padStart(2, '0');
+  const dia = d.getDate().toString().padStart(2, '0');
+  const horas = d.getHours().toString().padStart(2, '0');
+  const minutos = d.getMinutes().toString().padStart(2, '0');
+  return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
 };
-
 
 window.abrirModal = (modalId, id) => {
-    if (modalId === 'modalHistoricoCliente') {
-        clienteAtualParaHistorico = clientes.find(c => c.id === id);
-        if (!clienteAtualParaHistorico) return;
-        
-        document.getElementById('modalTituloCliente').textContent = `Histórico de: ${clienteAtualParaHistorico.nome}`;
-        document.getElementById('infoClienteModal').textContent = `Endereço: ${clienteAtualParaHistorico.endereco}, ${clienteAtualParaHistorico.numero}`;
-        
-        document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date());
-        renderHistoricoCliente(id);
+  if (modalId === 'modalHistoricoCliente') {
+    clienteAtualParaHistorico = clientes.find(c => c.id === id);
+    if (!clienteAtualParaHistorico) return;
+    document.getElementById('modalTituloCliente').textContent = `Histórico de: ${clienteAtualParaHistorico.nome}`;
+    document.getElementById('infoClienteModal').textContent = `Endereço: ${clienteAtualParaHistorico.endereco}, ${clienteAtualParaHistorico.numero}`;
+    document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date());
+    const sug = new Date(); sug.setDate(sug.getDate()+7);
+    document.getElementById('dataDevolucao').value = (function(d){const y=d.getFullYear(),m=(d.getMonth()+1+'').padStart(2,'0'),da=(d.getDate()+'').padStart(2,'0'); return `${y}-${m}-${da}`;})(sug);
+    renderHistoricoCliente(id);
+  }
+  if (modalId === 'modalDevolucao') {
+    registroParaDevolverId = id;
+    const registro = historico.find(h => h.id === registroParaDevolverId);
+    const container = document.getElementById('devolucaoItens');
+    container.innerHTML = '';
+    if (!registro) {
+      container.innerHTML = '<p>Registro não encontrado.</p>';
+    } else {
+      const cascosPendentes = (registro.qtd_casco || 0) - (registro.qtd_casco_devolvido || 0);
+      const caixasPendentes = (registro.qtd_caixa || 0) - (registro.qtd_caixa_devolvido || 0);
+      if (cascosPendentes > 0) container.innerHTML += `<div><label>Devolver Cascos (${registro.marca_casco} ${registro.tamanho_casco}):</label><input type="number" id="qtdCascoDevolver" value="0" min="0" max="${cascosPendentes}"></div>`;
+      if (caixasPendentes > 0) container.innerHTML += `<div><label>Devolver Caixas (${registro.tipo_caixa}):</label><input type="number" id="qtdCaixaDevolver" value="0" min="0" max="${caixasPendentes}"></div>`;
+      if (cascosPendentes <= 0 && caixasPendentes <= 0) container.innerHTML = '<p>Não há itens pendentes para devolver.</p>';
     }
-    if (modalId === 'modalDevolucao') {
-        registroParaDevolverId = id;
-        const registro = historico.find(h => h.id === registroParaDevolverId);
-        const container = document.getElementById('devolucaoItens');
-        container.innerHTML = '';
-        const cascosPendentes = (registro.qtd_casco || 0) - (registro.qtd_casco_devolvido || 0);
-        const caixasPendentes = (registro.qtd_caixa || 0) - (registro.qtd_caixa_devolvido || 0);
-
-        if(cascosPendentes > 0) container.innerHTML += `<div><label>Devolver Cascos (${registro.marca_casco} ${registro.tamanho_casco}):</label><input type="number" id="qtdCascoDevolver" value="0" min="0" max="${cascosPendentes}"></div>`;
-        if(caixasPendentes > 0) container.innerHTML += `<div><label>Devolver Caixas (${registro.tipo_caixa}):</label><input type="number" id="qtdCaixaDevolver" value="0" min="0" max="${caixasPendentes}"></div>`;
-    }
-    if (modalId === 'modalApagarRegistro') {
-        registroParaApagarId = id;
-    }
-    document.getElementById(modalId).style.display = 'block';
+  }
+  if (modalId === 'modalApagarRegistro') {
+    registroParaApagarId = id;
+  }
+  document.getElementById(modalId).style.display = 'block';
 };
 
 window.fecharModal = (modalId) => {
-    document.getElementById(modalId).style.display = 'none';
+  document.getElementById(modalId).style.display = 'none';
 };
 
 document.getElementById('formEmprestimo').addEventListener('submit', async e => {
-    e.preventDefault();
-    const novoRegistro = {
-        cliente_id: clienteAtualParaHistorico.id,
-        marcaCasco: document.getElementById('marcaCasco').value,
-        tamanhoCasco: document.getElementById('tamanhoCasco').value,
-        qtdCasco: parseInt(document.getElementById('qtdCasco').value, 10) || 0,
-        tipoCaixa: document.getElementById('tipoCaixa').value,
-        qtdCaixa: parseInt(document.getElementById('qtdCaixa').value, 10) || 0,
-        data_emprestimo: document.getElementById('dataEmprestimo').value 
-    };
-    const temCasco = novoRegistro.qtdCasco > 0 && novoRegistro.marcaCasco !== 'Nenhuma' && novoRegistro.tamanhoCasco !== 'Nenhum';
-    const temCaixa = novoRegistro.qtdCaixa > 0 && novoRegistro.tipoCaixa !== 'Nenhuma';
-    if (!temCasco && !temCaixa) return alert("Adicione pelo menos um item.");
-    
-    try {
-        const response = await fetch(`${API_URL}/historico`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(novoRegistro)
-        });
-        if (!response.ok) throw new Error('Falha ao guardar empréstimo.');
-        await carregarDadosIniciais();
-        document.getElementById('formEmprestimo').reset();
-        document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date());
-        renderHistoricoCliente(clienteAtualParaHistorico.id);
-    } catch (error) {
-        alert(`Erro: ${error.message}`);
-    }
+  e.preventDefault();
+
+  const dtDevStr = document.getElementById('dataDevolucao').value;
+  if (!dtDevStr) return alert('Informe a data de devolução prevista.');
+
+  const novoRegistro = {
+    cliente_id: clienteAtualParaHistorico.id,
+    marcaCasco: document.getElementById('marcaCasco').value,
+    tamanhoCasco: document.getElementById('tamanhoCasco').value,
+    qtdCasco: parseInt(document.getElementById('qtdCasco').value, 10) || 0,
+    tipoCaixa: document.getElementById('tipoCaixa').value,
+    qtdCaixa: parseInt(document.getElementById('qtdCaixa').value, 10) || 0,
+    data_emprestimo: document.getElementById('dataEmprestimo').value,
+    data_devolucao: dtDevStr
+  };
+  const temCasco = novoRegistro.qtdCasco > 0 && novoRegistro.marcaCasco !== 'Nenhuma' && novoRegistro.tamanhoCasco !== 'Nenhum';
+  const temCaixa = novoRegistro.qtdCaixa > 0 && novoRegistro.tipoCaixa !== 'Nenhuma';
+  if (!temCasco && !temCaixa) return alert("Adicione pelo menos um item.");
+
+  if (OFFLINE) {
+    const novoId = historico.length ? Math.max(...historico.map(h=>h.id)) + 1 : 1;
+    historico.push({
+      id: novoId,
+      cliente_id: novoRegistro.cliente_id,
+      marca_casco: novoRegistro.marcaCasco,
+      tamanho_casco: novoRegistro.tamanhoCasco,
+      qtd_casco: novoRegistro.qtdCasco,
+      qtd_casco_devolvido: 0,
+      tipo_caixa: novoRegistro.tipoCaixa,
+      qtd_caixa: novoRegistro.qtdCaixa,
+      qtd_caixa_devolvido: 0,
+      data_emprestimo: novoRegistro.data_emprestimo,
+      data_devolucao: novoRegistro.data_devolucao
+    });
+    clientes.forEach(c => {
+      const regs = historico.filter(h => h.cliente_id === c.id);
+      c.dividaTotal = regs.reduce((acc, h) => (acc + ((h.qtd_casco||0)-(h.qtd_casco_devolvido||0)) + ((h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0))), 0);
+    });
+    document.getElementById('formEmprestimo').reset();
+    document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date());
+    const sug = new Date(); sug.setDate(sug.getDate()+7);
+    document.getElementById('dataDevolucao').value = (function(d){const y=d.getFullYear(),m=(d.getMonth()+1+'').padStart(2,'0'),da=(d.getDate()+'').padStart(2,'0'); return `${y}-${m}-${da}`;})(sug);
+    renderHistoricoCliente(clienteAtualParaHistorico.id);
+    renderizarHome();
+    if (document.getElementById('conteudoNotificacoes').style.display !== 'none') renderizarNotificacoes();
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/historico`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(novoRegistro)
+    });
+    if (!response.ok) throw new Error('Falha ao guardar empréstimo.');
+    await carregarDadosIniciais();
+    document.getElementById('formEmprestimo').reset();
+    document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date());
+    renderHistoricoCliente(clienteAtualParaHistorico.id);
+  } catch (error) {
+    alert(`Erro: ${error.message}`);
+  }
 });
 
 document.getElementById('formDevolucao').addEventListener('submit', async e => {
-    e.preventDefault();
-    const qtdCascoDev = parseInt(document.getElementById('qtdCascoDevolver')?.value || 0, 10);
-    const qtdCaixaDev = parseInt(document.getElementById('qtdCaixaDevolver')?.value || 0, 10);
-    try {
-        const response = await fetch(`${API_URL}/historico/devolver/${registroParaDevolverId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ qtdCascoDev, qtdCaixaDev })
-        });
-        if (!response.ok) throw new Error('Falha ao registar devolução.');
-        await carregarDadosIniciais();
-        fecharModal('modalDevolucao');
-        renderHistoricoCliente(clienteAtualParaHistorico.id);
-    } catch (error) {
-        alert(`Erro: ${error.message}`);
+  e.preventDefault();
+  const qtdCascoDev = parseInt(document.getElementById('qtdCascoDevolver')?.value || 0, 10);
+  const qtdCaixaDev = parseInt(document.getElementById('qtdCaixaDevolver')?.value || 0, 10);
+
+  if (OFFLINE) {
+    const reg = historico.find(h => h.id === registroParaDevolverId);
+    if (reg) {
+      reg.qtd_casco_devolvido = Math.min(reg.qtd_casco, (reg.qtd_casco_devolvido || 0) + qtdCascoDev);
+      reg.qtd_caixa_devolvido = Math.min(reg.qtd_caixa, (reg.qtd_caixa_devolvido || 0) + qtdCaixaDev);
+      clientes.forEach(c => {
+        const regs = historico.filter(h => h.cliente_id === c.id);
+        c.dividaTotal = regs.reduce((acc, h) => (acc + ((h.qtd_casco||0)-(h.qtd_casco_devolvido||0)) + ((h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0))), 0);
+      });
+      fecharModal('modalDevolucao');
+      renderHistoricoCliente(clienteAtualParaHistorico.id);
+      renderizarHome();
+      if (document.getElementById('conteudoNotificacoes').style.display !== 'none') renderizarNotificacoes();
     }
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/historico/devolver/${registroParaDevolverId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ qtdCascoDev, qtdCaixaDev })
+    });
+    if (!response.ok) throw new Error('Falha ao registar devolução.');
+    await carregarDadosIniciais();
+    fecharModal('modalDevolucao');
+    renderHistoricoCliente(clienteAtualParaHistorico.id);
+  } catch (error) {
+    alert(`Erro: ${error.message}`);
+  }
 });
 
 document.getElementById('formApagar').addEventListener('submit', async e => {
-    e.preventDefault();
-    const justificativa = document.getElementById('justificativaApagar').value.trim();
-    if (!justificativa) return alert('A justificativa é obrigatória.');
+  e.preventDefault();
+  const justificativa = document.getElementById('justificativaApagar').value.trim();
+  if (!justificativa) return alert('A justificativa é obrigatória.');
 
-    try {
-        const response = await fetch(`${API_URL}/historico/${registroParaApagarId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ justificativa })
-        });
-        if (!response.ok) throw new Error((await response.json()).error || 'Falha ao apagar registo.');
-        
-        fecharModal('modalApagarRegistro');
-        document.getElementById('formApagar').reset();
-        await carregarDadosIniciais();
-        renderHistoricoCliente(clienteAtualParaHistorico.id);
-
-    } catch (error) {
-        alert(`Erro: ${error.message}`);
+  if (OFFLINE) {
+    const idx = historico.findIndex(h => h.id === registroParaApagarId);
+    if (idx >= 0) {
+      const reg = historico[idx];
+      historico.splice(idx, 1);
+      registrosApagados.push({
+        id: registrosApagados.length ? Math.max(...registrosApagados.map(r=>r.id))+1 : 1,
+        justificativa,
+        dados_originais: JSON.stringify(reg),
+        data_apagado: new Date().toISOString()
+      });
+      fecharModal('modalApagarRegistro');
+      document.getElementById('formApagar').reset();
+      clientes.forEach(c => {
+        const regs = historico.filter(h => h.cliente_id === c.id);
+        c.dividaTotal = regs.reduce((acc, h) => (acc + ((h.qtd_casco||0)-(h.qtd_casco_devolvido||0)) + ((h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0))), 0);
+      });
+      renderHistoricoCliente(clienteAtualParaHistorico.id);
+      renderizarHome();
+      renderizarRegistrosApagados();
+      if (document.getElementById('conteudoNotificacoes').style.display !== 'none') renderizarNotificacoes();
     }
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/historico/${registroParaApagarId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ justificativa })
+    });
+    if (!response.ok) throw new Error((await response.json()).error || 'Falha ao apagar registo.');
+    fecharModal('modalApagarRegistro');
+    document.getElementById('formApagar').reset();
+    await carregarDadosIniciais();
+    renderHistoricoCliente(clienteAtualParaHistorico.id);
+  } catch (error) {
+    alert(`Erro: ${error.message}`);
+  }
 });
 
+/* ===================== HISTÓRICO POR CLIENTE (só dentro do modal) ===================== */
 const renderHistoricoCliente = (clienteId) => {
-    const lista = document.getElementById('listaHistoricoCliente');
-    const resumoContainer = document.getElementById('resumoDividaCliente');
-    lista.innerHTML = '';
-    
-    const registros = historico
-        .filter(h => h.cliente_id === clienteId)
-        .sort((a, b) => new Date(corrigirFormatoData(b.data_emprestimo)) - new Date(corrigirFormatoData(a.data_emprestimo)));
-
-    if(registros.length === 0) {
-        lista.innerHTML = '<p>Nenhum empréstimo registado.</p>';
-        resumoContainer.style.display = 'none';
-        return;
-    }
-    
-    const dividaCliente = registros.reduce((acc, h) => {
-        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-
-        if (cascosPendentes > 0) {
-            const key = `Casco ${h.marca_casco} ${h.tamanho_casco}`;
-            acc[key] = (acc[key] || 0) + cascosPendentes;
-        }
-        if (caixasPendentes > 0) {
-            const key = `Caixa ${h.tipo_caixa}`;
-            acc[key] = (acc[key] || 0) + caixasPendentes;
-        }
-        return acc;
-    }, {});
-
-    const resumoTexto = Object.entries(dividaCliente)
-        .map(([item, qtd]) => `${qtd}x ${item}`)
-        .join(' / ');
-
-    if (resumoTexto) {
-        resumoContainer.textContent = `Dívida Total: ${resumoTexto}`;
-        resumoContainer.style.display = 'block';
-    } else {
-        resumoContainer.textContent = 'Nenhuma dívida pendente.';
-        resumoContainer.style.display = 'block';
-    }
-
-
-    registros.forEach(h => {
-        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-        const temPendencia = cascosPendentes > 0 || caixasPendentes > 0;
-
-        let info = '';
-        if (h.qtd_casco > 0) {
-            info += `<li>${h.qtd_casco} Casco(s) ${h.marca_casco} ${h.tamanho_casco} (Devolvido: ${h.qtd_casco_devolvido || 0})</li>`;
-        }
-        if (h.qtd_caixa > 0) {
-            info += `<li>${h.qtd_caixa} Caixa(s) ${h.tipo_caixa} (Devolvido: ${h.qtd_caixa_devolvido || 0})</li>`;
-        }
-        const dataEmprestimo = new Date(corrigirFormatoData(h.data_emprestimo));
-
-        const div = document.createElement('div');
-        div.className = 'item-lista';
-        div.innerHTML = `
-            <span>
-                <strong>Data: ${dataEmprestimo.toLocaleString('pt-BR')}</strong>
-                <ul>${info}</ul>
-            </span>
-            <div class="botoes">
-                ${temPendencia ? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>` : ''}
-                <button class="imprimir-recibo" onclick="imprimirRecibo(${h.id})">Recibo</button>
-                <button class="apagar" onclick="abrirModal('modalApagarRegistro', ${h.id})">Apagar</button>
-            </div>
-        `;
-        lista.appendChild(div);
+  const lista = document.getElementById('listaHistoricoCliente');
+  const resumoContainer = document.getElementById('resumoDividaCliente');
+  lista.innerHTML = '';
+  
+  const registros = historico
+    .filter(h => h.cliente_id === clienteId)
+    .sort((a, b) => {
+      const ta = parseDataSeguro(a.data_emprestimo)?.getTime() || 0;
+      const tb = parseDataSeguro(b.data_emprestimo)?.getTime() || 0;
+      return tb - ta;
     });
+
+  if (registros.length === 0) {
+    lista.innerHTML = '<p>Nenhum empréstimo registado.</p>';
+    resumoContainer.style.display = 'none';
+    return;
+  }
+  
+  const dividaCliente = registros.reduce((acc, h) => {
+    const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+    const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+    if (cascosPendentes > 0) {
+      const key = `Casco ${h.marca_casco} ${h.tamanho_casco}`;
+      acc[key] = (acc[key] || 0) + cascosPendentes;
+    }
+    if (caixasPendentes > 0) {
+      const key = `Caixa ${h.tipo_caixa}`;
+      acc[key] = (acc[key] || 0) + caixasPendentes;
+    }
+    return acc;
+  }, {});
+
+  const resumoTexto = Object.entries(dividaCliente).map(([item, qtd]) => `${qtd}x ${item}`).join(' / ');
+  resumoContainer.textContent = resumoTexto ? `Dívida Total: ${resumoTexto}` : 'Nenhuma dívida pendente.';
+  resumoContainer.style.display = 'block';
+
+  registros.forEach(h => {
+    const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+    const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+    const temPendencia = cascosPendentes > 0 || caixasPendentes > 0;
+
+    let info = '';
+    if (h.qtd_casco > 0) {
+      info += `<li>${h.qtd_casco} Casco(s) ${h.marca_casco} ${h.tamanho_casco} (Devolvido: ${h.qtd_casco_devolvido || 0})</li>`;
+    }
+    if (h.qtd_caixa > 0) {
+      info += `<li>${h.qtd_caixa} Caixa(s) ${h.tipo_caixa} (Devolvido: ${h.qtd_caixa_devolvido || 0})</li>`;
+    }
+    const dataEmp = formatarDataHoraBR(h.data_emprestimo);
+    const dataDev = h.data_devolucao ? ` | Devolução: ${formatarDataBR(h.data_devolucao)}` : '';
+
+    const div = document.createElement('div');
+    div.className = 'item-lista';
+    div.innerHTML = `
+      <span>
+        <strong>Data: ${dataEmp}${dataDev}</strong>
+        <ul>${info}</ul>
+      </span>
+      <div class="botoes">
+        ${temPendencia ? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>` : ''}
+        <button class="imprimir-recibo" onclick="imprimirRecibo(${h.id})">Recibo</button>
+        <button class="apagar" onclick="abrirModal('modalApagarRegistro', ${h.id})">Apagar</button>
+      </div>
+    `;
+    lista.appendChild(div);
+  });
 };
 
+/* ===================== WHATSAPP ===================== */
 document.getElementById('btnNotificarWhatsapp').addEventListener('click', () => {
-    if (!clienteAtualParaHistorico) return;
+  if (!clienteAtualParaHistorico) return;
+  const telefone = clienteAtualParaHistorico.telefone?.replace(/\D/g, '');
+  if (!telefone) return alert('Este cliente não possui um número de telefone cadastrado.');
 
-    const telefone = clienteAtualParaHistorico.telefone?.replace(/\D/g, '');
-    if (!telefone) {
-        alert('Este cliente não possui um número de telefone cadastrado.');
-        return;
-    }
+  const registros = historico.filter(h => h.cliente_id === clienteAtualParaHistorico.id);
+  const dividaCliente = registros.reduce((acc, h) => {
+    const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+    const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+    if (cascosPendentes > 0) acc[`Casco ${h.marca_casco} ${h.tamanho_casco}`] = (acc[`Casco ${h.marca_casco} ${h.tamanho_casco}`] || 0) + cascosPendentes;
+    if (caixasPendentes > 0) acc[`Caixa ${h.tipo_caixa}`] = (acc[`Caixa ${h.tipo_caixa}`] || 0) + caixasPendentes;
+    return acc;
+  }, {});
+  
+  const resumoItens = Object.entries(dividaCliente).map(([item, qtd]) => `  - ${qtd}x ${item}`).join('\n');
+  if (!resumoItens) return alert('Este cliente não possui débitos pendentes.');
 
-    const registros = historico.filter(h => h.cliente_id === clienteAtualParaHistorico.id);
-    const dividaCliente = registros.reduce((acc, h) => {
-        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-        if (cascosPendentes > 0) {
-            const key = `Casco ${h.marca_casco} ${h.tamanho_casco}`;
-            acc[key] = (acc[key] || 0) + cascosPendentes;
-        }
-        if (caixasPendentes > 0) {
-            const key = `Caixa ${h.tipo_caixa}`;
-            acc[key] = (acc[key] || 0) + caixasPendentes;
-        }
-        return acc;
-    }, {});
-    
-    const resumoItens = Object.entries(dividaCliente).map(([item, qtd]) => `  - ${qtd}x ${item}`).join('\n');
-
-    if (!resumoItens) {
-        alert('Este cliente não possui débitos pendentes.');
-        return;
-    }
-
-    const mensagem = encodeURIComponent(
+  const mensagem = encodeURIComponent(
 `Olá ${clienteAtualParaHistorico.nome}, tudo bem?
 Da Distribuidora Garcia, estamos passando para lembrar sobre os seguintes itens pendentes em seu nome:
 ${resumoItens}
 
 Por favor, verifique a possibilidade de devolução. Agradecemos a sua atenção!`
-    );
-
-    window.open(`https://wa.me/${telefone}?text=${mensagem}`, '_blank');
+  );
+  window.open(`https://wa.me/${telefone}?text=${mensagem}`, '_blank');
 });
 
-// ======= LÓGICA DE IMPRESSÃO =======
-const gerarConteudoImpressao = (titulo, corpo) => {
-    return `
-        <html>
-        <head>
-            <title>${titulo}</title>
-            <style>
-                body { font-family: sans-serif; margin: 20px; }
-                h1, h2, h3 { text-align: center; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-                .nao-imprimir { display: none; }
-                @media print {
-                    button { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            <img src="logo.png" style="display:block; margin:auto; height: 60px;">
-            <h1>${titulo}</h1>
-            <h3>Data: ${new Date().toLocaleDateString('pt-BR')}</h3>
-            ${corpo}
-            <script>setTimeout(() => window.print(), 500);</script>
-        </body>
-        </html>
-    `;
-};
+/* ===================== IMPRESSÃO ===================== */
+const gerarConteudoImpressao = (titulo, corpo) => `
+  <html>
+  <head>
+    <title>${titulo}</title>
+    <style>
+      body { font-family: sans-serif; margin: 20px; }
+      h1, h2, h3 { text-align: center; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+      th { background-color: #f2f2f2; }
+      .nao-imprimir { display: none; }
+      @media print { button { display: none; } }
+    </style>
+  </head>
+  <body>
+    <!-- Mantém a logo da distribuidora no recibo -->
+    <img src="logo.png" style="display:block; margin:auto; height: 60px;">
+    <h1>${titulo}</h1>
+    <h3>Data: ${new Date().toLocaleDateString('pt-BR')}</h3>
+    ${corpo}
+  </body>
+  </html>
+`;
 
 window.imprimirRecibo = (registroId) => {
-    const registro = historico.find(h => h.id === registroId);
-    const cliente = clientes.find(c => c.id === registro.cliente_id);
-    if (!registro || !cliente) return;
+  const registro = historico.find(h => h.id === registroId);
+  const cliente = registro ? clientes.find(c => c.id === registro.cliente_id) : null;
+  if (!registro || !cliente) return;
 
-    let itensHtml = '';
-    if (registro.qtd_casco > 0) itensHtml += `<tr><td>Casco ${registro.marca_casco} ${registro.tamanho_casco}</td><td>${registro.qtd_casco}</td></tr>`;
-    if (registro.qtd_caixa > 0) itensHtml += `<tr><td>Caixa ${registro.tipo_caixa}</td><td>${registro.qtd_caixa}</td></tr>`;
+  let itensHtml = '';
+  if (registro.qtd_casco > 0) itensHtml += `<tr><td>Casco ${registro.marca_casco} ${registro.tamanho_casco}</td><td>${registro.qtd_casco}</td></tr>`;
+  if (registro.qtd_caixa > 0) itensHtml += `<tr><td>Caixa ${registro.tipo_caixa}</td><td>${registro.qtd_caixa}</td></tr>`;
 
-    const dataEmprestimo = new Date(corrigirFormatoData(registro.data_emprestimo));
+  const dataEmprestimoStr = formatarDataHoraBR(registro.data_emprestimo);
 
-    const corpo = `
-        <h2>Recibo de Empréstimo</h2>
-        <p><strong>Cliente:</strong> ${cliente.nome}</p>
-        <p><strong>Endereço:</strong> ${cliente.endereco}, ${cliente.numero}</p>
-        <p><strong>Data do Empréstimo:</strong> ${dataEmprestimo.toLocaleString('pt-BR')}</p>
-        <table>
-            <thead><tr><th>Item</th><th>Quantidade</th></tr></thead>
-            <tbody>${itensHtml}</tbody>
-        </table>
-        <br><br>
-        <p>_________________________________________</p>
-        <p style="text-align:center;">Assinatura do Cliente</p>
-    `;
-    const win = window.open('', '_blank');
-    win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo));
-    win.document.close();
+  const corpo = `
+    <h2>Recibo de Empréstimo</h2>
+    <p><strong>Cliente:</strong> ${cliente.nome}</p>
+    <p><strong>Endereço:</strong> ${cliente.endereco}, ${cliente.numero}</p>
+    <p><strong>Data do Empréstimo:</strong> ${dataEmprestimoStr}</p>
+    <table>
+      <thead><tr><th>Item</th><th>Quantidade</th></tr></thead>
+      <tbody>${itensHtml}</tbody>
+    </table>
+    <br><br>
+    <p>_________________________________________</p>
+    <p style="text-align:center;">Assinatura do Cliente</p>
+  `;
+  const win = window.open('', '_blank');
+  win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo));
+  win.document.close();
+  win.onload = () => win.print();
 };
 
 document.getElementById('btnImprimirResumoDiario').addEventListener('click', () => {
-    let corpo = '<h2>Empréstimos Realizados Hoje</h2><table><thead><tr><th>Cliente</th><th>Itens</th><th>Horário</th></tr></thead><tbody>';
-    if(historicoHoje.length === 0) {
-        corpo += '<tr><td colspan="3">Nenhum empréstimo hoje.</td></tr>';
-    } else {
-        historicoHoje.forEach(h => {
-            const cascos = h.qtd_casco > 0 ? `${h.qtd_casco} Casco(s) ${h.marca_casco}` : '';
-            const caixas = h.qtd_caixa > 0 ? `${h.qtd_caixa} Caixa(s) ${h.tipo_caixa}` : '';
-            const dataEmprestimo = new Date(corrigirFormatoData(h.data_emprestimo));
-            corpo += `<tr><td>${h.cliente_nome}</td><td>${cascos} ${caixas}</td><td>${dataEmprestimo.toLocaleTimeString('pt-BR')}</td></tr>`;
-        });
-    }
-    corpo += '</tbody></table>';
+  let corpoTabela = '';
+  if (historicoHoje.length === 0) {
+    corpoTabela = '<tr><td colspan="3" style="text-align:center;">Nenhum empréstimo hoje.</td></tr>';
+  } else {
+    historicoHoje.forEach(h => {
+      const cascos = h.qtd_casco > 0 ? `${h.qtd_casco} Casco(s) ${h.marca_casco}` : '';
+      const caixas = h.qtd_caixa > 0 ? `${h.qtd_caixa} Caixa(s) ${h.tipo_caixa}` : '';
+      const hora = formatarHoraBR(h.data_emprestimo);
+      corpoTabela += `
+        <tr>
+          <td>${h.cliente_nome}</td>
+          <td>${cascos} ${caixas}</td>
+          <td>${hora}</td>
+        </tr>
+      `;
+    });
+  }
 
-    const win = window.open('', '_blank');
-    win.document.write(gerarConteudoImpressao('Resumo Diário de Empréstimos', corpo));
-    win.document.close();
+  const corpo = `
+    <h2>Empréstimos Realizados Hoje</h2>
+    <table>
+      <thead><tr><th>Cliente</th><th>Itens</th><th>Horário</th></tr></thead>
+      <tbody>${corpoTabela}</tbody>
+    </table>
+  `;
+  const win = window.open('', '_blank');
+  win.document.write(gerarConteudoImpressao('Resumo Diário de Empréstimos', corpo));
+  win.document.close();
+  win.onload = () => win.print();
 });
 
 document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click', () => {
-    let corpo = '<h2>Extrato Geral de Dívidas</h2>';
-    const clientesComDebitos = clientes.filter(c => c.dividaTotal > 0);
+  let corpo = '<h2>Extrato Geral de Dívidas</h2>';
+  const clientesComDebitos = clientes
+    .filter(c => c.dividaTotal > 0)
+    .sort((a,b) => {
+      const prio = t => t === 'fisico' ? 1 : 2;
+      if (prio(a.tipo) !== prio(b.tipo)) return prio(a.tipo) - prio(b.tipo);
+      return a.nome.localeCompare(b.nome);
+    });
 
-    if(clientesComDebitos.length === 0){
-        corpo += '<p>Nenhum cliente com débitos pendentes.</p>';
-    } else {
-        clientesComDebitos.forEach(c => {
-            corpo += `<h3>${c.nome} (Total: ${c.dividaTotal} itens)</h3>`;
-            corpo += '<table><thead><tr><th>Item</th><th>Qtd. Pendente</th><th>Data Original</th></tr></thead><tbody>';
-            historico.filter(h => h.cliente_id === c.id).forEach(h => {
-                const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-                const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-                const dataEmprestimo = new Date(corrigirFormatoData(h.data_emprestimo));
+  if (clientesComDebitos.length === 0) {
+    corpo += '<p>Nenhum cliente com débitos pendentes.</p>';
+  } else {
+    clientesComDebitos.forEach(c => {
+      corpo += `<h3>${c.nome} (Total: ${c.dividaTotal} itens) — ${c.tipo === 'fisico' ? 'Físico' : 'Bar'}</h3>`;
+      
+      let itensPendentesHtml = '';
+      historico.filter(h => h.cliente_id === c.id).forEach(h => {
+        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
+        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
+        const data = formatarDataBR(h.data_emprestimo);
 
-                if(cascosPendentes > 0) corpo += `<tr><td>Casco ${h.marca_casco} ${h.tamanho_casco}</td><td>${cascosPendentes}</td><td>${dataEmprestimo.toLocaleDateString('pt-BR')}</td></tr>`;
-                if(caixasPendentes > 0) corpo += `<tr><td>Caixa ${h.tipo_caixa}</td><td>${caixasPendentes}</td><td>${dataEmprestimo.toLocaleDateString('pt-BR')}</td></tr>`;
-            });
-            corpo += '</tbody></table>';
-        });
-    }
-    
-    const win = window.open('', '_blank');
-    win.document.write(gerarConteudoImpressao('Extrato Geral de Empréstimos', corpo));
-    win.document.close();
+        if (cascosPendentes > 0) itensPendentesHtml += `<tr><td>Casco ${h.marca_casco} ${h.tamanho_casco}</td><td>${cascosPendentes}</td><td>${data}</td></tr>`;
+        if (caixasPendentes > 0) itensPendentesHtml += `<tr><td>Caixa ${h.tipo_caixa}</td><td>${caixasPendentes}</td><td>${data}</td></tr>`;
+      });
+
+      corpo += `
+        <table>
+          <thead><tr><th>Item</th><th>Qtd. Pendente</th><th>Data Original</th></tr></thead>
+          <tbody>${itensPendentesHtml}</tbody>
+        </table>
+      `;
+    });
+  }
+  const win = window.open('', '_blank');
+  win.document.write(gerarConteudoImpressao('Extrato Geral de Empréstimos', corpo));
+  win.document.close();
+  win.onload = () => win.print();
 });
 
 document.getElementById('btnImprimirExtratoEstoque').addEventListener('click', () => {
-    let corpo = '<table><thead><tr><th>Item</th><th>Quantidade em Estoque</th></tr></thead><tbody>';
-    estoque.forEach(item => {
-        corpo += `<tr><td>${item.nome}</td><td>${item.quantidade}</td></tr>`;
-    });
-    corpo += '</tbody></table>';
-    const win = window.open('', '_blank');
-    win.document.write(gerarConteudoImpressao('Extrato de Estoque', corpo));
-    win.document.close();
+  let corpoTabela = '';
+  estoque.forEach(item => {
+    corpoTabela += `<tr><td>${item.nome}</td><td>${item.quantidade}</td></tr>`;
+  });
+
+  const corpo = `
+    <table>
+      <thead><tr><th>Item</th><th>Quantidade em Estoque</th></tr></thead>
+      <tbody>${corpoTabela}</tbody>
+    </table>
+  `;
+  const win = window.open('', '_blank');
+  win.document.write(gerarConteudoImpressao('Extrato de Estoque', corpo));
+  win.document.close();
+  win.onload = () => win.print();
 });
 
-
+/* Inicializa ao abrir */
 });
 </script>
 
