@@ -1,4 +1,4 @@
-// server.js - Versão 4.1 (datas estáveis + notificações + hoje com intervalo)
+// server.js - Versão 7 powered by cid garcia jr
 
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
