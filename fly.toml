@@ -7,9 +7,8 @@ app = 'cascos'
 primary_region = 'gig'
 
 [build]
-
 [[mounts]]
-  source = 'data'
+  source = 'cascos_data_recuperado' # <- Mude 'data' para o nome do novo volume
   destination = '/data'
   auto_extend_size_threshold = 80
   auto_extend_size_increment = '1GB'

@@ -5,94 +5,135 @@
 <title>Controle de Cascos e Caixas - Distribuidora Garcia</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-/* Estilos Gerais */
-:root { --cor-principal: #b71c1c; --cor-secundaria: #1976d2; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
-.container { max-width: 1000px; margin: auto; padding: 10px; }
-.box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-h1,h2,h3,h4 { text-align: center; color: var(--cor-principal); margin-top: 0; }
-h2 { margin-bottom: 20px; }
-label { font-weight: 600; display: block; margin-top: 15px; margin-bottom: 5px; }
-input, select, button, textarea { width: 100%; padding: 12px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1em; }
-button { background: var(--cor-principal); color: white; font-weight: bold; cursor: pointer; border: none; margin-top: 20px; transition: background-color 0.2s; }
-button:hover { opacity: 0.9; }
-button.secondary { background: var(--cor-secundaria); }
-button.whatsapp { background: #25D366; }
-.grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.grid-3-col { display: grid; grid-template-columns: 3fr 2fr 1fr; gap: 15px; }
-
-/* Header e Logo (VOLT à esquerda, título centralizado) */
-.header {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 15px;
-  padding: 15px 16px;
-  background: white;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+/* =========================
+   Estilos Gerais / Tema
+========================= */
+:root{
+  --cor-principal:#b71c1c;
+  --cor-secundaria:#1976d2;
+  --font-base-size:16px;         /* base maior para melhor leitura */
+  --font-lg:18px;
+  --font-xl:22px;
+  --logo-altura:140px;           /* logo maior na app */
 }
-.header img { height: 120px; width: auto; object-fit: contain; }
 
-/* Login */
-#loginScreen { padding-top: 50px; position: relative; }
-#loginScreen .box { max-width: 400px; margin: auto; }
-#loginScreen .box img { max-width: 250px; display: block; margin: 0 auto 20px; }
-/* Watermark VOLT no canto inferior direito do login */
-.login-watermark { position: fixed; right: 12px; bottom: 12px; width: 160px; opacity: .8; pointer-events: none; z-index: 15; }
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  margin:0;background:#f0f2f5;color:#333;
+  font-size:var(--font-base-size);
+}
+.container{ max-width:1000px; margin:auto; padding:10px; }
+.box{ background:#fff; padding:20px; border-radius:10px; margin-bottom:20px;
+      box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24); }
+h1,h2,h3,h4{ text-align:center; color:var(--cor-principal); margin-top:0; }
+h1{ font-size:calc(var(--font-xl) + 6px); }
+h2{ font-size:var(--font-xl); margin-bottom:20px; }
+label{ font-weight:700; display:block; margin-top:12px; margin-bottom:6px; }
+input,select,button,textarea{
+  width:100%; padding:12px; margin-top:5px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box; font-size:1em;
+}
+button{ background:var(--cor-principal); color:#fff; font-weight:800; cursor:pointer; border:none; margin-top:20px; transition:.2s; border-radius:10px; }
+button:hover{ opacity:.9; transform:translateY(-1px); }
+button.secondary{ background:var(--cor-secundaria); }
+button.whatsapp{ background:#25D366; }
 
-/* Navegação por Abas */
-.tabs { display: flex; flex-wrap: wrap; justify-content: space-around; margin-bottom: 20px; background: #e9ecef; padding: 5px; border-radius: 8px; }
-.tabs button { flex: 1; min-width: 120px; margin: 5px; padding: 12px; border-radius: 6px; background: transparent; font-weight: 600; cursor: pointer; color: #495057; border: none; transition: all 0.2s; }
-.tabs button.active { background: var(--cor-principal); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.grid-2-col{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-3-col{ display:grid; grid-template-columns:3fr 2fr 1fr; gap:15px; }
 
-/* Listas e Itens */
-.item-lista { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e9ecef; padding: 15px 5px; flex-wrap: wrap; gap: 10px;}
-.item-lista:last-child { border-bottom: none; }
-.item-lista span { flex: 1; min-width: 150px; }
-.item-lista .divida { font-weight: bold; color: var(--cor-principal); }
-.item-lista .botoes { display: flex; flex-wrap: wrap; gap: 5px; }
-.item-lista button { width: auto; margin: 0; padding: 8px 12px; font-size: 0.9em; }
-.item-lista button.editar { background: #f57c00; }
-.item-lista button.devolver { background: #388e3c; }
-.item-lista button.imprimir-recibo { background: #6a1b9a; }
-.item-lista button.apagar { background: #444; }
-.item-lista button.apagar-cliente { background: #9e9e9e; }
+/* =========================
+   Header / Logos
+========================= */
+.header{
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:16px;
+  padding:16px; background:#fff; border-radius:10px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,.12);
+}
+.header img{ height:var(--logo-altura); width:auto; object-fit:contain; }
 
-/* Barra de Pesquisa */
-.barra-pesquisa { margin-bottom: 20px; padding: 12px; }
+/* =========================
+   Login
+========================= */
+#loginScreen{ padding-top:50px; position:relative; }
+#loginScreen .box{ max-width:420px; margin:auto; }
+#loginScreen .box img{ max-width:280px; display:block; margin:0 auto 20px; }
+.login-watermark{ position:fixed; right:12px; bottom:12px; width:180px; opacity:.85; pointer-events:none; z-index:15; }
 
-/* Home */
-.home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-.home-grid .box { flex-grow: 1; text-align: center; }
-.home-grid .stat-number { font-size: 2.5em; font-weight: bold; color: var(--cor-principal); }
+/* =========================
+   Abas
+========================= */
+.tabs{ display:flex; flex-wrap:wrap; justify-content:space-around; margin-bottom:20px; background:#e9ecef; padding:6px; border-radius:10px; }
+.tabs button{ flex:1; min-width:120px; margin:6px; padding:12px; border-radius:8px; background:transparent; font-weight:800; cursor:pointer; color:#495057; border:none; transition:.2s; }
+.tabs button.active{ background:var(--cor-principal); color:#fff; box-shadow:0 2px 5px rgba(0,0,0,.2); }
 
-/* Estoque */
-.estoque-item { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
-.estoque-item input { width: 100px; text-align: center; }
+/* =========================
+   Listas / Itens
+========================= */
+.item-lista{
+  display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e9ecef; padding:16px 6px; flex-wrap:wrap; gap:10px;
+}
+.item-lista:last-child{ border-bottom:none; }
+.item-lista span{ flex:1; min-width:150px; }
+.item-lista .divida{ font-weight:900; color:var(--cor-principal); }
+.item-lista .botoes{ display:flex; flex-wrap:wrap; gap:6px; }
+.item-lista button{ width:auto; margin:0; padding:10px 14px; font-size:.95em; border-radius:10px; }
+.item-lista button.editar{ background:#f57c00; }
+.item-lista button.devolver{ background:#388e3c; }
+.item-lista button.imprimir-recibo{ background:#6a1b9a; }
+.item-lista button.apagar{ background:#444; }
+.item-lista button.apagar-cliente{ background:#9e9e9e; }
 
-/* Registos Apagados */
-.apagado-item { background: #f9f9f9; border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
-.apagado-item p { margin: 5px 0; }
-.apagado-item strong { color: #555; }
+/* =========================
+   Busca / Home / Estoque
+========================= */
+.barra-pesquisa{ margin-bottom:20px; padding:12px; }
+.home-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
+.home-grid .box{ text-align:center; }
+.home-grid .stat-number{ font-size:2.6em; font-weight:900; color:var(--cor-principal); }
+.estoque-item{ display:grid; grid-template-columns:1fr auto; align-items:center; gap:10px; }
+.estoque-item input{ width:110px; text-align:center; }
 
-/* Notificações */
-.notificacao { background:#fff7f7; border:1px solid #f3dada; padding:12px; border-radius:8px; margin-bottom:10px; cursor:pointer; }
-.notificacao:hover { background:#ffecec; }
-.badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; }
-.badge-hoje { background:#fff3cd; color:#856404; }
-.badge-atraso { background:#f8d7da; color:#721c24; }
+/* =========================
+   Apagados / Notificações
+========================= */
+.apagado-item{ background:#f9f9f9; border:1px solid #eee; padding:15px; margin-bottom:10px; border-radius:8px; }
+.apagado-item p{ margin:5px 0; }
+.apagado-item strong{ color:#555; }
 
-/* Modais */
-.modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.4); }
-.modal-content { background: #fff; margin: 6% auto; padding: 20px; border-radius: 8px; max-width: 720px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
-.close-button { float: right; font-size: 28px; cursor: pointer; }
+.notificacao{ background:#fff7f7; border:1px solid #f3dada; padding:12px; border-radius:10px; margin-bottom:10px; cursor:pointer; }
+.notificacao:hover{ background:#ffecec; }
+.badge{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:800; }
+.badge-hoje{ background:#fff3cd; color:#856404; }
+.badge-atraso{ background:#f8d7da; color:#721c24; }
 
+/* =========================
+   Modais
+========================= */
+.modal{ display:none; position:fixed; z-index:9999; inset:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,.4); }
+.modal-content{
+  background:#fff; margin:4% auto; padding:20px; border-radius:12px; max-width:760px; box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+.close-button{ float:right; font-size:28px; cursor:pointer; }
+
+/* =========================
+   Responsivo
+========================= */
 @media(max-width:768px){
-  .grid-2-col, .home-grid { grid-template-columns: 1fr; }
-  .item-lista { flex-direction: column; align-items: flex-start; }
-  .item-lista .botoes { width: 100%; margin-top: 10px; }
+  .grid-2-col,.home-grid{ grid-template-columns:1fr; }
+  .item-lista{ flex-direction:column; align-items:flex-start; }
+  .item-lista .botoes{ width:100%; margin-top:10px; }
+  :root{ --logo-altura:120px; }
+}
+
+/* =========================
+   @media print (base TX20)
+========================= */
+@media print{
+  body{ font-size:19px; }
+  h1{ font-size:28px; }
+  h2{ font-size:23px; }
+  .header img{ height:200px !important; }   /* logo bem grande na impressão */
+  table{ font-size:19px; }
+  th, td{ padding:10px; }
+  button{ display:none !important; }
 }
 </style>
 </head>
@@ -134,6 +175,7 @@ button.whatsapp { background: #25D366; }
       <button id="tabApagados">Registos Apagados</button>
     </div>
 
+    <!-- HOME -->
     <div id="conteudoHome">
       <div class="box home-grid">
         <div class="box">
@@ -170,6 +212,7 @@ button.whatsapp { background: #25D366; }
       </div>
     </div>
 
+    <!-- NOTIFICAÇÕES -->
     <div id="conteudoNotificacoes" style="display:none;">
       <div class="box">
         <h2>Notificações</h2>
@@ -177,6 +220,7 @@ button.whatsapp { background: #25D366; }
       </div>
     </div>
 
+    <!-- FÍSICOS -->
     <div id="conteudoFisicos" style="display:none;">
       <div class="box">
         <h2>Clientes Físicos</h2>
@@ -185,6 +229,7 @@ button.whatsapp { background: #25D366; }
       </div>
     </div>
 
+    <!-- BARES -->
     <div id="conteudoBares" style="display:none;">
       <div class="box">
         <h2>Bares</h2>
@@ -192,24 +237,36 @@ button.whatsapp { background: #25D366; }
         <div id="listaClientesBares"></div>
       </div>
     </div>
-    
+
+    <!-- ADD/EDIT CLIENTE -->
     <div id="conteudoAdicionarCliente" style="display:none;">
       <form id="formCliente" class="box">
         <h2 id="formClienteTitulo">Registar Novo Cliente</h2>
         <div class="grid-2-col">
           <div><label for="nomeCliente">Nome:</label><input type="text" id="nomeCliente" required></div>
-          <div><label for="tipoCliente">Tipo:</label><select id="tipoCliente" required><option value="">Selecione</option><option value="fisico">Físico</option><option value="bar">Bar</option></select></div>
+          <div>
+            <label for="tipoCliente">Tipo:</label>
+            <select id="tipoCliente" required>
+              <option value="">Selecione</option>
+              <option value="fisico">Físico</option>
+              <option value="bar">Bar</option>
+            </select>
+          </div>
         </div>
         <div class="grid-2-col">
           <div><label for="enderecoCliente">Endereço:</label><input type="text" id="enderecoCliente" required></div>
           <div><label for="numeroCliente">Número:</label><input type="text" id="numeroCliente" required></div>
         </div>
-        <div><label for="telefoneCliente">Telefone (com código do país, ex: 55119...):</label><input type="tel" id="telefoneCliente" placeholder="Ex: 5511987654321"></div>
+        <div>
+          <label for="telefoneCliente">Telefone (com código do país, ex: 55119...):</label>
+          <input type="tel" id="telefoneCliente" placeholder="Ex: 5511987654321">
+        </div>
         <button type="submit" id="btnSalvarCliente">Guardar Cliente</button>
         <button type="button" id="btnCancelarEdicao" class="secondary" style="display:none;">Cancelar Edição</button>
       </form>
     </div>
 
+    <!-- ESTOQUE -->
     <div id="conteudoEstoque" style="display:none;">
       <div class="box">
         <h2>Gestão de Estoque</h2>
@@ -218,6 +275,7 @@ button.whatsapp { background: #25D366; }
       </div>
     </div>
 
+    <!-- APAGADOS -->
     <div id="conteudoApagados" style="display:none;">
       <div class="box">
         <h2>Registos Apagados</h2>
@@ -227,14 +285,18 @@ button.whatsapp { background: #25D366; }
   </div>
 </div>
 
-<!-- Modais -->
+<!-- =========================
+     MODAIS
+========================= -->
+
+<!-- Histórico do Cliente + Novo Empréstimo -->
 <div id="modalHistoricoCliente" class="modal">
   <div class="modal-content">
     <span class="close-button" onclick="fecharModal('modalHistoricoCliente')">&times;</span>
     <h2 id="modalTituloCliente">Histórico do Cliente</h2>
     <div id="infoClienteModal" class="info-cliente-modal"></div>
     <div id="resumoDividaCliente" class="resumo-divida-cliente"></div>
-    
+
     <div class="box">
       <h3>Ações do Cliente</h3>
       <div class="grid-2-col">
@@ -243,20 +305,61 @@ button.whatsapp { background: #25D366; }
       </div>
     </div>
 
+    <!-- NOVO: Vendedor no cadastro de empréstimo -->
     <form id="formEmprestimo">
       <h3>Registar Novo Empréstimo</h3>
-      <div><label for="dataEmprestimo">Data e Hora do Empréstimo:</label><input type="datetime-local" id="dataEmprestimo" required></div>
-      <div><label for="dataDevolucao">Data de Devolução (prevista):</label><input type="date" id="dataDevolucao" required></div>
-      <div class="grid-3-col">
-        <div><label for="marcaCasco">Marca:</label><select id="marcaCasco"></select></div>
-        <div><label for="tamanhoCasco">Tamanho:</label><select id="tamanhoCasco"></select></div>
-        <div><label for="qtdCasco">Qtd:</label><input type="number" id="qtdCasco" min="0" value="0"></div>
+
+      <div class="grid-2-col">
+        <div>
+          <label for="vendedorEmprestimo">Vendedor que emprestou:</label>
+          <select id="vendedorEmprestimo" required>
+            <option value="">Selecione</option>
+            <option>JUNIOR</option>
+            <option>ANA CLARA</option>
+            <option>CARLOS VITOR</option>
+            <option>CID</option>
+            <option>ELIEUDA</option>
+            <option>CABEÇÃO</option>
+          </select>
+        </div>
+        <div>
+          <label for="dataEmprestimo">Data e Hora do Empréstimo:</label>
+          <input type="datetime-local" id="dataEmprestimo" required>
+        </div>
       </div>
+
+      <div>
+        <label for="dataDevolucao">Data de Devolução (prevista):</label>
+        <input type="date" id="dataDevolucao" required>
+      </div>
+
+      <div class="grid-3-col">
+        <div>
+          <label for="marcaCasco">Marca:</label>
+          <select id="marcaCasco"></select>
+        </div>
+        <div>
+          <label for="tamanhoCasco">Tamanho:</label>
+          <select id="tamanhoCasco"></select>
+        </div>
+        <div>
+          <label for="qtdCasco">Qtd:</label>
+          <input type="number" id="qtdCasco" min="0" value="0">
+        </div>
+      </div>
+
       <h4>Caixas</h4>
       <div class="grid-2-col">
-        <div><label for="tipoCaixa">Tipo:</label><select id="tipoCaixa"></select></div>
-        <div><label for="qtdCaixa">Qtd:</label><input type="number" id="qtdCaixa" min="0" value="0"></div>
+        <div>
+          <label for="tipoCaixa">Tipo:</label>
+          <select id="tipoCaixa"></select>
+        </div>
+        <div>
+          <label for="qtdCaixa">Qtd:</label>
+          <input type="number" id="qtdCaixa" min="0" value="0">
+        </div>
       </div>
+
       <button type="submit">Adicionar Empréstimo</button>
     </form>
 
@@ -267,6 +370,7 @@ button.whatsapp { background: #25D366; }
   </div>
 </div>
 
+<!-- Devolução -->
 <div id="modalDevolucao" class="modal">
   <div class="modal-content">
     <span class="close-button" onclick="fecharModal('modalDevolucao')">&times;</span>
@@ -278,6 +382,7 @@ button.whatsapp { background: #25D366; }
   </div>
 </div>
 
+<!-- Apagar Registro -->
 <div id="modalApagarRegistro" class="modal">
   <div class="modal-content">
     <span class="close-button" onclick="fecharModal('modalApagarRegistro')">&times;</span>
@@ -291,7 +396,7 @@ button.whatsapp { background: #25D366; }
   </div>
 </div>
 
-<!-- NOVO: Apagar Cliente -->
+<!-- Apagar Cliente -->
 <div id="modalApagarCliente" class="modal">
   <div class="modal-content">
     <span class="close-button" onclick="fecharModal('modalApagarCliente')">&times;</span>
@@ -305,11 +410,102 @@ button.whatsapp { background: #25D366; }
   </div>
 </div>
 
+<!-- NOVO: Editar Empréstimo -->
+<div id="modalEditarEmprestimo" class="modal">
+  <div class="modal-content">
+    <span class="close-button" onclick="fecharModal('modalEditarEmprestimo')">&times;</span>
+    <h3>Editar Empréstimo</h3>
+
+    <input type="hidden" id="editEmprestimoId">
+
+    <div class="grid-2-col">
+      <div>
+        <label for="editVendedor">Vendedor (do empréstimo):</label>
+        <select id="editVendedor" required>
+          <option value="">Selecione</option>
+          <option>JUNIOR</option>
+          <option>ANA CLARA</option>
+          <option>CARLOS VITOR</option>
+          <option>CID</option>
+          <option>ELIEUDA</option>
+          <option>CABEÇÃO</option>
+        </select>
+      </div>
+      <div>
+        <label for="editDataEmprestimo">Data e Hora:</label>
+        <input type="datetime-local" id="editDataEmprestimo" required>
+      </div>
+    </div>
+
+    <div>
+      <label for="editDataDevolucao">Devolução (prevista):</label>
+      <input type="date" id="editDataDevolucao" required>
+    </div>
+
+    <div class="grid-3-col">
+      <div>
+        <label for="editMarcaCasco">Marca:</label>
+        <select id="editMarcaCasco"></select>
+      </div>
+      <div>
+        <label for="editTamanhoCasco">Tamanho:</label>
+        <select id="editTamanhoCasco"></select>
+      </div>
+      <div>
+        <label for="editQtdCasco">Qtd Casco:</label>
+        <input type="number" id="editQtdCasco" min="0" value="0">
+      </div>
+    </div>
+
+    <h4>Caixas</h4>
+    <div class="grid-2-col">
+      <div>
+        <label for="editTipoCaixa">Tipo:</label>
+        <select id="editTipoCaixa"></select>
+      </div>
+      <div>
+        <label for="editQtdCaixa">Qtd Caixa:</label>
+        <input type="number" id="editQtdCaixa" min="0" value="0">
+      </div>
+    </div>
+
+    <div class="grid-2-col">
+      <div>
+        <label for="editAlteradoPor">Alterado por:</label>
+        <select id="editAlteradoPor" required>
+          <option value="">Selecione</option>
+          <option>JUNIOR</option>
+          <option>ANA CLARA</option>
+          <option>CARLOS VITOR</option>
+          <option>CID</option>
+          <option>ELIEUDA</option>
+          <option>CABEÇÃO</option>
+        </select>
+      </div>
+      <div>
+        <label for="justificativaEdicao">Justificativa da alteração:</label>
+        <textarea id="justificativaEdicao" rows="3" required placeholder="Explique o motivo (erro, ajuste de quantidade, etc.)"></textarea>
+      </div>
+    </div>
+
+    <button id="btnSalvarEdicaoEmprestimo">Salvar Alterações</button>
+  </div>
+</div>
+
+<!-- =========================
+     Scripts (LÓGICA COMPLETA)
+========================= -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-/* ===================== MODO OFFLINE ===================== */
-const OFFLINE = false;                 // <- mude para false para usar a API real
+/* ===================== CONFIG ===================== */
+const OFFLINE = false;               // backend real
 const API_URL = '/api';
+
+const VENDEDORES = ["JUNIOR","ANA CLARA","CARLOS VITOR","CID","ELIEUDA","CABEÇÃO"];
+
+const OPCOES_MARCA_CASCO = ["Nenhuma", "Brahma", "Skol", "Bohemia", "Budweiser", "Original", "Devassa", "Amstel", "Itaipava", "Heineken", "Stella", "Coca Cola"];
+const OPCOES_TAMANHO_CASCO = ["Nenhum", "300ml", "600ml", "1L"];
+const OPCOES_TIPO_CAIXA = ["Nenhuma", "Ambev Azul", "Brasil Kirin Amarela", "Itaipava Vermelha", "Coca Cola LS 1L", "Ambev 1L Caixa", "Heineken 600ml"];
 
 let clientes = [];
 let historico = [];
@@ -317,7 +513,7 @@ let historicoHoje = [];
 let estoque = [];
 let registrosApagados = [];
 let notificacoes = [];
-let clientesApagados = [];
+let clientesApagados = []; // apenas offline
 
 let clienteAtualParaHistorico = null;
 let editClienteId = null;
@@ -325,38 +521,19 @@ let registroParaDevolverId = null;
 let registroParaApagarId = null;
 let clienteParaApagarId = null;
 
-/* ===================== OPÇÕES PADRÃO ===================== */
-const OPCOES_MARCA_CASCO = ["Nenhuma", "Brahma", "Skol", "Bohemia", "Budweiser", "Original", "Devassa", "Amstel", "Itaipava", "Heineken", "Stella", "Coca Cola"];
-const OPCOES_TAMANHO_CASCO = ["Nenhum", "300ml", "600ml", "1L"];
-const OPCOES_TIPO_CAIXA = ["Nenhuma", "Ambev Azul", "Brasil Kirin Amarela", "Itaipava Vermelha", "Coca Cola LS 1L", "Ambev 1L Caixa", "Heineken 600ml"];
-
-/* ===================== MAPEAMENTO DE GRUPOS (para relatório geral) ===================== */
-const GRUPOS_MARCAS = {
-  'Ambev': ["Brahma","Skol","Bohemia","Budweiser","Original","Stella","Antarctica"],
-  'Brasil Kirin': ["Devassa","Heineken","Amstel"],
-  'Grupo Petrópolis': ["Itaipava"],
-  'Outros': ["Coca Cola"]
-};
-
-function grupoDaMarca(marca){
-  for (const [g, marcas] of Object.entries(GRUPOS_MARCAS)) {
-    if (marcas.includes(marca)) return g;
-  }
-  return 'Outros';
-}
-
-/* ===================== PARSE E FORMATAÇÃO DE DATAS ===================== */
-const parseDataSeguro = (valor) => {
-  if (valor == null) return null;
-  if (valor instanceof Date) return isNaN(valor) ? null : valor;
-  if (typeof valor === 'number') { const d = new Date(valor); return isNaN(d) ? null : d; }
-  if (typeof valor === 'string') {
-    const s = valor.trim();
-    let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
-    if (m) { const [, dd, mm, yyyy, hh='00', mi='00', ss='00'] = m; const d = new Date(+yyyy, +mm - 1, +dd, +hh, +mi, +ss); return isNaN(d) ? null : d; }
-    m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
-    if (m) { const [, yyyy, mm, dd, hh='00', mi='00', ss='00'] = m; const d = new Date(+yyyy, +mm - 1, +dd, +hh, +mi, +ss); return isNaN(d) ? null : d; }
-    const d = new Date(s.replace(' ', 'T')); return isNaN(d) ? null : d;
+/* ===================== HELPERS ===================== */
+const popularSelect = (id, opcoes) => { const s=document.getElementById(id); s.innerHTML=''; opcoes.forEach(v=>s.add(new Option(v,v))); };
+const parseDataSeguro = (v) => {
+  if (v==null) return null;
+  if (v instanceof Date) return isNaN(v)?null:v;
+  if (typeof v==='number'){const d=new Date(v);return isNaN(d)?null:d;}
+  if (typeof v==='string'){
+    const s=v.trim();
+    let m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+    if(m){const[,dd,mm,yyyy,hh='00',mi='00',ss='00']=m;const d=new Date(+yyyy,+mm-1,+dd,+hh,+mi,+ss);return isNaN(d)?null:d;}
+    m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+    if(m){const[,yyyy,mm,dd,hh='00',mi='00',ss='00']=m;const d=new Date(+yyyy,+mm-1,+dd,+hh,+mi,+ss);return isNaN(d)?null:d;}
+    const d=new Date(s.replace(' ','T')); return isNaN(d)?null:d;
   }
   return null;
 };
@@ -364,504 +541,564 @@ const formatarDataHoraBR = (v) => { const d = parseDataSeguro(v); return d ? d.t
 const formatarDataBR = (v) => { const d = parseDataSeguro(v); return d ? d.toLocaleDateString('pt-BR') : '—'; };
 const formatarHoraBR = (v) => { const d = parseDataSeguro(v); return d ? d.toLocaleTimeString('pt-BR') : '—'; };
 const fimDoDia = (d) => { const x = parseDataSeguro(d) || new Date(); x.setHours(23,59,59,999); return x; };
+const formatarDataParaInput = (date) => { const d = parseDataSeguro(date) || new Date(); const y=d.getFullYear(), m=(d.getMonth()+1+'').padStart(2,'0'), da=(d.getDate()+'').padStart(2,'0'), hh=(d.getHours()+'').padStart(2,'0'), mi=(d.getMinutes()+'').padStart(2,'0'); return `${y}-${m}-${da}T${hh}:${mi}`; };
 
-/* ===================== MOCKS OFFLINE ===================== */
-const carregarMocks = () => {
-  clientes = [
-    { id: 1, nome: 'João Silva', tipo: 'fisico', endereco: 'Rua A', numero: '123', telefone: '5511999999999' },
-    { id: 2, nome: 'Bar do Zé', tipo: 'bar', endereco: 'Av. B', numero: '45', telefone: '5511888888888' },
-  ];
-  estoque = [
-    { id: 1, nome: 'Casco Brahma 600ml', quantidade: 20 },
-    { id: 2, nome: 'Caixa Ambev Azul', quantidade: 10 },
-  ];
-  const hoje = new Date();
-  const hojeISODate = hoje.toISOString().slice(0,10);
-
-  historico = [
-    { id: 1, cliente_id: 1, marca_casco: 'Brahma', tamanho_casco: '600ml', qtd_casco: 2, qtd_casco_devolvido: 0, tipo_caixa: 'Ambev Azul', qtd_caixa: 1, qtd_caixa_devolvido: 0, data_emprestimo: new Date().toISOString(), data_devolucao: hojeISODate },
-    { id: 2, cliente_id: 2, marca_casco: 'Skol', tamanho_casco: '600ml', qtd_casco: 1, qtd_casco_devolvido: 0, tipo_caixa: 'Nenhuma', qtd_caixa: 0, qtd_caixa_devolvido: 0, data_emprestimo: new Date(Date.now()-3600*1000).toISOString(), data_devolucao: '2025-01-01' },
-    { id: 3, cliente_id: 1, marca_casco: 'Heineken', tamanho_casco: '600ml', qtd_casco: 0, qtd_casco_devolvido: 0, tipo_caixa: 'Heineken 600ml', qtd_caixa: 1, qtd_caixa_devolvido: 0, data_emprestimo: new Date().toISOString().slice(0,19).replace('T',' '), data_devolucao: '2099-12-31' },
-    { id: 4, cliente_id: 1, marca_casco: 'Brahma', tamanho_casco: '300ml', qtd_casco: 6, qtd_casco_devolvido: 3, tipo_caixa: 'Nenhuma', qtd_caixa: 0, qtd_caixa_devolvido: 0, data_emprestimo: new Date(Date.now()-86400000*2).toISOString(), data_devolucao: '2025-12-01' },
-    { id: 5, cliente_id: 2, marca_casco: 'Itaipava', tamanho_casco: '1L', qtd_casco: 4, qtd_casco_devolvido: 1, tipo_caixa: 'Itaipava Vermelha', qtd_caixa: 2, qtd_caixa_devolvido: 0, data_emprestimo: new Date(Date.now()-86400000*3).toISOString(), data_devolucao: '2025-12-10' }
-  ];
-  registrosApagados = [];
-
-  clientes.forEach(c => {
-    const regs = historico.filter(h => h.cliente_id === c.id);
-    c.dividaTotal = regs.reduce((acc, h) => acc + ((h.qtd_casco||0)-(h.qtd_casco_devolvido||0)) + ((h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0)), 0);
-  });
-
-  const y=hoje.getFullYear(), m=hoje.getMonth(), d=hoje.getDate();
-  const ini = new Date(y,m,d).getTime(), fim = new Date(y,m,d+1).getTime();
-  historicoHoje = historico.map(h=>{
-    const t = parseDataSeguro(h.data_emprestimo)?.getTime() || 0;
-    if (t>=ini && t<fim) {
-      const cli = clientes.find(c=>c.id===h.cliente_id);
-      return { ...h, cliente_nome: cli ? cli.nome : 'Desconhecido' };
-    }
-    return null;
-  }).filter(Boolean);
-};
-
-/* ===================== UI HELPERS ===================== */
-const popularSelect = (id, opcoes) => { const select = document.getElementById(id); select.innerHTML = ''; opcoes.forEach(opt => select.add(new Option(opt, opt))); };
-const inicializarApp = () => { popularSelect('marcaCasco', OPCOES_MARCA_CASCO); popularSelect('tamanhoCasco', OPCOES_TAMANHO_CASCO); popularSelect('tipoCaixa', OPCOES_TIPO_CAIXA); };
+function inicializarApp(){
+  ['marcaCasco','editMarcaCasco'].forEach(id=>popularSelect(id, OPCOES_MARCA_CASCO));
+  ['tamanhoCasco','editTamanhoCasco'].forEach(id=>popularSelect(id, OPCOES_TAMANHO_CASCO));
+  ['tipoCaixa','editTipoCaixa'].forEach(id=>popularSelect(id, OPCOES_TIPO_CAIXA));
+}
 inicializarApp();
 
-/* ===================== NOTIFICAÇÕES ===================== */
-const gerarNotificacoes = () => {
-  notificacoes = [];
-  const hoje = new Date();
-  const hojeFim = fimDoDia(hoje).getTime();
-  historico.forEach(h => {
-    const pendCascos = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-    const pendCaixas = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-    const pend = pendCascos + pendCaixas;
-    if (!h.data_devolucao || pend <= 0) return;
-    const dev = fimDoDia(h.data_devolucao).getTime();
-    if (dev <= hojeFim) {
-      const cli = clientes.find(c => c.id === h.cliente_id);
-      const dias = Math.ceil((hojeFim - dev) / (24*3600*1000));
-      const status = dias <= 0 ? 'Vence hoje' : `Atrasado ${dias} dia(s)`;
-      const resumo = [];
-      if (pendCascos > 0) resumo.push(`${pendCascos}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
-      if (pendCaixas > 0) resumo.push(`${pendCaixas}x Caixa(s) ${h.tipo_caixa}`);
-      notificacoes.push({ clienteId: h.cliente_id, clienteNome: cli ? cli.nome : 'Desconhecido', dataDevolucao: h.data_devolucao, status, resumo: resumo.join(' / ') });
+/* ===================== LOGIN ===================== */
+document.getElementById('formLogin').addEventListener('submit', async e => {
+  e.preventDefault();
+  const loginErro = document.getElementById('loginErro'); loginErro.textContent='';
+  if (OFFLINE){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.querySelector('.login-watermark')?.style && (document.querySelector('.login-watermark').style.display='none');
+    await carregarDadosIniciais(); return;
+  }
+  try{
+    const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
+    const senha = document.getElementById('loginSenha').value;
+    const r = await fetch(`${API_URL}/login`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({usuario,senha})});
+    if (r.ok){
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('app').style.display='block';
+      document.querySelector('.login-watermark')?.style && (document.querySelector('.login-watermark').style.display='none');
+      await carregarDadosIniciais();
+    } else {
+      const d = await r.json(); loginErro.textContent = d.error || 'Utilizador ou palavra-passe inválidos!';
     }
-  });
-  const porCliente = {};
-  notificacoes.forEach(n => { if (!porCliente[n.clienteId]) porCliente[n.clienteId] = { ...n }; else porCliente[n.clienteId].resumo += ' | ' + n.resumo; });
-  notificacoes = Object.values(porCliente).sort((a,b) => a.status.includes('Atrasado') === b.status.includes('Atrasado') ? a.clienteNome.localeCompare(b.clienteNome) : (b.status.includes('Atrasado') - a.status.includes('Atrasado')));
-};
+  }catch(err){ loginErro.textContent='Erro de conexão com o servidor.'; }
+});
 
-const renderizarNotificacoes = () => {
-  gerarNotificacoes();
-  const box = document.getElementById('listaNotificacoes');
-  box.innerHTML = '';
-  if (notificacoes.length === 0) { box.innerHTML = '<p>Nenhuma notificação no momento.</p>'; return; }
-  notificacoes.forEach(n => {
+/* ===================== ABAS ===================== */
+const abas = ['Home','Notificacoes','Fisicos','Bares','AdicionarCliente','Estoque','Apagados'];
+const mudarAba = (tabId) => {
+  abas.forEach(aba=>{
+    const el = document.getElementById(`conteudo${aba}`);
+    if (el) el.style.display='none';
+    document.getElementById(`tab${aba}`).classList.remove('active');
+  });
+  const active = tabId.replace('tab','');
+  const elAtivo = document.getElementById(`conteudo${active}`); if (elAtivo) elAtivo.style.display='block';
+  document.getElementById(tabId).classList.add('active');
+
+  if (active==='Home') renderizarHome();
+  if (active==='Notificacoes') renderizarNotificacoes();
+  if (active==='Fisicos') renderizarClientes('fisico');
+  if (active==='Bares') renderizarClientes('bar');
+  if (active==='Estoque') renderizarEstoque();
+  if (active==='Apagados') renderizarRegistrosApagados();
+  if (active==='AdicionarCliente') resetarFormCliente();
+};
+abas.forEach(aba=> document.getElementById(`tab${aba}`).addEventListener('click', ()=>mudarAba(`tab${aba}`)) );
+
+/* ===================== CARREGAR DADOS ===================== */
+async function carregarDadosIniciais(){
+  if (OFFLINE){ /* poderia carregar mocks se quiser */ return; }
+  try{
+    const [clientesRes, historicoRes, estoqueRes, apagadosRes, hojeRes] = await Promise.all([
+      fetch(`${API_URL}/clientes`),
+      fetch(`${API_URL}/historico`),
+      fetch(`${API_URL}/estoque`),
+      fetch(`${API_URL}/registros-apagados`),
+      fetch(`${API_URL}/historico/hoje`)
+    ]);
+    if (![clientesRes, historicoRes, estoqueRes, apagadosRes, hojeRes].every(r=>r.ok)) throw new Error('Falha ao buscar dados');
+
+    clientes = await clientesRes.json();
+    historico = await historicoRes.json();
+    estoque = await estoqueRes.json();
+    registrosApagados = await apagadosRes.json();
+    historicoHoje = await hojeRes.json();
+
+    clientes.forEach(c=>{
+      const regs = historico.filter(h=>h.cliente_id===c.id);
+      c.dividaTotal = regs.reduce((acc,h)=>
+        acc + ((h.qtd_casco||0)-(h.qtd_casco_devolvido||0)) + ((h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0))
+      ,0);
+    });
+
+    mudarAba('tabHome');
+  }catch(e){
+    console.error(e);
+    alert('Não foi possível conectar ao servidor.');
+  }
+}
+
+/* ===================== RENDER HOME ===================== */
+function renderizarHome(){
+  const container = document.getElementById('historicoDoDia');
+  container.innerHTML='';
+  if (!historicoHoje.length) container.innerHTML='<p>Nenhum empréstimo registado hoje.</p>';
+  else {
+    historicoHoje.forEach(h=>{
+      const cascosInfo = h.qtd_casco>0 ? `${h.qtd_casco} Casco(s) (${h.marca_casco})` : '';
+      const caixasInfo = h.qtd_caixa>0 ? `${h.qtd_caixa} Caixa(s) (${h.tipo_caixa})` : '';
+      const div = document.createElement('div'); div.className='item-lista';
+      div.innerHTML = `
+        <span><strong>Cliente:</strong> ${h.cliente_nome}</span>
+        <span>${cascosInfo} ${caixasInfo}</span>
+        <span><small>${formatarDataHoraBR(h.data_emprestimo)}</small></span>
+      `;
+      container.appendChild(div);
+    });
+  }
+  const totalPendentes = clientes.reduce((acc,c)=>acc+c.dividaTotal,0);
+  const clientesComDebitos = clientes.filter(c=>c.dividaTotal>0).length;
+  document.getElementById('totalItensPendentes').textContent = totalPendentes;
+  document.getElementById('totalClientesComDebitos').textContent = clientesComDebitos;
+}
+
+/* ===================== NOTIFICAÇÕES ===================== */
+async function gerarNotificacoes(){
+  if (OFFLINE){
+    notificacoes=[];
+    const hojeFim=fimDoDia(new Date()).getTime();
+    historico.forEach(h=>{
+      const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+      const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+      const pend=pendC+pendX;
+      if(!h.data_devolucao||pend<=0) return;
+      const dev=fimDoDia(h.data_devolucao).getTime();
+      if(dev<=hojeFim){
+        const cli=clientes.find(c=>c.id===h.cliente_id);
+        const dias=Math.ceil((hojeFim-dev)/(24*3600*1000));
+        const status=dias<=0?'Vence hoje':`Atrasado ${dias} dia(s)`;
+        const res=[];
+        if(pendC>0) res.push(`${pendC}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
+        if(pendX>0) res.push(`${pendX}x Caixa(s) ${h.tipo_caixa}`);
+        notificacoes.push({ clienteId:h.cliente_id, clienteNome:cli?cli.nome:'Desconhecido', dataDevolucao:h.data_devolucao, status, resumo:res.join(' / ') });
+      }
+    });
+  } else {
+    const r = await fetch(`${API_URL}/notificacoes`);
+    const rows = r.ok? await r.json() : [];
+    const porCli = {};
+    rows.forEach(h=>{
+      const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+      const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+      const res=[];
+      if(pendC>0) res.push(`${pendC}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
+      if(pendX>0) res.push(`${pendX}x Caixa(s) ${h.tipo_caixa}`);
+      const status = h.dias_atraso>0 ? `Atrasado ${h.dias_atraso} dia(s)` : 'Vence hoje';
+      const base = { clienteId:h.cliente_id, clienteNome:h.cliente_nome, dataDevolucao:h.data_devolucao, status, resumo:res.join(' / ') };
+      if (!porCli[h.cliente_id]) porCli[h.cliente_id]=base;
+      else porCli[h.cliente_id].resumo += ' | ' + base.resumo;
+    });
+    notificacoes = Object.values(porCli);
+  }
+  // Ordenação: atrasos primeiro
+  notificacoes = notificacoes.sort((a,b)=>{
+    const A=a.status.startsWith('Atrasado'), B=b.status.startsWith('Atrasado');
+    if (A!==B) return A? -1: 1;
+    return a.clienteNome.localeCompare(b.clienteNome);
+  });
+}
+async function renderizarNotificacoes(){
+  await gerarNotificacoes();
+  const box=document.getElementById('listaNotificacoes');
+  box.innerHTML='';
+  if (!notificacoes.length){ box.innerHTML='<p>Nenhuma notificação no momento.</p>'; return; }
+  notificacoes.forEach(n=>{
     const ehAtraso = n.status.startsWith('Atrasado');
-    const badgeClass = ehAtraso ? 'badge-atraso' : 'badge-hoje';
-    const el = document.createElement('div');
-    el.className = 'notificacao';
+    const badgeClass = ehAtraso? 'badge-atraso':'badge-hoje';
+    const el = document.createElement('div'); el.className='notificacao';
     el.innerHTML = `
       <div><span class="badge ${badgeClass}">${n.status}</span></div>
       <div><strong>${n.clienteNome}</strong></div>
       <div><small>Devolução: ${formatarDataBR(n.dataDevolucao)}</small></div>
       <div><small>${n.resumo}</small></div>
     `;
-    el.onclick = () => abrirModal('modalHistoricoCliente', n.clienteId);
+    el.onclick = ()=>abrirModal('modalHistoricoCliente', n.clienteId);
     box.appendChild(el);
   });
-};
+}
 
-/* ===================== CARREGAR DADOS ===================== */
-const carregarDadosIniciais = async () => {
-  if (OFFLINE) { carregarMocks(); mudarAba('tabHome'); return; }
-  try {
-    const [clientesRes, historicoRes, estoqueRes, apagadosRes, hojeRes] = await Promise.all([
-      fetch(`${API_URL}/clientes`), fetch(`${API_URL}/historico`), fetch(`${API_URL}/estoque`), fetch(`${API_URL}/registros-apagados`), fetch(`${API_URL}/historico/hoje`)
-    ]);
-    if (!clientesRes.ok || !historicoRes.ok || !estoqueRes.ok || !apagadosRes.ok || !hojeRes.ok) throw new Error('Falha ao buscar dados do servidor.');
-    clientes = await clientesRes.json(); historico = await historicoRes.json(); estoque = await estoqueRes.json(); registrosApagados = await apagadosRes.json(); historicoHoje = await hojeRes.json();
-    clientes.forEach(c => { const regs = historico.filter(h => h.cliente_id === c.id); c.dividaTotal = regs.reduce((acc, h) => acc + ((h.qtd_casco||0)-(h.qtd_casco_devolvido||0)) + ((h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0)), 0); });
-    mudarAba('tabHome');
-  } catch (error) { console.error('Erro ao carregar dados iniciais:', error); alert('Não foi possível conectar ao servidor.'); }
-};
+/* ===================== PESQUISAS ===================== */
+document.getElementById('pesquisaFisicos').addEventListener('input', (e)=>renderizarClientes('fisico',e.target.value));
+document.getElementById('pesquisaBares').addEventListener('input', (e)=>renderizarClientes('bar',e.target.value));
 
-/* ===================== LOGIN ===================== */
-document.getElementById('formLogin').addEventListener('submit', async e => {
-  e.preventDefault();
-  const loginErro = document.getElementById('loginErro');
-  loginErro.textContent = '';
-  if (OFFLINE) { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('app').style.display = 'block'; const wm = document.querySelector('.login-watermark'); if (wm) wm.style.display = 'none'; await carregarDadosIniciais(); return; }
-  try {
-    const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
-    const senha = document.getElementById('loginSenha').value;
-    const response = await fetch(`${API_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario, senha }) });
-    if (response.ok) { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('app').style.display = 'block'; const wm = document.querySelector('.login-watermark'); if (wm) wm.style.display = 'none'; await carregarDadosIniciais(); }
-    else { const data = await response.json(); loginErro.textContent = data.error || 'Utilizador ou palavra-passe inválidos!'; }
-  } catch(error) { loginErro.textContent = 'Erro de conexão com o servidor.'; }
-});
-
-/* ===================== ABAS ===================== */
-const abas = ['Home', 'Notificacoes', 'Fisicos', 'Bares', 'AdicionarCliente', 'Estoque', 'Apagados'];
-const mudarAba = (tabId) => {
-  abas.forEach(aba => { const el = document.getElementById(`conteudo${aba}`); if (el) el.style.display = 'none'; document.getElementById(`tab${aba}`).classList.remove('active'); });
-  const abaAtiva = tabId.replace('tab', '');
-  const elAtivo = document.getElementById(`conteudo${abaAtiva}`); if (elAtivo) elAtivo.style.display = 'block';
-  document.getElementById(tabId).classList.add('active');
-  if (abaAtiva === 'Home') renderizarHome();
-  if (abaAtiva === 'Notificacoes') renderizarNotificacoes();
-  if (abaAtiva === 'Fisicos') renderizarClientes('fisico');
-  if (abaAtiva === 'Bares') renderizarClientes('bar');
-  if (abaAtiva === 'Estoque') renderizarEstoque();
-  if (abaAtiva === 'Apagados') renderizarRegistrosApagados();
-  if (abaAtiva === 'AdicionarCliente') resetarFormCliente();
-};
-abas.forEach(aba => { const btn = document.getElementById(`tab${aba}`); if (btn) btn.addEventListener('click', () => mudarAba(`tab${aba}`)); });
-
-/* ===================== RENDER HOME ===================== */
-const renderizarHome = () => {
-  const container = document.getElementById('historicoDoDia');
-  container.innerHTML = '';
-  if (historicoHoje.length === 0) { container.innerHTML = '<p>Nenhum empréstimo registado hoje.</p>'; }
-  else {
-    historicoHoje.forEach(h => {
-      const cascosInfo = h.qtd_casco > 0 ? `${h.qtd_casco} Casco(s) (${h.marca_casco})` : '';
-      const caixasInfo = h.qtd_caixa > 0 ? `${h.qtd_caixa} Caixa(s) (${h.tipo_caixa})` : '';
-      const div = document.createElement('div');
-      div.className = 'item-lista';
-      const dataEmp = formatarDataHoraBR(h.data_emprestimo);
-      div.innerHTML = `
-        <span><strong>Cliente:</strong> ${h.cliente_nome}</span>
-        <span>${cascosInfo} ${caixasInfo}</span>
-        <span><small>${dataEmp}</small></span>
-      `;
-      container.appendChild(div);
-    });
-  }
-  const totalPendentes = clientes.reduce((acc, c) => acc + c.dividaTotal, 0);
-  const clientesComDebitos = clientes.filter(c => c.dividaTotal > 0).length;
-  document.getElementById('totalItensPendentes').textContent = totalPendentes;
-  document.getElementById('totalClientesComDebitos').textContent = clientesComDebitos;
-};
-
-/* ===================== RENDER CLIENTES ===================== */
-const renderizarClientes = (tipo, filtroNome = '') => {
-  const containerId = tipo === 'fisico' ? 'listaClientesFisicos' : 'listaClientesBares';
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
-  const filtrados = clientes.filter(c => c.tipo === tipo && c.nome.toLowerCase().includes(filtroNome.toLowerCase())).sort((a, b) => b.dividaTotal - a.dividaTotal);
-  if (filtrados.length === 0) { container.innerHTML = '<p>Nenhum cliente encontrado.</p>'; return; }
-  filtrados.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'item-lista';
-    div.innerHTML = `
+/* ===================== CLIENTES LISTA ===================== */
+function renderizarClientes(tipo, filtroNome=''){
+  const containerId = tipo==='fisico' ? 'listaClientesFisicos':'listaClientesBares';
+  const ctn = document.getElementById(containerId); ctn.innerHTML='';
+  const list = clientes.filter(c=>c.tipo===tipo && c.nome.toLowerCase().includes(filtroNome.toLowerCase()))
+    .sort((a,b)=>b.dividaTotal - a.dividaTotal);
+  if (!list.length){ ctn.innerHTML='<p>Nenhum cliente encontrado.</p>'; return; }
+  list.forEach(c=>{
+    const div=document.createElement('div'); div.className='item-lista';
+    div.innerHTML=`
       <span><strong>${c.nome}</strong><br><small>${c.endereco}, ${c.numero}</small></span>
       <span class="divida">Dívida: ${c.dividaTotal} itens</span>
       <div class="botoes">
         <button class="secondary" onclick="abrirModal('modalHistoricoCliente', ${c.id})">Histórico</button>
         <button class="editar" onclick="editarCliente(${c.id})">Editar</button>
         <button class="apagar-cliente" onclick="abrirModalApagarCliente(${c.id})">Apagar Cliente</button>
-      </div>`;
-    container.appendChild(div);
+      </div>
+    `;
+    ctn.appendChild(div);
   });
-};
+}
 
-/* ===================== RENDER ESTOQUE ===================== */
-const renderizarEstoque = () => {
-  const container = document.getElementById('listaEstoque');
-  container.innerHTML = '';
-  estoque.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(item => {
-    container.innerHTML += `
+/* ===================== ESTOQUE ===================== */
+function renderizarEstoque(){
+  const ctn=document.getElementById('listaEstoque'); ctn.innerHTML='';
+  estoque.sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(item=>{
+    ctn.innerHTML += `
       <div class="estoque-item item-lista">
         <span>${item.nome}</span>
-        <input type="number" id="estoque-${item.id}" value="${item.quantidade}" onchange="atualizarEstoque(${item.id})">
+        <input type="number" id="estoque-${item.id}" value="${item.quantidade}" onchange="atualizarEstoque('${item.id}')">
       </div>
     `;
   });
+}
+window.atualizarEstoque = async (itemId) => {
+  const input = document.getElementById(`estoque-${itemId}`);
+  const quantidade = parseInt(input.value,10);
+  if (isNaN(quantidade)) return;
+  if (OFFLINE){ const it=estoque.find(i=>i.id===itemId); if(it) it.quantidade=quantidade; return; }
+  try{
+    const r=await fetch(`${API_URL}/estoque/${itemId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quantidade})});
+    if(!r.ok) throw new Error('Falha ao atualizar estoque.');
+  }catch(e){ alert(e.message); await carregarDadosIniciais(); }
 };
 
-/* ===================== RENDER APAGADOS ===================== */
-const renderizarRegistrosApagados = () => {
-  const container = document.getElementById('listaRegistrosApagados');
-  container.innerHTML = '';
-  if (registrosApagados.length === 0 && clientesApagados.length === 0) { container.innerHTML = '<p>Nenhum registo apagado.</p>'; return; }
-
-  // Registros apagados (empréstimos)
-  registrosApagados
-    .sort((a, b) => { const da = parseDataSeguro(a.data_apagado)?.getTime() || 0; const db = parseDataSeguro(b.data_apagado)?.getTime() || 0; return db - da; })
-    .forEach(reg => {
-      try {
-        const dados = JSON.parse(reg.dados_originais);
-        const cliente = clientes.find(c => c.id === dados.cliente_id) || { nome: '(Cliente removido)' };
-        const dataApagado = formatarDataHoraBR(reg.data_apagado);
-        const dataOriginal = formatarDataHoraBR(dados.data_emprestimo);
-        container.innerHTML += `
-          <div class="apagado-item">
-            <p><strong>[REGISTO]</strong></p>
-            <p><strong>Data Apagado:</strong> ${dataApagado}</p>
-            <p><strong>Justificativa:</strong> ${reg.justificativa}</p>
-            <p><strong>Cliente:</strong> ${cliente ? cliente.nome : 'Cliente Desconhecido'}</p>
-            <p><strong>Itens:</strong> Cascos: ${dados.qtd_casco || 0}, Caixas: ${dados.qtd_caixa || 0}</p>
-            <p><strong>Data Original:</strong> ${dataOriginal}</p>
-          </div>
-        `;
-      } catch(e) { console.error("Erro ao processar registo apagado:", reg, e); }
-    });
-
-  // Clientes apagados
-  clientesApagados
-    .sort((a,b) => (parseDataSeguro(b.data_apagado)?.getTime()||0) - (parseDataSeguro(a.data_apagado)?.getTime()||0))
-    .forEach(reg => {
-      const dados = reg.dados_originais; // já é objeto
-      const dataApagado = formatarDataHoraBR(reg.data_apagado);
-      container.innerHTML += `
-        <div class="apagado-item">
-          <p><strong>[CLIENTE]</strong></p>
-          <p><strong>Data Apagado:</strong> ${dataApagado}</p>
-          <p><strong>Justificativa:</strong> ${reg.justificativa}</p>
-          <p><strong>Cliente:</strong> ${dados.nome} (${dados.tipo === 'fisico' ? 'F' : 'B'})</p>
-          <p><strong>Endereço:</strong> ${dados.endereco}, ${dados.numero}</p>
-          <p><strong>Histórico arquivado:</strong> ${reg.historico.length} registo(s)</p>
-        </div>
-      `;
-    });
-};
-
-/* ===================== PESQUISA ===================== */
-document.getElementById('pesquisaFisicos').addEventListener('input', (e) => renderizarClientes('fisico', e.target.value));
-document.getElementById('pesquisaBares').addEventListener('input', (e) => renderizarClientes('bar', e.target.value));
-
-/* ===================== CLIENTES (CRUD) ===================== */
-const resetarFormCliente = () => { document.getElementById('formCliente').reset(); editClienteId = null; document.getElementById('formClienteTitulo').textContent = 'Registar Novo Cliente'; document.getElementById('btnSalvarCliente').textContent = 'Guardar Cliente'; document.getElementById('btnCancelarEdicao').style.display = 'none'; };
-
+/* ===================== CRUD CLIENTE ===================== */
+function resetarFormCliente(){
+  document.getElementById('formCliente').reset();
+  editClienteId=null;
+  document.getElementById('formClienteTitulo').textContent='Registar Novo Cliente';
+  document.getElementById('btnSalvarCliente').textContent='Guardar Cliente';
+  document.getElementById('btnCancelarEdicao').style.display='none';
+}
 document.getElementById('btnCancelarEdicao').addEventListener('click', resetarFormCliente);
 
 window.editarCliente = (id) => {
   mudarAba('tabAdicionarCliente');
-  const cliente = clientes.find(c => c.id === id);
-  if (!cliente) return;
-  editClienteId = id;
-  document.getElementById('nomeCliente').value = cliente.nome;
-  document.getElementById('tipoCliente').value = cliente.tipo;
-  document.getElementById('enderecoCliente').value = cliente.endereco;
-  document.getElementById('numeroCliente').value = cliente.numero;
-  document.getElementById('telefoneCliente').value = cliente.telefone || '';
-  document.getElementById('formClienteTitulo').textContent = 'A editar Cliente';
-  document.getElementById('btnSalvarCliente').textContent = 'Atualizar Cliente';
-  document.getElementById('btnCancelarEdicao').style.display = 'block';
-  document.getElementById('formCliente').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const c=clientes.find(x=>x.id===id); if(!c) return;
+  editClienteId=id;
+  document.getElementById('nomeCliente').value=c.nome;
+  document.getElementById('tipoCliente').value=c.tipo;
+  document.getElementById('enderecoCliente').value=c.endereco;
+  document.getElementById('numeroCliente').value=c.numero;
+  document.getElementById('telefoneCliente').value=c.telefone||'';
+  document.getElementById('formClienteTitulo').textContent='A editar Cliente';
+  document.getElementById('btnSalvarCliente').textContent='Atualizar Cliente';
+  document.getElementById('btnCancelarEdicao').style.display='block';
+  document.getElementById('formCliente').scrollIntoView({behavior:'smooth', block:'start'});
 };
 
-document.getElementById('formCliente').addEventListener('submit', async e => {
+document.getElementById('formCliente').addEventListener('submit', async e=>{
   e.preventDefault();
-  const clienteData = { nome: document.getElementById('nomeCliente').value.trim(), tipo: document.getElementById('tipoCliente').value, endereco: document.getElementById('enderecoCliente').value.trim(), numero: document.getElementById('numeroCliente').value.trim(), telefone: document.getElementById('telefoneCliente').value.trim() };
-  if (!clienteData.nome || !clienteData.tipo || !clienteData.endereco || !clienteData.numero) return alert("Todos os campos, exceto telefone, são obrigatórios!");
-  if (OFFLINE) {
-    if (editClienteId) { const i = clientes.findIndex(c => c.id === editClienteId); clientes[i] = { ...clientes[i], ...clienteData }; }
-    else { const novoId = clientes.length ? Math.max(...clientes.map(c=>c.id)) + 1 : 1; clientes.push({ id: novoId, ...clienteData, dividaTotal: 0 }); }
-    mudarAba(clienteData.tipo === 'fisico' ? 'tabFisicos' : 'tabBares'); return;
-  }
-  try { const url = editClienteId ? `${API_URL}/clientes/${editClienteId}` : `${API_URL}/clientes`; const method = editClienteId ? 'PUT' : 'POST'; const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(clienteData) }); if (!response.ok) throw new Error((await response.json()).error || 'Erro no servidor'); await carregarDadosIniciais(); mudarAba(clienteData.tipo === 'fisico' ? 'tabFisicos' : 'tabBares'); } catch(error) { alert(`Erro: ${error.message}`); }
+  const payload = {
+    nome: document.getElementById('nomeCliente').value.trim(),
+    tipo: document.getElementById('tipoCliente').value,
+    endereco: document.getElementById('enderecoCliente').value.trim(),
+    numero: document.getElementById('numeroCliente').value.trim(),
+    telefone: document.getElementById('telefoneCliente').value.trim()
+  };
+  if (!payload.nome || !payload.tipo || !payload.endereco || !payload.numero) return alert('Todos os campos, exceto telefone, são obrigatórios!');
+  if (OFFLINE) return; // omit
+
+  try{
+    const url = editClienteId ? `${API_URL}/clientes/${editClienteId}` : `${API_URL}/clientes`;
+    const method = editClienteId ? 'PUT':'POST';
+    const r = await fetch(url,{method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error((await r.json()).error || 'Erro no servidor');
+    await carregarDadosIniciais();
+    mudarAba(payload.tipo==='fisico'?'tabFisicos':'tabBares');
+  }catch(e){ alert(`Erro: ${e.message}`); }
 });
 
-/* NOVO: Apagar cliente com justificativa */
-window.abrirModalApagarCliente = (id) => { clienteParaApagarId = id; document.getElementById('modalApagarCliente').style.display = 'block'; };
-
-document.getElementById('formApagarCliente').addEventListener('submit', async e => {
-  e.preventDefault();
-  const justificativa = document.getElementById('justificativaApagarCliente').value.trim();
-  if (!justificativa) return alert('A justificativa é obrigatória.');
-  if (OFFLINE) {
-    const idx = clientes.findIndex(c => c.id === clienteParaApagarId);
-    if (idx >= 0) {
-      const cliente = clientes[idx];
-      const historicoCliente = historico.filter(h => h.cliente_id === cliente.id);
-      // arquiva
-      clientesApagados.push({ id: (clientesApagados.length ? Math.max(...clientesApagados.map(r=>r.id))+1 : 1), justificativa, dados_originais: { ...cliente }, historico: JSON.parse(JSON.stringify(historicoCliente)), data_apagado: new Date().toISOString() });
-      // remove cliente e seu histórico ativo
-      clientes.splice(idx,1);
-      historico = historico.filter(h => h.cliente_id !== cliente.id);
-      fecharModal('modalApagarCliente');
-      document.getElementById('formApagarCliente').reset();
-      renderizarClientes('fisico');
-      renderizarClientes('bar');
-      renderizarHome();
-      renderizarRegistrosApagados();
-    }
-    return;
-  }
-  try {
-    const response = await fetch(`${API_URL}/clientes/${clienteParaApagarId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ justificativa }) });
-    if (!response.ok) throw new Error((await response.json()).error || 'Falha ao apagar cliente.');
-    fecharModal('modalApagarCliente'); document.getElementById('formApagarCliente').reset(); await carregarDadosIniciais();
-  } catch (error) { alert(`Erro: ${error.message}`); }
-});
-
-/* ===================== ESTOQUE ===================== */
-window.atualizarEstoque = async (itemId) => {
-  const input = document.getElementById(`estoque-${itemId}`);
-  const quantidade = parseInt(input.value, 10);
-  if (isNaN(quantidade)) return;
-  if (OFFLINE) { const item = estoque.find(i => i.id == itemId); if (item) item.quantidade = quantidade; return; }
-  try { const response = await fetch(`${API_URL}/estoque/${itemId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade }) }); if (!response.ok) throw new Error('Falha ao atualizar estoque.'); } catch (error) { alert(error.message); carregarDadosIniciais(); }
-};
-
-/* ===================== MODAIS, EMPRÉSTIMOS, DEVOLUÇÕES ===================== */
-const formatarDataParaInput = (date) => { const d = parseDataSeguro(date) || new Date(); const ano = d.getFullYear(); const mes = (d.getMonth() + 1).toString().padStart(2, '0'); const dia = d.getDate().toString().padStart(2, '0'); const horas = d.getHours().toString().padStart(2, '0'); const minutos = d.getMinutes().toString().padStart(2, '0'); return `${ano}-${mes}-${dia}T${horas}:${minutos}`; };
-
+/* ===================== MODAIS ABRIR/FECHAR ===================== */
 window.abrirModal = (modalId, id) => {
-  if (modalId === 'modalHistoricoCliente') {
-    clienteAtualParaHistorico = clientes.find(c => c.id === id);
-    if (!clienteAtualParaHistorico) return;
-    document.getElementById('modalTituloCliente').textContent = `Histórico de: ${clienteAtualParaHistorico.nome}`;
-    document.getElementById('infoClienteModal').textContent = `Endereço: ${clienteAtualParaHistorico.endereco}, ${clienteAtualParaHistorico.numero}`;
+  if (modalId==='modalHistoricoCliente'){
+    clienteAtualParaHistorico = clientes.find(c=>c.id===id);
+    if(!clienteAtualParaHistorico) return;
+    document.getElementById('modalTituloCliente').textContent=`Histórico de: ${clienteAtualParaHistorico.nome}`;
+    document.getElementById('infoClienteModal').textContent=`Endereço: ${clienteAtualParaHistorico.endereco}, ${clienteAtualParaHistorico.numero}`;
     document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date());
-    const sug = new Date(); sug.setDate(sug.getDate()+7);
-    document.getElementById('dataDevolucao').value = (function(d){const y=d.getFullYear(),m=(d.getMonth()+1+'').padStart(2,'0'),da=(d.getDate()+'').padStart(2,'0'); return `${y}-${m}-${da}`;})(sug);
+    const sug=new Date(); sug.setDate(sug.getDate()+7);
+    document.getElementById('dataDevolucao').value = (()=>{ const y=sug.getFullYear(), m=(sug.getMonth()+1+'').padStart(2,'0'), d=(sug.getDate()+'').padStart(2,'0'); return `${y}-${m}-${d}`; })();
     renderHistoricoCliente(id);
   }
-  if (modalId === 'modalDevolucao') {
-    registroParaDevolverId = id;
-    const registro = historico.find(h => h.id === registroParaDevolverId);
-    const container = document.getElementById('devolucaoItens');
-    container.innerHTML = '';
-    if (!registro) { container.innerHTML = '<p>Registro não encontrado.</p>'; }
-    else {
-      const cascosPendentes = (registro.qtd_casco || 0) - (registro.qtd_casco_devolvido || 0);
-      const caixasPendentes = (registro.qtd_caixa || 0) - (registro.qtd_caixa_devolvido || 0);
-      if (cascosPendentes > 0) container.innerHTML += `<div><label>Devolver Cascos (${registro.marca_casco} ${registro.tamanho_casco}):</label><input type="number" id="qtdCascoDevolver" value="0" min="0" max="${cascosPendentes}"></div>`;
-      if (caixasPendentes > 0) container.innerHTML += `<div><label>Devolver Caixas (${registro.tipo_caixa}):</label><input type="number" id="qtdCaixaDevolver" value="0" min="0" max="${caixasPendentes}"></div>`;
-      if (cascosPendentes <= 0 && caixasPendentes <= 0) container.innerHTML = '<p>Não há itens pendentes para devolver.</p>';
+  if (modalId==='modalDevolucao'){
+    registroParaDevolverId=id;
+    const reg=historico.find(h=>h.id===id);
+    const ctn=document.getElementById('devolucaoItens'); ctn.innerHTML='';
+    if(!reg){ ctn.innerHTML='<p>Registro não encontrado.</p>'; }
+    else{
+      const pendC=(reg.qtd_casco||0)-(reg.qtd_casco_devolvido||0);
+      const pendX=(reg.qtd_caixa||0)-(reg.qtd_caixa_devolvido||0);
+      if (pendC>0) ctn.innerHTML += `<div><label>Devolver Cascos (${reg.marca_casco} ${reg.tamanho_casco}):</label><input type="number" id="qtdCascoDevolver" value="0" min="0" max="${pendC}"></div>`;
+      if (pendX>0) ctn.innerHTML += `<div><label>Devolver Caixas (${reg.tipo_caixa}):</label><input type="number" id="qtdCaixaDevolver" value="0" min="0" max="${pendX}"></div>`;
+      if (pendC<=0 && pendX<=0) ctn.innerHTML='<p>Não há itens pendentes para devolver.</p>';
     }
   }
-  if (modalId === 'modalApagarRegistro') { registroParaApagarId = id; }
-  document.getElementById(modalId).style.display = 'block';
+  document.getElementById(modalId).style.display='block';
 };
+window.fecharModal = (modalId) => document.getElementById(modalId).style.display='none';
 
-window.fecharModal = (modalId) => { document.getElementById(modalId).style.display = 'none'; };
-
-document.getElementById('formEmprestimo').addEventListener('submit', async e => {
+/* ===================== NOVO EMPRÉSTIMO ===================== */
+document.getElementById('formEmprestimo').addEventListener('submit', async e=>{
   e.preventDefault();
-  const dtDevStr = document.getElementById('dataDevolucao').value; if (!dtDevStr) return alert('Informe a data de devolução prevista.');
-  const novoRegistro = { cliente_id: clienteAtualParaHistorico.id, marcaCasco: document.getElementById('marcaCasco').value, tamanhoCasco: document.getElementById('tamanhoCasco').value, qtdCasco: parseInt(document.getElementById('qtdCasco').value, 10) || 0, tipoCaixa: document.getElementById('tipoCaixa').value, qtdCaixa: parseInt(document.getElementById('qtdCaixa').value, 10) || 0, data_emprestimo: document.getElementById('dataEmprestimo').value, data_devolucao: dtDevStr };
-  const temCasco = novoRegistro.qtdCasco > 0 && novoRegistro.marcaCasco !== 'Nenhuma' && novoRegistro.tamanhoCasco !== 'Nenhum';
-  const temCaixa = novoRegistro.qtdCaixa > 0 && novoRegistro.tipoCaixa !== 'Nenhuma';
-  if (!temCasco && !temCaixa) return alert("Adicione pelo menos um item.");
-  if (OFFLINE) {
-    const novoId = historico.length ? Math.max(...historico.map(h=>h.id)) + 1 : 1;
-    historico.push({ id: novoId, cliente_id: novoRegistro.cliente_id, marca_casco: novoRegistro.marcaCasco, tamanho_casco: novoRegistro.tamanhoCasco, qtd_casco: novoRegistro.qtdCasco, qtd_casco_devolvido: 0, tipo_caixa: novoRegistro.tipoCaixa, qtd_caixa: novoRegistro.qtdCaixa, qtd_caixa_devolvido: 0, data_emprestimo: novoRegistro.data_emprestimo, data_devolucao: novoRegistro.data_devolucao });
-    clientes.forEach(c => { const regs = historico.filter(h => h.cliente_id === c.id); c.dividaTotal = regs.reduce((acc, h) => (acc + ((h.qtd_casco||0)-(h.qtd_casco_devolvido||0)) + ((h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0))), 0); });
-    document.getElementById('formEmprestimo').reset(); document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date()); const sug = new Date(); sug.setDate(sug.getDate()+7); document.getElementById('dataDevolucao').value = (function(d){const y=d.getFullYear(),m=(d.getMonth()+1+'').padStart(2,'0'),da=(d.getDate()+'').padStart(2,'0'); return `${y}-${m}-${da}`;})(sug);
-    renderHistoricoCliente(clienteAtualParaHistorico.id); renderizarHome(); if (document.getElementById('conteudoNotificacoes').style.display !== 'none') renderizarNotificacoes();
-    return;
-  }
-  try { const response = await fetch(`${API_URL}/historico`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(novoRegistro) }); if (!response.ok) throw new Error('Falha ao guardar empréstimo.'); await carregarDadosIniciais(); document.getElementById('formEmprestimo').reset(); document.getElementById('dataEmprestimo').value = formatarDataParaInput(new Date()); renderHistoricoCliente(clienteAtualParaHistorico.id); } catch (error) { alert(`Erro: ${error.message}`); }
+  const vendedor = document.getElementById('vendedorEmprestimo').value.trim();
+  const data_emprestimo = document.getElementById('dataEmprestimo').value;
+  const data_devolucao = document.getElementById('dataDevolucao').value;
+  const marcaCasco = document.getElementById('marcaCasco').value;
+  const tamanhoCasco = document.getElementById('tamanhoCasco').value;
+  const qtdCasco = parseInt(document.getElementById('qtdCasco').value,10)||0;
+  const tipoCaixa = document.getElementById('tipoCaixa').value;
+  const qtdCaixa = parseInt(document.getElementById('qtdCaixa').value,10)||0;
+
+  const temCasco = qtdCasco>0 && marcaCasco!=='Nenhuma' && tamanhoCasco!=='Nenhum';
+  const temCaixa = qtdCaixa>0 && tipoCaixa!=='Nenhuma';
+  if (!temCasco && !temCaixa) return alert('Adicione pelo menos um item.');
+  if (!VENDEDORES.includes(vendedor)) return alert('Selecione o vendedor.');
+
+  const payload = {
+    cliente_id: clienteAtualParaHistorico.id,
+    vendedor,
+    marcaCasco, tamanhoCasco, qtdCasco,
+    tipoCaixa, qtdCaixa,
+    data_emprestimo, data_devolucao
+  };
+
+  try{
+    const r = await fetch(`${API_URL}/historico`,{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    if (!r.ok) throw new Error('Falha ao guardar empréstimo.');
+    await carregarDadosIniciais();
+    renderHistoricoCliente(clienteAtualParaHistorico.id);
+  }catch(e){ alert(`Erro: ${e.message}`); }
 });
 
-document.getElementById('formDevolucao').addEventListener('submit', async e => {
+/* ===================== DEVOLUÇÃO ===================== */
+document.getElementById('formDevolucao').addEventListener('submit', async e=>{
   e.preventDefault();
-  const qtdCascoDev = parseInt(document.getElementById('qtdCascoDevolver')?.value || 0, 10);
-  const qtdCaixaDev = parseInt(document.getElementById('qtdCaixaDevolver')?.value || 0, 10);
-  if (OFFLINE) {
-    const reg = historico.find(h => h.id === registroParaDevolverId);
-    if (reg) {
-      reg.qtd_casco_devolvido = Math.min(reg.qtd_casco, (reg.qtd_casco_devolvido || 0) + qtdCascoDev);
-      reg.qtd_caixa_devolvido = Math.min(reg.qtd_caixa, (reg.qtd_caixa_devolvido || 0) + qtdCaixaDev);
-      clientes.forEach(c => { const regs = historico.filter(h => h.cliente_id === c.id); c.dividaTotal = regs.reduce((acc, h) => (acc + ((h.qtd_casco||0)-(h.qtd_casco_devolvido||0)) + ((h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0))), 0); });
-      fecharModal('modalDevolucao'); renderHistoricoCliente(clienteAtualParaHistorico.id); renderizarHome(); if (document.getElementById('conteudoNotificacoes').style.display !== 'none') renderizarNotificacoes();
-    }
-    return;
-  }
-  try { const response = await fetch(`${API_URL}/historico/devolver/${registroParaDevolverId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ qtdCascoDev, qtdCaixaDev }) }); if (!response.ok) throw new Error('Falha ao registar devolução.'); await carregarDadosIniciais(); fecharModal('modalDevolucao'); renderHistoricoCliente(clienteAtualParaHistorico.id); } catch (error) { alert(`Erro: ${error.message}`); }
+  const qtdCascoDev=parseInt(document.getElementById('qtdCascoDevolver')?.value||0,10);
+  const qtdCaixaDev=parseInt(document.getElementById('qtdCaixaDevolver')?.value||0,10);
+
+  try{
+    const r=await fetch(`${API_URL}/historico/devolver/${registroParaDevolverId}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({qtdCascoDev,qtdCaixaDev})
+    });
+    if(!r.ok) throw new Error('Falha ao registar devolução.');
+    fecharModal('modalDevolucao');
+    await carregarDadosIniciais();
+    renderHistoricoCliente(clienteAtualParaHistorico.id);
+  }catch(e){ alert(`Erro: ${e.message}`); }
 });
 
-document.getElementById('formApagar').addEventListener('submit', async e => {
+/* ===================== APAGAR REGISTRO ===================== */
+document.getElementById('formApagar').addEventListener('submit', async e=>{
   e.preventDefault();
   const justificativa = document.getElementById('justificativaApagar').value.trim();
   if (!justificativa) return alert('A justificativa é obrigatória.');
-  if (OFFLINE) {
-    const idx = historico.findIndex(h => h.id === registroParaApagarId);
-    if (idx >= 0) {
-      const reg = historico[idx];
-      historico.splice(idx, 1);
-      registrosApagados.push({ id: registrosApagados.length ? Math.max(...registrosApagados.map(r=>r.id))+1 : 1, justificativa, dados_originais: JSON.stringify(reg), data_apagado: new Date().toISOString() });
-      fecharModal('modalApagarRegistro'); document.getElementById('formApagar').reset();
-      clientes.forEach(c => { const regs = historico.filter(h => h.cliente_id === c.id); c.dividaTotal = regs.reduce((acc, h) => (acc + ((h.qtd_casco||0)-(h.qtd_casco_devolvido||0)) + ((h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0))), 0); });
-      renderHistoricoCliente(clienteAtualParaHistorico.id); renderizarHome(); renderizarRegistrosApagados(); if (document.getElementById('conteudoNotificacoes').style.display !== 'none') renderizarNotificacoes();
-    }
-    return;
-  }
-  try { const response = await fetch(`${API_URL}/historico/${registroParaApagarId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ justificativa }) }); if (!response.ok) throw new Error((await response.json()).error || 'Falha ao apagar registo.'); fecharModal('modalApagarRegistro'); document.getElementById('formApagar').reset(); await carregarDadosIniciais(); renderHistoricoCliente(clienteAtualParaHistorico.id); } catch (error) { alert(`Erro: ${error.message}`); }
+  try{
+    const r=await fetch(`${API_URL}/historico/${registroParaApagarId}`,{
+      method:'DELETE', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({justificativa})
+    });
+    if(!r.ok) throw new Error((await r.json()).error||'Falha ao apagar registro.');
+    fecharModal('modalApagarRegistro');
+    document.getElementById('formApagar').reset();
+    await carregarDadosIniciais();
+    renderHistoricoCliente(clienteAtualParaHistorico.id);
+  }catch(e){ alert(`Erro: ${e.message}`); }
+});
+
+/* ===================== APAGAR CLIENTE ===================== */
+window.abrirModalApagarCliente = (id) => { clienteParaApagarId=id; document.getElementById('modalApagarCliente').style.display='block'; };
+document.getElementById('formApagarCliente').addEventListener('submit', async e=>{
+  e.preventDefault();
+  alert('No backend atual não existe rota de apagar cliente com histórico arquivado. (Se quiser, implemento depois.)');
+  fecharModal('modalApagarCliente');
 });
 
 /* ===================== HISTÓRICO POR CLIENTE ===================== */
-const renderHistoricoCliente = (clienteId) => {
-  const lista = document.getElementById('listaHistoricoCliente');
-  const resumoContainer = document.getElementById('resumoDividaCliente');
-  lista.innerHTML = '';
-  const registros = historico.filter(h => h.cliente_id === clienteId).sort((a, b) => (parseDataSeguro(b.data_emprestimo)?.getTime()||0) - (parseDataSeguro(a.data_emprestimo)?.getTime()||0));
-  if (registros.length === 0) { lista.innerHTML = '<p>Nenhum empréstimo registado.</p>'; resumoContainer.style.display = 'none'; return; }
-  const dividaCliente = registros.reduce((acc, h) => {
-    const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-    const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-    if (cascosPendentes > 0) { const key = `Casco ${h.marca_casco} ${h.tamanho_casco}`; acc[key] = (acc[key] || 0) + cascosPendentes; }
-    if (caixasPendentes > 0) { const key = `Caixa ${h.tipo_caixa}`; acc[key] = (acc[key] || 0) + caixasPendentes; }
+function renderHistoricoCliente(clienteId){
+  const lista=document.getElementById('listaHistoricoCliente');
+  const resumo=document.getElementById('resumoDividaCliente');
+  lista.innerHTML='';
+  const regs = historico.filter(h=>h.cliente_id===clienteId)
+    .sort((a,b)=>(parseDataSeguro(b.data_emprestimo)?.getTime()||0)-(parseDataSeguro(a.data_emprestimo)?.getTime()||0));
+
+  if(!regs.length){ lista.innerHTML='<p>Nenhum empréstimo registado.</p>'; resumo.style.display='none'; return; }
+
+  const divida = regs.reduce((acc,h)=>{
+    const pc=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const px=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    if (pc>0) acc[`Casco ${h.marca_casco} ${h.tamanho_casco}`]=(acc[`Casco ${h.marca_casco} ${h.tamanho_casco}`]||0)+pc;
+    if (px>0) acc[`Caixa ${h.tipo_caixa}`]=(acc[`Caixa ${h.tipo_caixa}`]||0)+px;
     return acc;
-  }, {});
-  const resumoTexto = Object.entries(dividaCliente).map(([item, qtd]) => `${qtd}x ${item}`).join(' / ');
-  resumoContainer.textContent = resumoTexto ? `Dívida Total: ${resumoTexto}` : 'Nenhuma dívida pendente.';
-  resumoContainer.style.display = 'block';
-  registros.forEach(h => {
-    const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-    const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-    const temPendencia = cascosPendentes > 0 || caixasPendentes > 0;
-    let info = '';
-    if (h.qtd_casco > 0) info += `<li>${h.qtd_casco} Casco(s) ${h.marca_casco} ${h.tamanho_casco} (Devolvido: ${h.qtd_casco_devolvido || 0})</li>`;
-    if (h.qtd_caixa > 0) info += `<li>${h.qtd_caixa} Caixa(s) ${h.tipo_caixa} (Devolvido: ${h.qtd_caixa_devolvido || 0})</li>`;
-    const dataEmp = formatarDataHoraBR(h.data_emprestimo);
-    const dataDev = h.data_devolucao ? ` | Devolução: ${formatarDataBR(h.data_devolucao)}` : '';
-    const div = document.createElement('div');
-    div.className = 'item-lista';
-    div.innerHTML = `
+  },{});
+  const resumoTexto = Object.entries(divida).map(([item,q])=>`${q}x ${item}`).join(' / ');
+  resumo.textContent = resumoTexto ? `Dívida Total: ${resumoTexto}` : 'Nenhuma dívida pendente.';
+  resumo.style.display='block';
+
+  regs.forEach(h=>{
+    const pc=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const px=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    const temPend=pc>0||px>0;
+
+    const itens=[];
+    if(h.qtd_casco>0) itens.push(`${h.qtd_casco} Casco(s) ${h.marca_casco} ${h.tamanho_casco} (Dev: ${h.qtd_casco_devolvido||0})`);
+    if(h.qtd_caixa>0) itens.push(`${h.qtd_caixa} Caixa(s) ${h.tipo_caixa} (Dev: ${h.qtd_caixa_devolvido||0})`);
+
+    const div=document.createElement('div');
+    div.className='item-lista';
+    div.innerHTML=`
       <span>
-        <strong>Data: ${dataEmp}${dataDev}</strong>
-        <ul>${info}</ul>
+        <strong>Data: ${formatarDataHoraBR(h.data_emprestimo)}${h.data_devolucao? ' | Devolução: '+formatarDataBR(h.data_devolucao):''}</strong><br>
+        <small><strong>Vendedor:</strong> ${h.vendedor||'-'}</small>
+        <ul><li>${itens.join('</li><li>')}</li></ul>
       </span>
       <div class="botoes">
-        ${temPendencia ? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>` : ''}
+        ${temPend? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>`:''}
         <button class="imprimir-recibo" onclick="imprimirRecibo(${h.id})">Recibo</button>
-        <button class="apagar" onclick="abrirModal('modalApagarRegistro', ${h.id})">Apagar</button>
+        <button class="editar" onclick="abrirModalEditarEmprestimo(${h.id})">Editar</button>
+        <button class="apagar" onclick="registroParaApagarId=${h.id}; abrirModal('modalApagarRegistro')">Apagar</button>
       </div>
     `;
     lista.appendChild(div);
   });
+}
+
+/* ===================== EDITAR EMPRÉSTIMO ===================== */
+window.abrirModalEditarEmprestimo = (id) => {
+  const h = historico.find(x=>x.id===id); if(!h) return;
+  document.getElementById('editEmprestimoId').value = id;
+  document.getElementById('editVendedor').value = h.vendedor||'';
+  document.getElementById('editDataEmprestimo').value = formatarDataParaInput(h.data_emprestimo);
+  document.getElementById('editDataDevolucao').value = h.data_devolucao ? h.data_devolucao.slice(0,10) : '';
+
+  document.getElementById('editMarcaCasco').value = OPCOES_MARCA_CASCO.includes(h.marca_casco)? h.marca_casco : 'Nenhuma';
+  document.getElementById('editTamanhoCasco').value = OPCOES_TAMANHO_CASCO.includes(h.tamanho_casco)? h.tamanho_casco : 'Nenhum';
+  document.getElementById('editQtdCasco').value = h.qtd_casco||0;
+
+  document.getElementById('editTipoCaixa').value = OPCOES_TIPO_CAIXA.includes(h.tipo_caixa)? h.tipo_caixa : 'Nenhuma';
+  document.getElementById('editQtdCaixa').value = h.qtd_caixa||0;
+
+  document.getElementById('editAlteradoPor').value = '';
+
+  document.getElementById('modalEditarEmprestimo').style.display='block';
 };
 
-/* ===================== WHATSAPP ===================== */
-document.getElementById('btnNotificarWhatsapp').addEventListener('click', () => {
-  if (!clienteAtualParaHistorico) return;
-  const telefone = clienteAtualParaHistorico.telefone?.replace(/\D/g, '');
+document.getElementById('btnSalvarEdicaoEmprestimo').addEventListener('click', async ()=>{
+  const id = document.getElementById('editEmprestimoId').value;
+  const payload = {
+    vendedor: document.getElementById('editVendedor').value,
+    data_emprestimo: document.getElementById('editDataEmprestimo').value,
+    data_devolucao: document.getElementById('editDataDevolucao').value,
+    marca_casco: document.getElementById('editMarcaCasco').value,
+    tamanho_casco: document.getElementById('editTamanhoCasco').value,
+    qtd_casco: parseInt(document.getElementById('editQtdCasco').value,10)||0,
+    tipo_caixa: document.getElementById('editTipoCaixa').value,
+    qtd_caixa: parseInt(document.getElementById('editQtdCaixa').value,10)||0,
+    justificativa: document.getElementById('justificativaEdicao').value.trim(),
+    alterado_por: document.getElementById('editAlteradoPor').value
+  };
+  if (!payload.justificativa) return alert('Informe a justificativa.');
+  if (!payload.alterado_por) return alert('Selecione quem alterou.');
+  if (payload.qtd_casco<0 || payload.qtd_caixa<0) return alert('Quantidades inválidas.');
+
+  try{
+    const r=await fetch(`${API_URL}/historico/${id}`,{
+      method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    });
+    if(!r.ok){ const d=await r.json(); throw new Error(d.error||'Falha ao editar.'); }
+    fecharModal('modalEditarEmprestimo');
+    await carregarDadosIniciais();
+    renderHistoricoCliente(clienteAtualParaHistorico.id);
+  }catch(e){ alert(e.message); }
+});
+
+/* ===================== WHATSAPP CONSOLIDADO ===================== */
+document.getElementById('btnNotificarWhatsapp').addEventListener('click', ()=>{
+  if(!clienteAtualParaHistorico) return;
+  const telefone = (clienteAtualParaHistorico.telefone||'').replace(/\D/g,'');
   if (!telefone) return alert('Este cliente não possui um número de telefone cadastrado.');
-  const registros = historico.filter(h => h.cliente_id === clienteAtualParaHistorico.id);
-  const dividaCliente = registros.reduce((acc, h) => {
-    const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-    const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-    if (cascosPendentes > 0) acc[`Casco ${h.marca_casco} ${h.tamanho_casco}`] = (acc[`Casco ${h.marca_casco} ${h.tamanho_casco}`] || 0) + cascosPendentes;
-    if (caixasPendentes > 0) acc[`Caixa ${h.tipo_caixa}`] = (acc[`Caixa ${h.tipo_caixa}`] || 0) + caixasPendentes;
-    return acc;
-  }, {});
-  const resumoItens = Object.entries(dividaCliente).map(([item, qtd]) => `  - ${qtd}x ${item}`).join('\n');
-  if (!resumoItens) return alert('Este cliente não possui débitos pendentes.');
+
+  const regs = historico.filter(h=>h.cliente_id===clienteAtualParaHistorico.id)
+    .sort((a,b)=>(parseDataSeguro(a.data_emprestimo)||0)-(parseDataSeguro(b.data_emprestimo)||0));
+
+  // 1) linhas detalhadas (produto, quantidade, data)
+  const linhasDetalhe=[];
+  const somaPorItem={}; // para total consolidado
+  let dataMin=null, dataMax=null;
+
+  regs.forEach(h=>{
+    const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    const dataEmp= formatarDataBR(h.data_emprestimo);
+
+    if (pendC>0){
+      const key=`Casco ${h.marca_casco} ${h.tamanho_casco}`;
+      linhasDetalhe.push(`- ${pendC}x ${key} (em ${dataEmp})`);
+      somaPorItem[key]=(somaPorItem[key]||0)+pendC;
+    }
+    if (pendX>0){
+      const key=`Caixa ${h.tipo_caixa}`;
+      linhasDetalhe.push(`- ${pendX}x ${key} (em ${dataEmp})`);
+      somaPorItem[key]=(somaPorItem[key]||0)+pendX;
+    }
+
+    const d=parseDataSeguro(h.data_emprestimo);
+    if (d){
+      if(!dataMin || d<dataMin) dataMin=d;
+      if(!dataMax || d>dataMax) dataMax=d;
+    }
+  });
+
+  if (!linhasDetalhe.length) return alert('Este cliente não possui débitos pendentes.');
+
+  const intervaloDatas = dataMin && dataMax
+    ? (dataMin.toLocaleDateString('pt-BR')===dataMax.toLocaleDateString('pt-BR')
+        ? `(${dataMin.toLocaleDateString('pt-BR')})`
+        : `(${dataMin.toLocaleDateString('pt-BR')} até ${dataMax.toLocaleDateString('pt-BR')})`)
+    : '';
+
+  const totalConsolidado = Object.entries(somaPorItem)
+    .map(([k,q])=>`${q}x ${k}`).join('; ');
+
   const mensagem = encodeURIComponent(
 `Olá ${clienteAtualParaHistorico.nome}, tudo bem?
-Da Distribuidora Garcia, estamos passando para lembrar sobre os seguintes itens pendentes em seu nome:
-${resumoItens}
+Da Distribuidora Garcia. Identificamos os seguintes itens pendentes ${intervaloDatas}:
+
+${linhasDetalhe.join('\n')}
+
+Totais: ${totalConsolidado}
 
 Por favor, verifique a possibilidade de devolução. Agradecemos a sua atenção!`
   );
-  window.open(`https://wa.me/${telefone}?text=${mensagem}`, '_blank');
+  window.open(`https://wa.me/${telefone}?text=${mensagem}`,'_blank');
 });
 
-/* ===================== IMPRESSÃO ===================== */
-const gerarConteudoImpressao = (titulo, corpo, tipo = "normal") => {
-  let logoStyle = "display:block; margin:auto; height:120px;"; // padrão térmica
-  if (tipo === "a4") { logoStyle = "display:block; margin:auto; max-width:150px; height:auto;"; }
+/* ===================== IMPRESSÃO / RECIBO ===================== */
+const gerarConteudoImpressao = (titulo, corpo, tipo="termica") => {
+  // Ajustes para TX20: logo grande e fontes maiores
+  const logoStyle = tipo==="a4"
+    ? "display:block; margin:auto; max-width:180px; height:auto;"
+    : "display:block; margin:auto; height:200px;"; // térmica: bem grande
+  const fontBase = tipo==="a4" ? 18 : 20;
+
   return `
     <html>
     <head>
       <title>${titulo}</title>
       <style>
-        body { font-family: sans-serif; margin: 20px; }
+        body { font-family: sans-serif; margin: 12px; font-size:${fontBase}px; }
         h1, h2, h3 { text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
         th { background-color: #f2f2f2; }
-        .nao-imprimir { display: none; }
-        @media print { button { display: none; } }
+        @media print { button { display:none; } }
       </style>
     </head>
     <body>
@@ -875,18 +1112,21 @@ const gerarConteudoImpressao = (titulo, corpo, tipo = "normal") => {
 };
 
 window.imprimirRecibo = (registroId) => {
-  const registro = historico.find(h => h.id === registroId);
-  const cliente = registro ? clientes.find(c => c.id === registro.cliente_id) : null;
-  if (!registro || !cliente) return;
-  let itensHtml = '';
-  if (registro.qtd_casco > 0) itensHtml += `<tr><td>Casco ${registro.marca_casco} ${registro.tamanho_casco}</td><td>${registro.qtd_casco}</td></tr>`;
-  if (registro.qtd_caixa > 0) itensHtml += `<tr><td>Caixa ${registro.tipo_caixa}</td><td>${registro.qtd_caixa}</td></tr>`;
-  const dataEmprestimoStr = formatarDataHoraBR(registro.data_emprestimo);
+  const h = historico.find(x=>x.id===registroId);
+  const cli = h ? clientes.find(c=>c.id===h.cliente_id) : null;
+  if (!h || !cli) return;
+
+  let itensHtml='';
+  if (h.qtd_casco>0) itensHtml += `<tr><td>Casco ${h.marca_casco} ${h.tamanho_casco}</td><td>${h.qtd_casco}</td></tr>`;
+  if (h.qtd_caixa>0) itensHtml += `<tr><td>Caixa ${h.tipo_caixa}</td><td>${h.qtd_caixa}</td></tr>`;
+
   const corpo = `
     <h2>Recibo de Empréstimo</h2>
-    <p><strong>Cliente:</strong> ${cliente.nome} (${cliente.tipo === 'fisico' ? 'F' : 'B'})</p>
-    <p><strong>Endereço:</strong> ${cliente.endereco}, ${cliente.numero}</p>
-    <p><strong>Data do Empréstimo:</strong> ${dataEmprestimoStr}</p>
+    <p><strong>Cliente:</strong> ${cli.nome} (${cli.tipo==='fisico'?'F':'B'})</p>
+    <p><strong>Endereço:</strong> ${cli.endereco}, ${cli.numero}</p>
+    <p><strong>Data do Empréstimo:</strong> ${formatarDataHoraBR(h.data_emprestimo)}</p>
+    <p><strong>Vendedor:</strong> ${h.vendedor || '-'}</p>
+    ${h.data_devolucao ? `<p><strong>Devolução Prevista:</strong> ${formatarDataBR(h.data_devolucao)}</p>`:''}
     <table>
       <thead><tr><th>Item</th><th>Quantidade</th></tr></thead>
       <tbody>${itensHtml}</tbody>
@@ -895,134 +1135,81 @@ window.imprimirRecibo = (registroId) => {
     <p>______________________________________________</p>
     <p style="text-align:center;">Assinatura do Cliente</p>
   `;
-  const win = window.open('', '_blank');
-  win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo));
+  const win=window.open('','_blank');
+  win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo, 'termica'));
   win.document.close();
-  win.onload = () => win.print();
+  win.onload = ()=> win.print();
 };
 
-/* NOVO: Relatório completo do cliente */
-document.getElementById('btnImprimirRelatorioCliente').addEventListener('click', () => {
-  if (!clienteAtualParaHistorico) return;
-  const cli = clienteAtualParaHistorico;
-  const regs = historico.filter(h => h.cliente_id === cli.id).sort((a,b) => (parseDataSeguro(a.data_emprestimo)?.getTime()||0) - (parseDataSeguro(b.data_emprestimo)?.getTime()||0));
-  let linhas = '';
-  if (regs.length === 0) { linhas = '<tr><td colspan="5" style="text-align:center;">Sem registros.</td></tr>'; }
-  else {
-    regs.forEach(h => {
-      const itens = [
-        h.qtd_casco > 0 ? `${h.qtd_casco}x Casco ${h.marca_casco} ${h.tamanho_casco} (Dev: ${h.qtd_casco_devolvido||0})` : '',
-        h.qtd_caixa > 0 ? `${h.qtd_caixa}x Caixa ${h.tipo_caixa} (Dev: ${h.qtd_caixa_devolvido||0})` : ''
-      ].filter(Boolean).join(' | ');
-      linhas += `<tr>
-        <td>${formatarDataHoraBR(h.data_emprestimo)}</td>
-        <td>${h.data_devolucao ? formatarDataBR(h.data_devolucao) : '—'}</td>
-        <td>${itens || '-'}</td>
-        <td>${(h.qtd_casco||0)-(h.qtd_casco_devolvido||0)}</td>
-        <td>${(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0)}</td>
-      </tr>`;
-    });
-  }
+/* ===================== RELATÓRIO CLIENTE / GERAL ===================== */
+document.getElementById('btnImprimirRelatorioCliente').addEventListener('click', ()=>{
+  if(!clienteAtualParaHistorico) return;
+  const cli=clienteAtualParaHistorico;
+  const regs = historico.filter(h=>h.cliente_id===cli.id).sort((a,b)=>(parseDataSeguro(a.data_emprestimo)?.getTime()||0)-(parseDataSeguro(b.data_emprestimo)?.getTime()||0));
+  let linhas='';
+  if(!regs.length) linhas='<tr><td colspan="6" style="text-align:center;">Sem registros.</td></tr>';
+  else regs.forEach(h=>{
+    const itens = [
+      h.qtd_casco>0 ? `${h.qtd_casco}x Casco ${h.marca_casco} ${h.tamanho_casco} (Dev: ${h.qtd_casco_devolvido||0})`:'',
+      h.qtd_caixa>0 ? `${h.qtd_caixa}x Caixa ${h.tipo_caixa} (Dev: ${h.qtd_caixa_devolvido||0})`:''
+    ].filter(Boolean).join(' | ');
+    linhas += `<tr>
+      <td>${formatarDataHoraBR(h.data_emprestimo)}</td>
+      <td>${h.data_devolucao?formatarDataBR(h.data_devolucao):'—'}</td>
+      <td>${itens||'-'}</td>
+      <td>${(h.qtd_casco||0)-(h.qtd_casco_devolvido||0)}</td>
+      <td>${(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0)}</td>
+      <td>${h.vendedor||'-'}</td>
+    </tr>`;
+  });
+
   const corpo = `
     <h2>Relatório Completo do Cliente</h2>
-    <p><strong>Cliente:</strong> ${cli.nome} (${cli.tipo === 'fisico' ? 'F' : 'B'})</p>
+    <p><strong>Cliente:</strong> ${cli.nome} (${cli.tipo==='fisico'?'F':'B'})</p>
     <p><strong>Endereço:</strong> ${cli.endereco}, ${cli.numero}</p>
     <table>
-      <thead><tr><th>Data Empréstimo</th><th>Devolução Prev.</th><th>Itens</th><th>Cascos Pend.</th><th>Caixas Pend.</th></tr></thead>
+      <thead><tr><th>Data Empréstimo</th><th>Devolução Prev.</th><th>Itens</th><th>Cascos Pend.</th><th>Caixas Pend.</th><th>Vendedor</th></tr></thead>
       <tbody>${linhas}</tbody>
     </table>
   `;
-  const win = window.open('', '_blank');
+  const win=window.open('','_blank');
   win.document.write(gerarConteudoImpressao('Relatório do Cliente', corpo, 'a4'));
   win.document.close();
-  win.onload = () => win.print();
+  win.onload=()=>win.print();
 });
 
-/* NOVO: Resumo por data passada */
-function historicoPorDataEspecifica(dateStr){
-  if (!dateStr) return [];
-  const d = parseDataSeguro(dateStr);
-  if (!d) return [];
-  const y=d.getFullYear(), m=d.getMonth(), da=d.getDate();
-  const ini = new Date(y,m,da).getTime(), fim = new Date(y,m,da+1).getTime();
-  return historico.map(h=>{
-    const t = parseDataSeguro(h.data_emprestimo)?.getTime() || 0;
-    if (t>=ini && t<fim) {
-      const cli = clientes.find(c=>c.id===h.cliente_id);
-      return { ...h, cliente_nome: cli ? cli.nome : 'Desconhecido' };
-    }
-    return null;
-  }).filter(Boolean);
-}
-
-document.getElementById('btnImprimirResumoDiario').addEventListener('click', () => imprimirResumoDeLista(historicoHoje, 'Resumo de Hoje'));
-document.getElementById('btnImprimirResumoPorData').addEventListener('click', () => {
-  const data = document.getElementById('dataResumoDia').value;
-  const lista = historicoPorDataEspecifica(data);
-  imprimirResumoDeLista(lista, `Resumo do Dia (${formatarDataBR(data)})`);
-});
-
-function imprimirResumoDeLista(lista, titulo){
-  let corpoTabela = '';
-  if (!lista || lista.length === 0) {
-    corpoTabela = '<tr><td colspan="3" style="text-align:center;">Nenhum empréstimo.</td></tr>';
-  } else {
-    lista.forEach(h => {
-      const cascos = h.qtd_casco > 0 ? `${h.qtd_casco} Casco(s) ${h.marca_casco}` : '';
-      const caixas = h.qtd_caixa > 0 ? `${h.qtd_caixa} Caixa(s) ${h.tipo_caixa}` : '';
-      const hora = formatarHoraBR(h.data_emprestimo);
-      corpoTabela += `
-        <tr>
-          <td>${h.cliente_nome}</td>
-          <td>${cascos} ${caixas}</td>
-          <td>${hora}</td>
-        </tr>
-      `;
-    });
-  }
-  const corpo = `
-    <h2>Empréstimos</h2>
-    <table>
-      <thead><tr><th>Cliente</th><th>Itens</th><th>Horário</th></tr></thead>
-      <tbody>${corpoTabela}</tbody>
-    </table>
-  `;
-  const win = window.open('', '_blank');
-  win.document.write(gerarConteudoImpressao(titulo, corpo));
-  win.document.close();
-  win.onload = () => win.print();
-}
-
-/* AJUDA: agregações por grupo e volume (300ml / 600ml / 1L) */
 function agregacaoPorGrupoEVolume(pendentesApenas=true){
-  const acc = {
-    '300ml': { 'Ambev': {total:0, marcas:{}}, 'Brasil Kirin': {total:0, marcas:{}}, 'Grupo Petrópolis': {total:0, marcas:{}}, 'Outros': {total:0, marcas:{}} },
-    '600ml': { 'Ambev': {total:0, marcas:{}}, 'Brasil Kirin': {total:0, marcas:{}}, 'Grupo Petrópolis': {total:0, marcas:{}}, 'Outros': {total:0, marcas:{}} },
-    '1L':    { 'Ambev': {total:0, marcas:{}}, 'Brasil Kirin': {total:0, marcas:{}}, 'Grupo Petrópolis': {total:0, marcas:{}}, 'Outros': {total:0, marcas:{}} }
+  const grupos=['Ambev','Brasil Kirin','Grupo Petrópolis','Outros'];
+  const acc={
+    '300ml': Object.fromEntries(grupos.map(g=>[g,{total:0,marcas:{}}])),
+    '600ml': Object.fromEntries(grupos.map(g=>[g,{total:0,marcas:{}}])),
+    '1L':    Object.fromEntries(grupos.map(g=>[g,{total:0,marcas:{}}]))
   };
-  historico.forEach(h => {
-    const qtdPend = (h.qtd_casco||0) - (h.qtd_casco_devolvido||0);
+  const grupoDaMarca = (marca)=>{
+    if (["Brahma","Skol","Bohemia","Budweiser","Original","Stella","Antarctica"].includes(marca)) return 'Ambev';
+    if (["Devassa","Heineken","Amstel"].includes(marca)) return 'Brasil Kirin';
+    if (["Itaipava"].includes(marca)) return 'Grupo Petrópolis';
+    return 'Outros';
+  };
+  historico.forEach(h=>{
+    const qtdPend=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
     if (!h.tamanho_casco || !h.marca_casco) return;
-    if (pendentesApenas && qtdPend <= 0) return;
-    const vol = h.tamanho_casco;
-    if (!acc[vol]) return; // ignora tamanhos fora de 300/600/1L
-    const g = grupoDaMarca(h.marca_casco);
+    if (pendentesApenas && qtdPend<=0) return;
+    const vol=h.tamanho_casco; if (!acc[vol]) return;
+    const g=grupoDaMarca(h.marca_casco);
     acc[vol][g].total += qtdPend;
-    acc[vol][g].marcas[h.marca_casco] = (acc[vol][g].marcas[h.marca_casco]||0) + qtdPend;
+    acc[vol][g].marcas[h.marca_casco]=(acc[vol][g].marcas[h.marca_casco]||0)+qtdPend;
   });
   return acc;
 }
-
 function htmlResumoGrupos(agg){
-  const mkLinha = (vol, grupo) => {
-    const dados = agg[vol][grupo];
-    const breakdown = Object.entries(dados.marcas).sort((a,b)=>b[1]-a[1]).map(([m,q])=>`${m} ${q}`).join(', ');
-    return `<tr><td>${vol}</td><td>${grupo}</td><td>${dados.total}</td><td>${breakdown || '-'}</td></tr>`;
+  const mkLinha=(vol,grupo)=>{
+    const d=agg[vol][grupo];
+    const brk=Object.entries(d.marcas).sort((a,b)=>b[1]-a[1]).map(([m,q])=>`${m} ${q}`).join(', ');
+    return `<tr><td>${vol}</td><td>${grupo}</td><td>${d.total}</td><td>${brk||'-'}</td></tr>`;
   };
-  const vols = ['300ml','600ml','1L'];
-  const grupos = ['Ambev','Brasil Kirin','Grupo Petrópolis','Outros'];
-  let rows = '';
-  vols.forEach(v => grupos.forEach(g => rows += mkLinha(v,g)));
+  let rows='';
+  ['300ml','600ml','1L'].forEach(v=>['Ambev','Brasil Kirin','Grupo Petrópolis','Outros'].forEach(g=>rows+=mkLinha(v,g)));
   return `
     <h3>Resumo de Vasilhames por Grupo e Volume</h3>
     <table>
@@ -1032,47 +1219,83 @@ function htmlResumoGrupos(agg){
   `;
 }
 
-/* Atualizado: Relatório geral com agregações e sigla (F/B) ao lado do nome */
-document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click', () => {
-  let corpo = '<h2>Extrato Geral de Dívidas</h2>';
-
-  // Bloco de agregação por grupos/volumes (apenas pendentes)
-  const agg = agregacaoPorGrupoEVolume(true);
-  corpo += htmlResumoGrupos(agg);
-
-  const clientesComDebitos = clientes
-    .filter(c => c.dividaTotal > 0)
-    .sort((a,b) => { const prio = t => t === 'fisico' ? 1 : 2; if (prio(a.tipo) !== prio(b.tipo)) return prio(a.tipo) - prio(b.tipo); return a.nome.localeCompare(b.nome); });
-  if (clientesComDebitos.length === 0) {
-    corpo += '<p>Nenhum cliente com débitos pendentes.</p>';
-  } else {
-    clientesComDebitos.forEach(c => {
-      corpo += `<h3>${c.nome} (${c.tipo === 'fisico' ? 'Físico' : 'Bar'}) — Total: ${c.dividaTotal} itens</h3>`;
-      let itensPendentesHtml = '';
-      historico.filter(h => h.cliente_id === c.id).forEach(h => {
-        const cascosPendentes = (h.qtd_casco || 0) - (h.qtd_casco_devolvido || 0);
-        const caixasPendentes = (h.qtd_caixa || 0) - (h.qtd_caixa_devolvido || 0);
-        const data = formatarDataBR(h.data_emprestimo);
-        if (cascosPendentes > 0) itensPendentesHtml += `<tr><td>Casco ${h.marca_casco} ${h.tamanho_casco}</td><td>${cascosPendentes}</td><td>${data}</td></tr>`;
-        if (caixasPendentes > 0) itensPendentesHtml += `<tr><td>Caixa ${h.tipo_caixa}</td><td>${caixasPendentes}</td><td>${data}</td></tr>`;
-      });
-      corpo += `
-        <table>
-          <thead><tr><th>Item</th><th>Qtd. Pendente</th><th>Data Original</th></tr></thead>
-          <tbody>${itensPendentesHtml || '<tr><td colspan="3">—</td></tr>'}</tbody>
-        </table>
-      `;
+document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click', ()=>{
+  let corpo = '<h2>Extrato Geral de Dívidas</h2>' + htmlResumoGrupos(agregacaoPorGrupoEVolume(true));
+  const cDeb=clientes.filter(c=>c.dividaTotal>0).sort((a,b)=>{
+    const pr= t=> t==='fisico'?1:2;
+    if (pr(a.tipo)!==pr(b.tipo)) return pr(a.tipo)-pr(b.tipo);
+    return a.nome.localeCompare(b.nome);
+  });
+  if(!cDeb.length) corpo+='<p>Nenhum cliente com débitos pendentes.</p>';
+  else cDeb.forEach(c=>{
+    corpo+=`<h3>${c.nome} (${c.tipo==='fisico'?'Físico':'Bar'}) — Total: ${c.dividaTotal} itens</h3>`;
+    let itensPend='';
+    historico.filter(h=>h.cliente_id===c.id).forEach(h=>{
+      const pc=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+      const px=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+      const data = formatarDataBR(h.data_emprestimo);
+      if (pc>0) itensPend += `<tr><td>Casco ${h.marca_casco} ${h.tamanho_casco}</td><td>${pc}</td><td>${data}</td><td>${h.vendedor||'-'}</td></tr>`;
+      if (px>0) itensPend += `<tr><td>Caixa ${h.tipo_caixa}</td><td>${px}</td><td>${data}</td><td>${h.vendedor||'-'}</td></tr>`;
     });
-  }
-  const win = window.open('', '_blank');
+    corpo += `
+      <table>
+        <thead><tr><th>Item</th><th>Qtd. Pendente</th><th>Data Original</th><th>Vendedor</th></tr></thead>
+        <tbody>${itensPend || '<tr><td colspan="4">—</td></tr>'}</tbody>
+      </table>
+    `;
+  });
+  const win=window.open('','_blank');
   win.document.write(gerarConteudoImpressao('Relatório Geral de Empréstimos', corpo, 'a4'));
   win.document.close();
-  win.onload = () => win.print();
+  win.onload=()=>win.print();
 });
 
-/* Inicializa ao abrir */
+/* ===================== BUSCA POR DATA (resumo) ===================== */
+function historicoPorData(dateStr){
+  if(!dateStr) return [];
+  const d=parseDataSeguro(dateStr); if(!d) return [];
+  const y=d.getFullYear(), m=d.getMonth(), da=d.getDate();
+  const ini=new Date(y,m,da).getTime(), fim=new Date(y,m,da+1).getTime();
+  return historico.map(h=>{
+    const t=parseDataSeguro(h.data_emprestimo)?.getTime()||0;
+    if (t>=ini && t<fim){
+      const cli=clientes.find(c=>c.id===h.cliente_id);
+      return {...h, cliente_nome: cli? cli.nome : 'Desconhecido'};
+    }
+    return null;
+  }).filter(Boolean);
+}
+document.getElementById('btnImprimirResumoDiario').addEventListener('click', ()=> imprimirResumoDeLista(historicoHoje,'Resumo de Hoje'));
+document.getElementById('btnImprimirResumoPorData').addEventListener('click', ()=>{
+  const data=document.getElementById('dataResumoDia').value;
+  imprimirResumoDeLista(historicoPorData(data), `Resumo do Dia (${formatarDataBR(data)})`);
 });
+function imprimirResumoDeLista(lista, titulo){
+  let corpoTabela='';
+  if(!lista||!lista.length) corpoTabela='<tr><td colspan="3" style="text-align:center;">Nenhum empréstimo.</td></tr>';
+  else lista.forEach(h=>{
+    const cascos=h.qtd_casco>0? `${h.qtd_casco} Casco(s) ${h.marca_casco}`:'';
+    const caixas=h.qtd_caixa>0? `${h.qtd_caixa} Caixa(s) ${h.tipo_caixa}`:'';
+    const hora=formatarHoraBR(h.data_emprestimo);
+    corpoTabela += `<tr><td>${h.cliente_nome}</td><td>${cascos} ${caixas}</td><td>${hora}</td></tr>`;
+  });
+  const corpo = `
+    <h2>Empréstimos</h2>
+    <table>
+      <thead><tr><th>Cliente</th><th>Itens</th><th>Horário</th></tr></thead>
+      <tbody>${corpoTabela}</tbody>
+    </table>
+  `;
+  const win=window.open('','_blank');
+  win.document.write(gerarConteudoImpressao(titulo, corpo, 'termica'));
+  win.document.close();
+  win.onload=()=>win.print();
+}
+
+/* ===================== EVENTOS INICIAIS ===================== */
+carregarDadosIniciais();
+
+}); // DOMContentLoaded
 </script>
-
 </body>
 </html>
