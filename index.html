@@ -597,6 +597,12 @@ const mudarAba = (tabId) => {
 };
 abas.forEach(aba=> document.getElementById(`tab${aba}`).addEventListener('click', ()=>mudarAba(`tab${aba}`)) );
 
+/* evita erro caso a função ainda não exista */
+function renderizarRegistrosApagados(){
+  const el = document.getElementById('listaRegistrosApagados');
+  if (el) el.innerHTML = '<p>(Em breve)</p>';
+}
+
 /* ===================== CARREGAR DADOS ===================== */
 async function carregarDadosIniciais(){
   if (OFFLINE){ /* poderia carregar mocks se quiser */ return; }
@@ -1184,10 +1190,6 @@ const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
       /* Evita cortes de linhas/tabelas na impressão */
       table, tr, td, th { page-break-inside: avoid; }
       h1, h2, h3, img, p { page-break-inside: avoid; }
-
-      @media print {
-        /* Algumas impressoras ignoram zoom; por isso elevamos os tamanhos acima */
-      }
     </style>
   </head>
   <body>
@@ -1201,29 +1203,7 @@ const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
   </html>`;
 };
 
-  return `
-    <html>
-    <head>
-      <title>${titulo}</title>
-      <style>
-        body { font-family: sans-serif; margin: 12px; font-size:${fontBase}px; }
-        h1, h2, h3 { text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        @media print { button { display:none; } }
-      </style>
-    </head>
-    <body>
-      <img src="logo.png" style="${logoStyle}">
-      <h1>${titulo}</h1>
-      <h3>Data: ${new Date().toLocaleDateString('pt-BR')}</h3>
-      ${corpo}
-    </body>
-    </html>
-  `;
-};
-
+// Recibo (térmica 80mm – tx20)
 window.imprimirRecibo = (registroId) => {
   const h = historico.find(x=>x.id===registroId);
   const cli = h ? clientes.find(c=>c.id===h.cliente_id) : null;
@@ -1244,12 +1224,13 @@ window.imprimirRecibo = (registroId) => {
       <thead><tr><th>Item</th><th>Quantidade</th></tr></thead>
       <tbody>${itensHtml}</tbody>
     </table>
-    <br><br>
-    <p>______________________________________________</p>
-    <p style="text-align:center;">Assinatura do Cliente</p>
+    <div class="assinatura">
+      <div class="linha"></div>
+      <div>Assinatura do Cliente</div>
+    </div>
   `;
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo, 'termica'));
+  win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo, 'tx20'));
   win.document.close();
   win.onload = ()=> win.print();
 };
@@ -1400,7 +1381,8 @@ function imprimirResumoDeLista(lista, titulo){
     </table>
   `;
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao(titulo, corpo, 'termica'));
+  // térmica: usar perfil tx20
+  win.document.write(gerarConteudoImpressao(titulo, corpo, 'tx20'));
   win.document.close();
   win.onload=()=>win.print();
 }
