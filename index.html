@@ -498,7 +498,7 @@ button.whatsapp{ background:#25D366; }
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 /* ===================== CONFIG ===================== */
-const OFFLINE = false;               // backend real
+const OFFLINE = true;               // backend real
 const API_URL = '/api';
 
 const VENDEDORES = ["JUNIOR","ANA CLARA","CARLOS VITOR","CID","ELIEUDA","CABEÇÃO"];
@@ -1081,12 +1081,125 @@ Por favor, verifique a possibilidade de devolução. Agradecemos a sua atenção
 });
 
 /* ===================== IMPRESSÃO / RECIBO ===================== */
-const gerarConteudoImpressao = (titulo, corpo, tipo="termica") => {
-  // Ajustes para TX20: logo grande e fontes maiores
-  const logoStyle = tipo==="a4"
-    ? "display:block; margin:auto; max-width:180px; height:auto;"
-    : "display:block; margin:auto; height:200px;"; // térmica: bem grande
-  const fontBase = tipo==="a4" ? 18 : 20;
+/**
+ * Perfis:
+ *  - "tx20": térmica 80mm (TX20) com logo grande e fontes grandes
+ *  - "termica58": térmica 58mm (se precisar)
+ *  - "a4": para relatórios em papel comum
+ */
+const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
+  const perfis = {
+    tx20: {
+      pageWidth: "80mm",
+      margin: "4mm",
+      font: 22,
+      lineHeight: 1.6,
+      h1: 30,
+      h2: 26,
+      h3: 24,
+      table: 20,
+      th: 22,
+      logoHeight: "230px",
+      logoMaxWidth: "74mm"
+    },
+    termica58: {
+      pageWidth: "58mm",
+      margin: "4mm",
+      font: 18,
+      lineHeight: 1.5,
+      h1: 24,
+      h2: 22,
+      h3: 20,
+      table: 16,
+      th: 18,
+      logoHeight: "160px",
+      logoMaxWidth: "54mm"
+    },
+    a4: {
+      pageWidth: "210mm",
+      margin: "12mm",
+      font: 18,
+      lineHeight: 1.6,
+      h1: 28,
+      h2: 24,
+      h3: 22,
+      table: 18,
+      th: 18,
+      logoHeight: "180px",
+      logoMaxWidth: "180px"
+    }
+  };
+
+  const c = perfis[tipo] || perfis.tx20;
+
+  return `
+  <html>
+  <head>
+    <title>${titulo}</title>
+    <meta charset="utf-8">
+    <style>
+      @page { size: ${c.pageWidth} auto; margin: ${c.margin}; }
+      html, body {
+        width: ${c.pageWidth};
+        margin: 0 auto;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: ${c.font}px;
+        line-height: ${c.lineHeight};
+        color: #000;
+      }
+      h1, h2, h3 { text-align: center; margin: 6px 0; }
+      h1 { font-size: ${c.h1}px; }
+      h2 { font-size: ${c.h2}px; }
+      h3 { font-size: ${c.h3}px; }
+
+      .logo {
+        display:block; margin: 0 auto 8px;
+        height: ${c.logoHeight};
+        max-width: ${c.logoMaxWidth};
+        object-fit: contain;
+        image-rendering: -webkit-optimize-contrast;
+      }
+
+      .cabecalho { text-align:center; margin-bottom: 6px; }
+      .meta { text-align:center; font-size:${Math.max(c.font-2, 12)}px; }
+
+      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      th, td {
+        border: 1px solid #000;
+        padding: 6px 8px;
+        font-size: ${c.table}px;
+        word-break: break-word;
+      }
+      th { font-size: ${c.th}px; }
+
+      .assinatura {
+        margin-top: 18px; text-align:center;
+      }
+      .assinatura .linha {
+        margin: 24px auto 4px; border-top: 2px solid #000; width: 90%;
+      }
+
+      /* Evita cortes de linhas/tabelas na impressão */
+      table, tr, td, th { page-break-inside: avoid; }
+      h1, h2, h3, img, p { page-break-inside: avoid; }
+
+      @media print {
+        /* Algumas impressoras ignoram zoom; por isso elevamos os tamanhos acima */
+      }
+    </style>
+  </head>
+  <body>
+    <img src="logo.png" class="logo" alt="Distribuidora Garcia">
+    <div class="cabecalho">
+      <h1>${titulo}</h1>
+      <div class="meta">Data: ${new Date().toLocaleDateString('pt-BR')} — Hora: ${new Date().toLocaleTimeString('pt-BR')}</div>
+    </div>
+    ${corpo}
+  </body>
+  </html>`;
+};
 
   return `
     <html>
