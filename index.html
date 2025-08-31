@@ -873,8 +873,8 @@ document.getElementById('formEmprestimo').addEventListener('submit', async e=>{
   const payload = {
     cliente_id: clienteAtualParaHistorico.id,
     vendedor,
-    marcaCasco, tamanhoCasco, qtdCasco,
-    tipoCaixa, qtdCaixa,
+    marca_casco: marcaCasco, tamanho_casco: tamanhoCasco, qtd_casco: qtdCasco,
+    tipo_caixa: tipoCaixa, qtd_caixa: qtdCaixa,
     data_emprestimo, data_devolucao
   };
 
@@ -895,7 +895,7 @@ document.getElementById('formDevolucao').addEventListener('submit', async e=>{
   try{
     const r=await fetch(`${API_URL}/historico/devolver/${registroParaDevolverId}`,{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({qtdCascoDev,qtdCaixaDev})
+      body:JSON.stringify({qtd_casco_dev:qtdCascoDev,qtd_caixa_dev:qtdCaixaDev})
     });
     if(!r.ok) throw new Error('Falha ao registar devolução.');
     fecharModal('modalDevolucao');
@@ -905,6 +905,11 @@ document.getElementById('formDevolucao').addEventListener('submit', async e=>{
 });
 
 /* ===================== APAGAR REGISTRO ===================== */
+window.abrirModalApagarRegistro = (id) => {
+  registroParaApagarId = id;
+  document.getElementById('modalApagarRegistro').style.display='block';
+};
+
 document.getElementById('formApagar').addEventListener('submit', async e=>{
   e.preventDefault();
   const justificativa = document.getElementById('justificativaApagar').value.trim();
@@ -919,6 +924,29 @@ document.getElementById('formApagar').addEventListener('submit', async e=>{
     document.getElementById('formApagar').reset();
     await carregarDadosIniciais();
     renderHistoricoCliente(clienteAtualParaHistorico.id);
+  }catch(e){ alert(`Erro: ${e.message}`); }
+});
+
+/* ===================== APAGAR CLIENTE ===================== */
+window.abrirModalApagarCliente = (id) => {
+  clienteParaApagarId = id;
+  document.getElementById('modalApagarCliente').style.display='block';
+};
+
+document.getElementById('formApagarCliente').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const justificativa = document.getElementById('justificativaApagarCliente').value.trim();
+  if (!justificativa) return alert('A justificativa é obrigatória.');
+  try{
+    const r=await fetch(`${API_URL}/clientes/${clienteParaApagarId}`,{
+      method:'DELETE', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({justificativa})
+    });
+    if(!r.ok) throw new Error((await r.json()).error||'Falha ao apagar cliente.');
+    fecharModal('modalApagarCliente');
+    document.getElementById('formApagarCliente').reset();
+    await carregarDadosIniciais();
+    mudarAba('tabHome');
   }catch(e){ alert(`Erro: ${e.message}`); }
 });
 
@@ -1322,7 +1350,137 @@ function imprimirResumoDeLista(lista, titulo){
   win.onload=()=>win.print();
 }
 
-/* ===================== EVENTOS INICIAIS ===================== */
+/* ===================== HISTÓRICO DO CLIENTE (LISTAGEM + AÇÕES) ===================== */
+function atualizarResumoDividaCliente(clienteId){
+  const div = document.getElementById('resumoDividaCliente');
+  const regs = historico.filter(h=>h.cliente_id===clienteId);
+  const totalPend = regs.reduce((acc,h)=>{
+    const pc=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const px=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    return acc + Math.max(pc,0) + Math.max(px,0);
+  },0);
+  div.innerHTML = `<p><strong>Total pendente:</strong> ${totalPend} item(ns)</p>`;
+}
+
+window.renderHistoricoCliente = (clienteId) => {
+  const ctn = document.getElementById('listaHistoricoCliente');
+  ctn.innerHTML = '';
+  const regs = historico
+    .filter(h=>h.cliente_id===clienteId)
+    .sort((a,b)=>(parseDataSeguro(b.data_emprestimo)?.getTime()||0)-(parseDataSeguro(a.data_emprestimo)?.getTime()||0));
+
+  if (!regs.length){
+    ctn.innerHTML = '<p>Sem registros para este cliente.</p>';
+    atualizarResumoDividaCliente(clienteId);
+    return;
+  }
+
+  regs.forEach(h=>{
+    const pc=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const px=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    const pendentes = [];
+    if (pc>0) pendentes.push(`${pc}x Casco ${h.marca_casco||'-'} ${h.tamanho_casco||''}`.trim());
+    if (px>0) pendentes.push(`${px}x Caixa ${h.tipo_caixa||'-'}`);
+
+    const div = document.createElement('div');
+    div.className='item-lista';
+    div.innerHTML = `
+      <span>
+        <strong>${formatarDataHoraBR(h.data_emprestimo)}</strong><br>
+        ${h.data_devolucao ? `<small>Prev. devolução: ${formatarDataBR(h.data_devolucao)}</small>` : ''}
+      </span>
+      <span>
+        ${h.qtd_casco>0? `${h.qtd_casco}x Casco ${h.marca_casco} ${h.tamanho_casco}`:''}
+        ${h.qtd_casco>0 && h.qtd_caixa>0 ? ' | ' : ''}
+        ${h.qtd_caixa>0? `${h.qtd_caixa}x Caixa ${h.tipo_caixa}`:''}
+        ${pendentes.length? `<br><small><strong>Pendentes:</strong> ${pendentes.join(' / ')}</small>`:''}
+      </span>
+      <span><small>Vendedor: ${h.vendedor||'-'}</small></span>
+      <div class="botoes">
+        <button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>
+        <button class="imprimir-recibo" onclick="imprimirRecibo(${h.id})">Recibo</button>
+        <button class="editar" onclick="abrirModalEditarEmprestimo(${h.id})">Editar</button>
+        <button class="apagar" onclick="abrirModalApagarRegistro(${h.id})">Apagar</button>
+      </div>
+    `;
+    ctn.appendChild(div);
+  });
+
+  atualizarResumoDividaCliente(clienteId);
+};
+
+/* ===================== EDITAR EMPRÉSTIMO ===================== */
+window.abrirModalEditarEmprestimo = (id) => {
+  const reg = historico.find(h=>h.id===id);
+  if (!reg) return;
+  document.getElementById('editEmprestimoId').value = id;
+  document.getElementById('editVendedor').value = reg.vendedor || '';
+  document.getElementById('editDataEmprestimo').value = formatarDataParaInput(reg.data_emprestimo);
+  document.getElementById('editDataDevolucao').value = reg.data_devolucao ? (()=>{
+    const d = parseDataSeguro(reg.data_devolucao);
+    const y=d.getFullYear(), m=(d.getMonth()+1+'').padStart(2,'0'), da=(d.getDate()+'').padStart(2,'0'); return `${y}-${m}-${da}`;
+  })() : '';
+
+  document.getElementById('editMarcaCasco').value = reg.marca_casco || 'Nenhuma';
+  document.getElementById('editTamanhoCasco').value = reg.tamanho_casco || 'Nenhum';
+  document.getElementById('editQtdCasco').value = reg.qtd_casco || 0;
+
+  document.getElementById('editTipoCaixa').value = reg.tipo_caixa || 'Nenhuma';
+  document.getElementById('editQtdCaixa').value = reg.qtd_caixa || 0;
+
+  document.getElementById('editAlteradoPor').value = '';
+  document.getElementById('justificativaEdicao').value = '';
+
+  document.getElementById('modalEditarEmprestimo').style.display='block';
+};
+
+document.getElementById('btnSalvarEdicaoEmprestimo').addEventListener('click', async ()=>{
+  const id = document.getElementById('editEmprestimoId').value;
+  const payload = {
+    vendedor: document.getElementById('editVendedor').value,
+    data_emprestimo: document.getElementById('editDataEmprestimo').value,
+    data_devolucao: document.getElementById('editDataDevolucao').value,
+    marca_casco: document.getElementById('editMarcaCasco').value,
+    tamanho_casco: document.getElementById('editTamanhoCasco').value,
+    qtd_casco: parseInt(document.getElementById('editQtdCasco').value,10)||0,
+    tipo_caixa: document.getElementById('editTipoCaixa').value,
+    qtd_caixa: parseInt(document.getElementById('editQtdCaixa').value,10)||0,
+    alterado_por: document.getElementById('editAlteradoPor').value,
+    justificativa: document.getElementById('justificativaEdicao').value.trim()
+  };
+  if (!payload.alterado_por || !payload.justificativa) return alert('Preencha "Alterado por" e a justificativa.');
+  try{
+    const r = await fetch(`${API_URL}/historico/${id}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    if(!r.ok) throw new Error((await r.json()).error || 'Falha ao salvar edição.');
+    fecharModal('modalEditarEmprestimo');
+    await carregarDadosIniciais();
+    if (clienteAtualParaHistorico) renderHistoricoCliente(clienteAtualParaHistorico.id);
+  }catch(e){ alert(`Erro: ${e.message}`); }
+});
+
+/* ===================== WHATSAPP COBRANÇA (OPCIONAL) ===================== */
+document.getElementById('btnNotificarWhatsapp').addEventListener('click', ()=>{
+  if (!clienteAtualParaHistorico) return;
+  const cli = clienteAtualParaHistorico;
+  const pend = historico.filter(h=>h.cliente_id===cli.id).map(h=>{
+    const pc=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const px=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    const itens=[];
+    if (pc>0) itens.push(`${pc}x Casco ${h.marca_casco||''} ${h.tamanho_casco||''}`.trim());
+    if (px>0) itens.push(`${px}x Caixa ${h.tipo_caixa||''}`.trim());
+    return itens.join(' / ');
+  }).filter(Boolean);
+  const msg = `Olá ${cli.nome}, tudo bem? Consta aqui ${pend.length? 'pendência de: ' + pend.join(' | ') : 'uma pendência de vasilhames'}. Pode verificar para nós? Obrigado!`;
+  const tel = (cli.telefone||'').replace(/\D/g,'');
+  const url = tel ? `https://wa.me/${tel}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
+});
+
+/* ===================== INICIAL ===================== */
 carregarDadosIniciais();
 
 }); // DOMContentLoaded
