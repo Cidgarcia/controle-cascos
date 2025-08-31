@@ -190,10 +190,28 @@ button.whatsapp{ background:#25D366; }
 
       <div class="box">
         <h2>Relatórios e Extratos</h2>
+
+        <!-- NOVO: seletor de formato -->
+        <div class="grid-2-col" style="margin-bottom:10px;">
+          <div>
+            <label for="formatoImpressao">Formato de impressão:</label>
+            <select id="formatoImpressao">
+              <option value="tx20">TX20 (80mm)</option>
+              <option value="termica58">Térmica 58mm</option>
+              <option value="a4">A4</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="btnRelatorioServidorHoje" class="secondary">Relatório HOJE (Servidor)</button>
+          </div>
+        </div>
+
         <div class="grid-2-col">
           <button id="btnImprimirResumoDiario">Imprimir Resumo de Hoje</button>
           <button id="btnImprimirExtratoEmprestimos" class="secondary">Imprimir Relatório Geral</button>
         </div>
+
         <div class="grid-2-col" style="margin-top:10px;">
           <div>
             <label for="dataResumoDia">Escolher data para resumo:</label>
@@ -302,6 +320,13 @@ button.whatsapp{ background:#25D366; }
       <div class="grid-2-col">
         <button class="whatsapp" id="btnNotificarWhatsapp">Gerar Mensagem de Cobrança</button>
         <button id="btnImprimirRelatorioCliente" class="secondary">Imprimir Relatório Completo do Cliente</button>
+      </div>
+      <!-- NOVO: relatório servidor do cliente -->
+      <div class="grid-2-col" style="margin-top:10px;">
+        <div><label>&nbsp;</label>
+          <button id="btnRelatorioServidorCliente" class="secondary">Relatório (Servidor) do Cliente</button>
+        </div>
+        <div></div>
       </div>
     </div>
 
@@ -542,6 +567,7 @@ const formatarDataBR = (v) => { const d = parseDataSeguro(v); return d ? d.toLoc
 const formatarHoraBR = (v) => { const d = parseDataSeguro(v); return d ? d.toLocaleTimeString('pt-BR') : '—'; };
 const fimDoDia = (d) => { const x = parseDataSeguro(d) || new Date(); x.setHours(23,59,59,999); return x; };
 const formatarDataParaInput = (date) => { const d = parseDataSeguro(date) || new Date(); const y=d.getFullYear(), m=(d.getMonth()+1+'').padStart(2,'0'), da=(d.getDate()+'').padStart(2,'0'), hh=(d.getHours()+'').padStart(2,'0'), mi=(d.getMinutes()+'').padStart(2,'0'); return `${y}-${m}-${da}T${hh}:${mi}`; };
+const getFormato = () => (document.getElementById('formatoImpressao')?.value || 'tx20');
 
 function inicializarApp(){
   ['marcaCasco','editMarcaCasco'].forEach(id=>popularSelect(id, OPCOES_MARCA_CASCO));
@@ -592,7 +618,7 @@ const mudarAba = (tabId) => {
   if (active==='Fisicos') renderizarClientes('fisico');
   if (active==='Bares') renderizarClientes('bar');
   if (active==='Estoque') renderizarEstoque();
-  if (active==='Apagados') renderizarRegistrosApagados();
+  if (active==='Apagados') renderizarRegistrosApagados && renderizarRegistrosApagados();
   if (active==='AdicionarCliente') resetarFormCliente();
 };
 abas.forEach(aba=> document.getElementById(`tab${aba}`).addEventListener('click', ()=>mudarAba(`tab${aba}`)) );
@@ -656,44 +682,21 @@ function renderizarHome(){
 
 /* ===================== NOTIFICAÇÕES ===================== */
 async function gerarNotificacoes(){
-  if (OFFLINE){
-    notificacoes=[];
-    const hojeFim=fimDoDia(new Date()).getTime();
-    historico.forEach(h=>{
-      const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
-      const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
-      const pend=pendC+pendX;
-      if(!h.data_devolucao||pend<=0) return;
-      const dev=fimDoDia(h.data_devolucao).getTime();
-      if(dev<=hojeFim){
-        const cli=clientes.find(c=>c.id===h.cliente_id);
-        const dias=Math.ceil((hojeFim-dev)/(24*3600*1000));
-        const status=dias<=0?'Vence hoje':`Atrasado ${dias} dia(s)`;
-        const res=[];
-        if(pendC>0) res.push(`${pendC}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
-        if(pendX>0) res.push(`${pendX}x Caixa(s) ${h.tipo_caixa}`);
-        notificacoes.push({ clienteId:h.cliente_id, clienteNome:cli?cli.nome:'Desconhecido', dataDevolucao:h.data_devolucao, status, resumo:res.join(' / ') });
-      }
-    });
-  } else {
-    const r = await fetch(`${API_URL}/notificacoes`);
-    const rows = r.ok? await r.json() : [];
-    const porCli = {};
-    rows.forEach(h=>{
-      const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
-      const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
-      const res=[];
-      if(pendC>0) res.push(`${pendC}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
-      if(pendX>0) res.push(`${pendX}x Caixa(s) ${h.tipo_caixa}`);
-      const status = h.dias_atraso>0 ? `Atrasado ${h.dias_atraso} dia(s)` : 'Vence hoje';
-      const base = { clienteId:h.cliente_id, clienteNome:h.cliente_nome, dataDevolucao:h.data_devolucao, status, resumo:res.join(' / ') };
-      if (!porCli[h.cliente_id]) porCli[h.cliente_id]=base;
-      else porCli[h.cliente_id].resumo += ' | ' + base.resumo;
-    });
-    notificacoes = Object.values(porCli);
-  }
-  // atrasos primeiro
-  notificacoes = notificacoes.sort((a,b)=>{
+  const r = await fetch(`${API_URL}/notificacoes`);
+  const rows = r.ok? await r.json() : [];
+  const porCli = {};
+  rows.forEach(h=>{
+    const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    const res=[];
+    if(pendC>0) res.push(`${pendC}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
+    if(pendX>0) res.push(`${pendX}x Caixa(s) ${h.tipo_caixa}`);
+    const status = h.dias_atraso>0 ? `Atrasado ${h.dias_atraso} dia(s)` : 'Vence hoje';
+    const base = { clienteId:h.cliente_id, clienteNome:h.cliente_nome, dataDevolucao:h.data_devolucao, status, resumo:res.join(' / ') };
+    if (!porCli[h.cliente_id]) porCli[h.cliente_id]=base;
+    else porCli[h.cliente_id].resumo += ' | ' + base.resumo;
+  });
+  notificacoes = Object.values(porCli).sort((a,b)=>{
     const A=a.status.startsWith('Atrasado'), B=b.status.startsWith('Atrasado');
     if (A!==B) return A? -1: 1;
     return a.clienteNome.localeCompare(b.clienteNome);
@@ -913,12 +916,25 @@ document.getElementById('formApagar').addEventListener('submit', async e=>{
   }catch(e){ alert(`Erro: ${e.message}`); }
 });
 
-/* ===================== APAGAR CLIENTE ===================== */
+/* ===================== APAGAR CLIENTE (N O V O) ===================== */
 window.abrirModalApagarCliente = (id) => { clienteParaApagarId=id; document.getElementById('modalApagarCliente').style.display='block'; };
 document.getElementById('formApagarCliente').addEventListener('submit', async e=>{
   e.preventDefault();
-  alert('No backend atual não existe rota de apagar cliente com histórico arquivado. (Se quiser, implemento depois.)');
-  fecharModal('modalApagarCliente');
+  const justificativa = document.getElementById('justificativaApagarCliente').value.trim();
+  if (!justificativa) return alert('A justificativa é obrigatória.');
+  try{
+    const r=await fetch(`${API_URL}/clientes/${clienteParaApagarId}`,{
+      method:'DELETE', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({justificativa})
+    });
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error || 'Falha ao apagar cliente.');
+    fecharModal('modalApagarCliente');
+    document.getElementById('formApagarCliente').reset();
+    await carregarDadosIniciais();
+    mudarAba('tabHome');
+    alert(d.message || 'Cliente apagado e arquivado com sucesso.');
+  }catch(e){ alert(`Erro: ${e.message}`); }
 });
 
 /* ===================== HISTÓRICO POR CLIENTE ===================== */
@@ -1127,7 +1143,6 @@ const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
       logoHeight: "180px",
       logoMaxWidth: "180px"
     }
-    
   };
 
   const c = perfis[tipo] || perfis.tx20;
@@ -1231,10 +1246,11 @@ window.imprimirRecibo = (registroId) => {
     </table>
     <div class="assinatura"><div class="linha"></div>Assinatura do Cliente</div>
   `;
+  const fmt = getFormato();
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo, 'tx20'));
+  win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo, fmt));
   win.document.close();
-  win.onload = ()=> win.print();
+  win.onload = ()=>win.print();
 };
 
 /* ===================== RELATÓRIO CLIENTE ===================== */
@@ -1278,10 +1294,18 @@ document.getElementById('btnImprimirRelatorioCliente').addEventListener('click',
       <tbody>${linhas}</tbody>
     </table>
   `;
+  const fmt = getFormato();
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao('Relatório do Cliente', corpo, 'tx20'));
+  win.document.write(gerarConteudoImpressao('Relatório do Cliente', corpo, fmt));
   win.document.close();
   win.onload=()=>win.print();
+});
+
+/* ======= RELATÓRIO (SERVIDOR) DO CLIENTE ======= */
+document.getElementById('btnRelatorioServidorCliente').addEventListener('click', ()=>{
+  if(!clienteAtualParaHistorico) return;
+  const fmt = getFormato();
+  window.open(`/relatorio/cliente/${clienteAtualParaHistorico.id}?formato=${encodeURIComponent(fmt)}`,'_blank');
 });
 
 /* ===================== RELATÓRIO GERAL ===================== */
@@ -1351,10 +1375,17 @@ document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click
       </table>
     `;
   });
+  const fmt = getFormato();
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao('Relatório Geral de Empréstimos', corpo, 'tx20'));
+  win.document.write(gerarConteudoImpressao('Relatório Geral de Empréstimos', corpo, fmt));
   win.document.close();
   win.onload=()=>win.print();
+});
+
+/* ======= RELATÓRIO HOJE (SERVIDOR) ======= */
+document.getElementById('btnRelatorioServidorHoje').addEventListener('click', ()=>{
+  const fmt = getFormato();
+  window.open(`/relatorio/hoje?formato=${encodeURIComponent(fmt)}`,'_blank');
 });
 
 /* ===================== BUSCA POR DATA (resumo) ===================== */
@@ -1393,8 +1424,9 @@ function imprimirResumoDeLista(lista, titulo){
       <tbody>${corpoTabela}</tbody>
     </table>
   `;
+  const fmt = getFormato();
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao(titulo, corpo, 'tx20'));
+  win.document.write(gerarConteudoImpressao(titulo, corpo, fmt));
   win.document.close();
   win.onload=()=>win.print();
 }

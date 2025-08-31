@@ -1,4 +1,4 @@
-// server.js - Versão 8 - com vendedor + edição com justificativa
+// server.js - Versão 9 - Relatórios A4/TX20 + apagar cliente/histórico com auditoria
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
@@ -22,6 +22,11 @@ const dbFile = path.join(dbPath, 'garcia_database.db');
 const db = new sqlite3.Database(dbFile, (err) => {
   if (err) return console.error(`Erro ao conectar ao DB: ${err.message}`);
   console.log(`Conectado ao banco SQLite: ${dbFile}`);
+});
+
+// Habilita CASCADE e demais integridades
+db.serialize(() => {
+  db.run('PRAGMA foreign_keys = ON');
 });
 
 /* ===================== DATA (America/Recife) ===================== */
@@ -93,7 +98,7 @@ db.serialize(()=>{
     cliente_id INTEGER NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
     data_emprestimo TEXT NOT NULL,
     data_devolucao TEXT,
-    vendedor TEXT,                           -- NOVO
+    vendedor TEXT,
     marca_casco TEXT,
     tamanho_casco TEXT,
     qtd_casco INTEGER DEFAULT 0,
@@ -101,16 +106,16 @@ db.serialize(()=>{
     tipo_caixa TEXT,
     qtd_caixa INTEGER DEFAULT 0,
     qtd_caixa_devolvido INTEGER DEFAULT 0,
-    alterado_por TEXT,                       -- NOVO
-    justificativa_alteracao TEXT,            -- NOVO
-    data_alteracao TEXT                      -- NOVO
+    alterado_por TEXT,
+    justificativa_alteracao TEXT,
+    data_alteracao TEXT
   )`);
 
   // migrações "best effort"
   ['telefone'].forEach(col=> db.run(`ALTER TABLE clientes ADD COLUMN ${col} TEXT`, ()=>{}));
   ['data_devolucao','vendedor','alterado_por','justificativa_alteracao','data_alteracao'].forEach(col=>
-    db.run(`ALTER TABLE historico ADD COLUMN ${col} TEXT`, ()=>{})
-  );
+    db.run(`ALTER TABLE historico ADD COLUMN ${col} TEXT`, ()=>{}
+  ));
 
   db.run(`CREATE TABLE IF NOT EXISTS estoque (
     id TEXT PRIMARY KEY,
@@ -136,6 +141,14 @@ db.serialize(()=>{
     data_alteracao TEXT NOT NULL
   )`);
 
+  // Guarda clientes apagados (com histórico embutido)
+  db.run(`CREATE TABLE IF NOT EXISTS clientes_apagados (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dados_cliente TEXT NOT NULL,
+    justificativa TEXT NOT NULL,
+    data_apagado TEXT NOT NULL
+  )`);
+
   // Popular estoque se faltando
   const itensEstoque = [
     { id: 'vasilhame_ambev', nome: 'Vasilhame AMBEV (Brahma/Skol/Original/Bohemia)' },
@@ -152,7 +165,6 @@ db.serialize(()=>{
     { id: 'caixa_heineken_600ml', nome: 'Caixa Heineken 600ml' }
   ];
   itensEstoque.forEach(it=> db.run('INSERT OR IGNORE INTO estoque (id,nome,quantidade) VALUES(?,?,0)', [it.id,it.nome]));
-
 });
 
 /* ===================== ESTOQUE HELPERS ===================== */
@@ -179,6 +191,117 @@ const atualizarEstoque = (itemId, quantidade) => {
   if (!itemId || !quantidade) return;
   db.run('UPDATE estoque SET quantidade = quantidade + ? WHERE id = ?', [quantidade, itemId]);
 };
+
+/* ===================== UTILS RELATÓRIO ===================== */
+function htmlEscape(s=''){return String(s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+function baseCss(formato) {
+  if ((formato||'').toLowerCase()==='tx20') {
+    // Largura ~80mm (troque para 58mm se necessário)
+    return `
+      <style>
+        @page { size: 80mm auto; margin: 4mm; }
+        html, body { width: 80mm; }
+        body { font: 12px/1.25 Arial, sans-serif; }
+        h1,h2 { margin: 0 0 4mm 0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 2px 0; border-bottom: 1px dashed #000; }
+        thead { display: table-header-group; }
+        tr { break-inside: avoid; page-break-inside: avoid; }
+        .sum { margin-top: 4mm; border-top: 1px solid #000; padding-top: 2mm; }
+        @media print { .no-print { display: none !important; } }
+      </style>
+    `;
+  }
+  // A4 retrato
+  return `
+    <style>
+      @page { size: A4 portrait; margin: 12mm; }
+      body { font: 12px/1.4 Arial, sans-serif; color: #111; }
+      h1,h2 { margin: 0 0 10px 0; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 6px 8px; border: 1px solid #ddd; }
+      thead th { background: #f4f4f4; position: sticky; top: 0; }
+      thead { display: table-header-group; }
+      tr { break-inside: avoid; page-break-inside: avoid; }
+      .sum { margin-top: 10px; font-weight: bold; }
+      @media print { .no-print { display: none !important; } }
+    </style>
+  `;
+}
+
+function renderRelatorioHTML({ titulo, linhas, formato }) {
+  const css = baseCss(formato);
+  let totalCasco = 0, totalCaixa = 0, pendCasco = 0, pendCaixa = 0;
+
+  const rows = (linhas||[]).map(r=>{
+    const qC = r.qtd_casco|0, qCd = r.qtd_casco_devolvido|0;
+    const qX = r.qtd_caixa|0, qXd = r.qtd_caixa_devolvido|0;
+    totalCasco += qC; totalCaixa += qX;
+    pendCasco += (qC - qCd); pendCaixa += (qX - qXd);
+    return `
+      <tr>
+        <td>${htmlEscape(r.data_emprestimo||'')}</td>
+        <td>${htmlEscape(r.cliente_nome||'')}</td>
+        <td>${htmlEscape(r.vendedor||'')}</td>
+        <td>${htmlEscape([r.marca_casco, r.tamanho_casco].filter(Boolean).join(' '))}</td>
+        <td style="text-align:right">${qC}</td>
+        <td style="text-align:right">${qCd}</td>
+        <td>${htmlEscape(r.tipo_caixa||'')}</td>
+        <td style="text-align:right">${qX}</td>
+        <td style="text-align:right">${qXd}</td>
+        <td>${htmlEscape(r.data_devolucao||'')}</td>
+      </tr>
+    `;
+  }).join('');
+
+  const sum = `
+    <div class="sum">
+      Totais — Cascos: ${totalCasco} (pend. ${pendCasco}) · Caixas: ${totalCaixa} (pend. ${pendCaixa})
+    </div>
+  `;
+
+  const botao = `
+    <div class="no-print" style="margin:8px 0 16px 0">
+      <button onclick="window.print()">Imprimir</button>
+    </div>
+  `;
+
+  return `
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${htmlEscape(titulo)}</title>
+        ${css}
+      </head>
+      <body>
+        <h1>${htmlEscape(titulo)}</h1>
+        ${botao}
+        <table>
+          <thead>
+            <tr>
+              <th>Empréstimo</th>
+              <th>Cliente</th>
+              <th>Vendedor</th>
+              <th>Casco</th>
+              <th>Qtd</th>
+              <th>Devolv.</th>
+              <th>Caixa</th>
+              <th>Qtd</th>
+              <th>Devolv.</th>
+              <th>Devolução</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        ${sum}
+      </body>
+    </html>
+  `;
+}
 
 /* ===================== ROTAS ===================== */
 // Login
@@ -227,6 +350,48 @@ app.put('/api/clientes/:id', (req,res)=>{
       if (err) return res.status(500).json({error:'Erro ao atualizar cliente.'});
       res.json({message:'Cliente atualizado com sucesso'});
     });
+});
+
+// NOVO: Apagar cliente com justificativa + arquivar + cascata (historico)
+app.delete('/api/clientes/:id', (req, res) => {
+  const { id } = req.params;
+  const { justificativa } = req.body;
+  if (!justificativa) return res.status(400).json({ error: 'A justificativa é obrigatória.' });
+
+  db.serialize(()=>{
+    db.get('SELECT * FROM clientes WHERE id=?', [id], (err, cliente)=>{
+      if (err || !cliente) return res.status(404).json({ error: 'Cliente não encontrado.' });
+
+      db.all('SELECT * FROM historico WHERE cliente_id=?', [id], (errH, hist)=>{
+        if (errH) return res.status(500).json({ error: 'Erro ao ler histórico do cliente.' });
+
+        // Ajusta estoque do que ficou pendente
+        (hist||[]).forEach(reg=>{
+          const pendC = (reg.qtd_casco||0) - (reg.qtd_casco_devolvido||0);
+          const pendX = (reg.qtd_caixa||0) - (reg.qtd_caixa_devolvido||0);
+          if (pendC>0) atualizarEstoque(getItemDeEstoqueId('casco', reg.marca_casco), pendC);
+          if (pendX>0) atualizarEstoque(getItemDeEstoqueId('caixa', reg.tipo_caixa), pendX);
+        });
+
+        const pacote = { cliente, historico: hist||[] };
+        const when = nowSqlRecife();
+
+        db.run(
+          'INSERT INTO clientes_apagados (dados_cliente, justificativa, data_apagado) VALUES (?,?,?)',
+          [ JSON.stringify(pacote), justificativa, when ],
+          function(errA){
+            if (errA) return res.status(500).json({ error: 'Erro ao arquivar cliente apagado.' });
+
+            // ON DELETE CASCADE remove o histórico após deletar o cliente
+            db.run('DELETE FROM clientes WHERE id=?', [id], function(errD){
+              if (errD) return res.status(500).json({ error: 'Erro ao apagar cliente.' });
+              return res.json({ message: 'Cliente apagado e arquivado com sucesso.' });
+            });
+          }
+        );
+      });
+    });
+  });
 });
 
 // Historico
@@ -362,9 +527,7 @@ app.put('/api/historico/:id', (req,res)=>{
     db.run(`INSERT INTO historico_edicoes (historico_id, dados_antes, dados_depois, justificativa, alterado_por, data_alteracao)
             VALUES (?, ?, ?, ?, ?, ?)`,
       [id, dadosAntes, dadosDepois, justificativa, alterado_por, dataAlt],
-      (err3)=>{
-        if (err3) console.error('Falha ao gravar auditoria:', err3);
-      });
+      (err3)=>{ if (err3) console.error('Falha ao gravar auditoria:', err3); });
 
     // Atualiza registro principal
     const sql = `
@@ -390,7 +553,7 @@ app.put('/api/historico/:id', (req,res)=>{
   });
 });
 
-// Apagar registro
+// Apagar registro de histórico
 app.delete('/api/historico/:id', (req,res)=>{
   const { id } = req.params;
   const { justificativa } = req.body;
@@ -468,6 +631,52 @@ app.get('/api/notificacoes', (req,res)=>{
       return {...r, dias_atraso:dias};
     });
     res.json(out);
+  });
+});
+
+/* ===================== RELATÓRIOS (A4 / TX20) ===================== */
+// hoje
+app.get('/relatorio/hoje', (req, res) => {
+  const formato = (req.query.formato||'a4').toLowerCase();
+  const [ini,fim] = hojeIntervaloSql();
+  const sql = `
+    SELECT h.*, c.nome AS cliente_nome
+    FROM historico h JOIN clientes c ON h.cliente_id=c.id
+    WHERE datetime(h.data_emprestimo) BETWEEN datetime(?) AND datetime(?)
+    ORDER BY datetime(h.data_emprestimo) DESC
+  `;
+  db.all(sql, [ini,fim], (err, rows)=>{
+    if (err) return res.status(500).send('Erro ao gerar relatório');
+    const html = renderRelatorioHTML({
+      titulo: `Relatório - Hoje (${ini.slice(0,10)}) — ${formato.toUpperCase()}`,
+      linhas: rows||[],
+      formato
+    });
+    res.setHeader('Content-Type','text/html; charset=utf-8');
+    res.send(html);
+  });
+});
+
+// por cliente
+app.get('/relatorio/cliente/:id', (req, res) => {
+  const formato = (req.query.formato||'a4').toLowerCase();
+  const { id } = req.params;
+  const sql = `
+    SELECT h.*, c.nome AS cliente_nome
+    FROM historico h JOIN clientes c ON h.cliente_id=c.id
+    WHERE c.id = ?
+    ORDER BY datetime(h.data_emprestimo) DESC
+  `;
+  db.all(sql, [id], (err, rows)=>{
+    if (err) return res.status(500).send('Erro ao gerar relatório');
+    const nome = rows && rows[0] ? rows[0].cliente_nome : `Cliente #${id}`;
+    const html = renderRelatorioHTML({
+      titulo: `Relatório - ${nome} — ${formato.toUpperCase()}`,
+      linhas: rows||[],
+      formato
+    });
+    res.setHeader('Content-Type','text/html; charset=utf-8');
+    res.send(html);
   });
 });
 
