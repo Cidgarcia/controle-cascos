@@ -147,9 +147,9 @@ button.whatsapp{ background:#25D366; }
       <h1>Login</h1>
       <form id="formLogin">
         <label for="loginUsuario">Utilizador:</label>
-        <input type="text" id="loginUsuario" autocomplete="username" required>
+        <input type="text" id="loginUsuario" required>
         <label for="loginSenha">Palavra-passe:</label>
-        <input type="password" id="loginSenha" autocomplete="current-password" required>
+        <input type="password" id="loginSenha" required>
         <button type="submit">Entrar</button>
         <p id="loginErro" style="color:red;text-align:center;font-weight:bold;"></p>
       </form>
@@ -507,35 +507,12 @@ button.whatsapp{ background:#25D366; }
 ========================= -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-/* ===================== CONFIG / API (Fly) ===================== */
-// sempre bate no backend da mesma origem do app em Fly
-const API_BASE = `${window.location.origin}/api`;
+/* ===================== CONFIG ===================== */
+const OFFLINE = false;
+const API_URL = '/api';
 
-// helper de fetch (mantém cookies da sessão)
-async function api(path, options = {}) {
-  const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
-  const opts = {
-    method: 'GET',
-    headers: {'Accept':'application/json', ...(options.headers||{})},
-    credentials: 'include',                   // importa pro login/sessão
-    ...options
-  };
-  if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
-    opts.headers['Content-Type'] = 'application/json';
-    opts.body = JSON.stringify(opts.body);
-  }
-  const res = await fetch(url, opts);
-  if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
-    try { const j = await res.json(); if (j?.error) msg += ` - ${j.error}`; } catch {}
-    throw new Error(msg);
-  }
-  return res.headers.get('content-type')?.includes('application/json') ? res.json() : res.text();
-}
-
-
-/* ===================== CONSTS ===================== */
 const VENDEDORES = ["JUNIOR","ANA CLARA","CARLOS VITOR","CID","ELIEUDA","CABEÇÃO"];
+
 const OPCOES_MARCA_CASCO = ["Nenhuma","Brahma","Skol","Bohemia","Budweiser","Original","Devassa","Amstel","Itaipava","Heineken","Stella","Coca Cola"];
 const OPCOES_TAMANHO_CASCO = ["Nenhum","300ml","600ml","1L"];
 const OPCOES_TIPO_CAIXA = ["Nenhuma","Ambev Azul","Brasil Kirin Amarela","Itaipava Vermelha","Coca Cola LS 1L","Ambev 1L Caixa","Heineken 600ml"];
@@ -546,13 +523,13 @@ let historicoHoje = [];
 let estoque = [];
 let registrosApagados = [];
 let notificacoes = [];
+let clientesApagados = [];
 
 let clienteAtualParaHistorico = null;
 let editClienteId = null;
 let registroParaDevolverId = null;
 let registroParaApagarId = null;
 let clienteParaApagarId = null;
-let registroParaEditar = null;
 
 /* ===================== HELPERS ===================== */
 const popularSelect = (id, opcoes) => { const s=document.getElementById(id); s.innerHTML=''; opcoes.forEach(v=>s.add(new Option(v,v))); };
@@ -587,17 +564,25 @@ inicializarApp();
 document.getElementById('formLogin').addEventListener('submit', async e => {
   e.preventDefault();
   const loginErro = document.getElementById('loginErro'); loginErro.textContent='';
-  try{
-    const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
-    const senha = document.getElementById('loginSenha').value;
-    await api('/login', {method:'POST', body:{usuario,senha}});
+  if (OFFLINE){
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='block';
     document.querySelector('.login-watermark')?.style && (document.querySelector('.login-watermark').style.display='none');
-    await carregarDadosIniciais();
-  }catch(err){
-    loginErro.textContent = `Erro de login: ${err.message}`;
+    await carregarDadosIniciais(); return;
   }
+  try{
+    const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
+    const senha = document.getElementById('loginSenha').value;
+    const r = await fetch(`${API_URL}/login`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({usuario,senha})});
+    if (r.ok){
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('app').style.display='block';
+      document.querySelector('.login-watermark')?.style && (document.querySelector('.login-watermark').style.display='none');
+      await carregarDadosIniciais();
+    } else {
+      const d = await r.json(); loginErro.textContent = d.error || 'Utilizador ou palavra-passe inválidos!';
+    }
+  }catch(err){ loginErro.textContent='Erro de conexão com o servidor.'; }
 });
 
 /* ===================== ABAS ===================== */
@@ -624,20 +609,22 @@ abas.forEach(aba=> document.getElementById(`tab${aba}`).addEventListener('click'
 
 /* ===================== CARREGAR DADOS ===================== */
 async function carregarDadosIniciais(){
+  if (OFFLINE){ return; }
   try{
     const [clientesRes, historicoRes, estoqueRes, apagadosRes, hojeRes] = await Promise.all([
-      api('/clientes'),
-      api('/historico'),
-      api('/estoque'),
-      api('/registros-apagados'),
-      api('/historico/hoje')
+      fetch(`${API_URL}/clientes`),
+      fetch(`${API_URL}/historico`),
+      fetch(`${API_URL}/estoque`),
+      fetch(`${API_URL}/registros-apagados`),
+      fetch(`${API_URL}/historico/hoje`)
     ]);
+    if (![clientesRes, historicoRes, estoqueRes, apagadosRes, hojeRes].every(r=>r.ok)) throw new Error('Falha ao buscar dados');
 
-    clientes = clientesRes;
-    historico = historicoRes;
-    estoque = estoqueRes;
-    registrosApagados = apagadosRes;
-    historicoHoje = hojeRes;
+    clientes = await clientesRes.json();
+    historico = await historicoRes.json();
+    estoque = await estoqueRes.json();
+    registrosApagados = await apagadosRes.json();
+    historicoHoje = await hojeRes.json();
 
     clientes.forEach(c=>{
       const regs = historico.filter(h=>h.cliente_id===c.id);
@@ -649,7 +636,7 @@ async function carregarDadosIniciais(){
     mudarAba('tabHome');
   }catch(e){
     console.error(e);
-    alert('Não foi possível conectar ao servidor: ' + e.message);
+    alert('Não foi possível conectar ao servidor.');
   }
 }
 
@@ -679,21 +666,43 @@ function renderizarHome(){
 
 /* ===================== NOTIFICAÇÕES ===================== */
 async function gerarNotificacoes(){
-  const r = await api('/notificacoes');
-  const rows = Array.isArray(r)? r: [];
-  const porCli = {};
-  rows.forEach(h=>{
-    const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
-    const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
-    const res=[];
-    if(pendC>0) res.push(`${pendC}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
-    if(pendX>0) res.push(`${pendX}x Caixa(s) ${h.tipo_caixa}`);
-    const status = h.dias_atraso>0 ? `Atrasado ${h.dias_atraso} dia(s)` : 'Vence hoje';
-    const base = { clienteId:h.cliente_id, clienteNome:h.cliente_nome, dataDevolucao:h.data_devolucao, status, resumo:res.join(' / ') };
-    if (!porCli[h.cliente_id]) porCli[h.cliente_id]=base;
-    else porCli[h.cliente_id].resumo += ' | ' + base.resumo;
-  });
-  notificacoes = Object.values(porCli).sort((a,b)=>{
+  if (OFFLINE){
+    notificacoes=[];
+    const hojeFim=fimDoDia(new Date()).getTime();
+    historico.forEach(h=>{
+      const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+      const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+      const pend=pendC+pendX;
+      if(!h.data_devolucao||pend<=0) return;
+      const dev=fimDoDia(h.data_devolucao).getTime();
+      if(dev<=hojeFim){
+        const cli=clientes.find(c=>c.id===h.cliente_id);
+        const dias=Math.ceil((hojeFim-dev)/(24*3600*1000));
+        const status=dias<=0?'Vence hoje':`Atrasado ${dias} dia(s)`;
+        const res=[];
+        if(pendC>0) res.push(`${pendC}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
+        if(pendX>0) res.push(`${pendX}x Caixa(s) ${h.tipo_caixa}`);
+        notificacoes.push({ clienteId:h.cliente_id, clienteNome:cli?cli.nome:'Desconhecido', dataDevolucao:h.data_devolucao, status, resumo:res.join(' / ') });
+      }
+    });
+  } else {
+    const r = await fetch(`${API_URL}/notificacoes`);
+    const rows = r.ok? await r.json() : [];
+    const porCli = {};
+    rows.forEach(h=>{
+      const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+      const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+      const res=[];
+      if(pendC>0) res.push(`${pendC}x Casco(s) ${h.marca_casco} ${h.tamanho_casco}`);
+      if(pendX>0) res.push(`${pendX}x Caixa(s) ${h.tipo_caixa}`);
+      const status = h.dias_atraso>0 ? `Atrasado ${h.dias_atraso} dia(s)` : 'Vence hoje';
+      const base = { clienteId:h.cliente_id, clienteNome:h.cliente_nome, dataDevolucao:h.data_devolucao, status, resumo:res.join(' / ') };
+      if (!porCli[h.cliente_id]) porCli[h.cliente_id]=base;
+      else porCli[h.cliente_id].resumo += ' | ' + base.resumo;
+    });
+    notificacoes = Object.values(porCli);
+  }
+  notificacoes = notificacoes.sort((a,b)=>{
     const A=a.status.startsWith('Atrasado'), B=b.status.startsWith('Atrasado');
     if (A!==B) return A? -1: 1;
     return a.clienteNome.localeCompare(b.clienteNome);
@@ -761,12 +770,11 @@ window.atualizarEstoque = async (itemId) => {
   const input = document.getElementById(`estoque-${itemId}`);
   const quantidade = parseInt(input.value,10);
   if (isNaN(quantidade)) return;
+  if (OFFLINE){ const it=estoque.find(i=>i.id===itemId); if(it) it.quantidade=quantidade; return; }
   try{
-    await api(`/estoque/${itemId}`,{method:'POST', body:{quantidade}});
-  }catch(e){
-    alert(e.message);
-    await carregarDadosIniciais();
-  }
+    const r=await fetch(`${API_URL}/estoque/${itemId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quantidade})});
+    if(!r.ok) throw new Error('Falha ao atualizar estoque.');
+  }catch(e){ alert(e.message); await carregarDadosIniciais(); }
 };
 
 /* ===================== CRUD CLIENTE ===================== */
@@ -804,11 +812,13 @@ document.getElementById('formCliente').addEventListener('submit', async e=>{
     telefone: document.getElementById('telefoneCliente').value.trim()
   };
   if (!payload.nome || !payload.tipo || !payload.endereco || !payload.numero) return alert('Todos os campos, exceto telefone, são obrigatórios!');
+  if (OFFLINE) return;
 
   try{
-    const url = editClienteId ? `/clientes/${editClienteId}` : `/clientes`;
+    const url = editClienteId ? `${API_URL}/clientes/${editClienteId}` : `${API_URL}/clientes`;
     const method = editClienteId ? 'PUT':'POST';
-    await api(url,{method, body:payload});
+    const r = await fetch(url,{method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error((await r.json()).error || 'Erro no servidor');
     await carregarDadosIniciais();
     mudarAba(payload.tipo==='fisico'?'tabFisicos':'tabBares');
   }catch(e){ alert(`Erro: ${e.message}`); }
@@ -843,39 +853,6 @@ window.abrirModal = (modalId, id) => {
 };
 window.fecharModal = (modalId) => document.getElementById(modalId).style.display='none';
 
-/* ===================== HISTÓRICO DO CLIENTE (LISTA) ===================== */
-function renderHistoricoCliente(clienteId){
-  const wrap = document.getElementById('listaHistoricoCliente');
-  wrap.innerHTML = '';
-  const regs = historico
-    .filter(h=>h.cliente_id===clienteId)
-    .sort((a,b)=>(parseDataSeguro(b.data_emprestimo)?.getTime()||0)-(parseDataSeguro(a.data_emprestimo)?.getTime()||0));
-
-  if (!regs.length){ wrap.innerHTML = '<p>Sem registros.</p>'; return; }
-
-  regs.forEach(h=>{
-    const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
-    const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
-
-    const bloco = document.createElement('div');
-    bloco.className = 'item-lista';
-    bloco.innerHTML = `
-      <span>
-        <strong>${formatarDataHoraBR(h.data_emprestimo)}</strong><br>
-        Prev. devolução: ${h.data_devolucao?formatarDataBR(h.data_devolucao):'—'}
-      </span>
-      <span>Vendedor: ${h.vendedor||'-'}</span>
-      <div class="botoes">
-        <button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>
-        <button class="imprimir-recibo" onclick="imprimirRecibo(${h.id})">Recibo</button>
-        <button class="editar" onclick="abrirEditar(${h.id})">Editar</button>
-        <button class="apagar" onclick="abrirApagarRegistro(${h.id})">Apagar</button>
-      </div>
-    `;
-    wrap.appendChild(bloco);
-  });
-}
-
 /* ===================== NOVO EMPRÉSTIMO ===================== */
 document.getElementById('formEmprestimo').addEventListener('submit', async e=>{
   e.preventDefault();
@@ -896,17 +873,14 @@ document.getElementById('formEmprestimo').addEventListener('submit', async e=>{
   const payload = {
     cliente_id: clienteAtualParaHistorico.id,
     vendedor,
-    marca_casco: marcaCasco,
-    tamanho_casco: tamanhoCasco,
-    qtd_casco: qtdCasco,
-    tipo_caixa: tipoCaixa,
-    qtd_caixa: qtdCaixa,
-    data_emprestimo,
-    data_devolucao
+    marcaCasco, tamanhoCasco, qtdCasco,
+    tipoCaixa, qtdCaixa,
+    data_emprestimo, data_devolucao
   };
 
   try{
-    await api(`/historico`,{method:'POST', body:payload});
+    const r = await fetch(`${API_URL}/historico`,{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    if (!r.ok) throw new Error('Falha ao guardar empréstimo.');
     await carregarDadosIniciais();
     renderHistoricoCliente(clienteAtualParaHistorico.id);
   }catch(e){ alert(`Erro: ${e.message}`); }
@@ -919,10 +893,11 @@ document.getElementById('formDevolucao').addEventListener('submit', async e=>{
   const qtdCaixaDev=parseInt(document.getElementById('qtdCaixaDevolver')?.value||0,10);
 
   try{
-    await api(`/historico/devolver/${registroParaDevolverId}`,{
-      method:'POST',
-      body:{qtdCascoDev,qtdCaixaDev}
+    const r=await fetch(`${API_URL}/historico/devolver/${registroParaDevolverId}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({qtdCascoDev,qtdCaixaDev})
     });
+    if(!r.ok) throw new Error('Falha ao registar devolução.');
     fecharModal('modalDevolucao');
     await carregarDadosIniciais();
     renderHistoricoCliente(clienteAtualParaHistorico.id);
@@ -930,19 +905,16 @@ document.getElementById('formDevolucao').addEventListener('submit', async e=>{
 });
 
 /* ===================== APAGAR REGISTRO ===================== */
-window.abrirApagarRegistro = (id)=>{
-  registroParaApagarId = id;
-  document.getElementById('modalApagarRegistro').style.display='block';
-};
 document.getElementById('formApagar').addEventListener('submit', async e=>{
   e.preventDefault();
   const justificativa = document.getElementById('justificativaApagar').value.trim();
   if (!justificativa) return alert('A justificativa é obrigatória.');
   try{
-    await api(`/historico/${registroParaApagarId}`,{
-      method:'DELETE',
-      body:{justificativa}
+    const r=await fetch(`${API_URL}/historico/${registroParaApagarId}`,{
+      method:'DELETE', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({justificativa})
     });
+    if(!r.ok) throw new Error((await r.json()).error||'Falha ao apagar registro.');
     fecharModal('modalApagarRegistro');
     document.getElementById('formApagar').reset();
     await carregarDadosIniciais();
@@ -950,7 +922,7 @@ document.getElementById('formApagar').addEventListener('submit', async e=>{
   }catch(e){ alert(`Erro: ${e.message}`); }
 });
 
-/* ===================== APAGADOS ===================== */
+/* ===================== APAGADOS (AGORA FUNCIONA) ===================== */
 function renderizarRegistrosApagados(){
   const box = document.getElementById('listaRegistrosApagados');
   box.innerHTML = '';
@@ -991,29 +963,111 @@ document.getElementById('perfilImpressao').addEventListener('change', (e)=>{
   if (salvo) document.getElementById('perfilImpressao').value = salvo;
 })();
 
+/**
+ * Perfis de impressão:
+ *  - "tx20": térmica 80mm (TX20)
+ *  - "a4": papel A4 (serve para "Impressora comum" e "Salvar como PDF")
+ */
 const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
   const perfis = {
-    tx20: { pageWidth:"80mm", margin:"4mm", font:18, lineHeight:1.45, h1:24, h2:21, h3:19, table:15, th:16, cellPadV:4, cellPadH:6, logoHeight:"210px", logoMaxWidth:"74mm" },
-    a4:  { pageWidth:"210mm", margin:"12mm", font:18, lineHeight:1.6,  h1:28, h2:24, h3:22, table:18, th:18, cellPadV:8, cellPadH:10, logoHeight:"180px", logoMaxWidth:"180px" }
+    tx20: {
+      pageWidth: "80mm",
+      margin: "4mm",
+      font: 18,
+      lineHeight: 1.45,
+      h1: 24,
+      h2: 21,
+      h3: 19,
+      table: 15,
+      th: 16,
+      cellPadV: 4,
+      cellPadH: 6,
+      logoHeight: "210px",
+      logoMaxWidth: "74mm"
+    },
+    a4: {
+      pageWidth: "210mm",
+      margin: "12mm",
+      font: 18,
+      lineHeight: 1.6,
+      h1: 28,
+      h2: 24,
+      h3: 22,
+      table: 18,
+      th: 18,
+      cellPadV: 8,
+      cellPadH: 10,
+      logoHeight: "180px",
+      logoMaxWidth: "180px"
+    }
   };
+
   const c = perfis[tipo] || perfis.tx20;
+
   const tel = "74988433842";
   const endereco = "AV.NOE/PRINCIPAL DA PORTELINHA";
+
   return `
-  <html><head><title>${titulo}</title><meta charset="utf-8">
-  <style>
-    @page { size:${c.pageWidth} auto; margin:${c.margin}; }
-    html,body{ width:${c.pageWidth}; margin:0 auto; -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:${c.font}px; line-height:${c.lineHeight}; color:#000; }
-    h1,h2,h3{ text-align:center; margin:6px 0; } h1{font-size:${c.h1}px} h2{font-size:${c.h2}px} h3{font-size:${c.h3}px}
-    .logo{ display:block; margin:0 auto 2px; height:${c.logoHeight}; max-width:${c.logoMaxWidth}; object-fit:contain; image-rendering:-webkit-optimize-contrast; }
-    .cabecalho{ text-align:center; margin-bottom:6px; } .meta{ text-align:center; font-size:${Math.max(c.font-3,11)}px; white-space:nowrap; } .contatos{ text-align:center; font-size:${Math.max(c.font-3,11)}px; margin-top:0; }
-    table{ width:100%; border-collapse:collapse; margin-top:8px; table-layout:fixed; }
-    th,td{ border:1px solid #000; padding:${c.cellPadV}px ${c.cellPadH}px; font-size:${c.table}px; overflow-wrap:anywhere; word-break:break-word;}
-    th{ font-size:${c.th}px; } .nowrap{ white-space:nowrap; }
-    .assinatura{ margin-top:14px; text-align:center; } .assinatura .linha{ margin:18px auto 4px; border-top:2px solid #000; width:90%; }
-    .nota-asterisco{ margin-top:10px; text-align:center; font-size:${Math.max(c.font-4,12)}px; }
-    table,tr,td,th,h1,h2,h3,img,p{ page-break-inside:avoid; }
-  </style></head><body>
+  <html>
+  <head>
+    <title>${titulo}</title>
+    <meta charset="utf-8">
+    <style>
+      @page { size: ${c.pageWidth} auto; margin: ${c.margin}; }
+      html, body {
+        width: ${c.pageWidth};
+        margin: 0 auto;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: ${c.font}px;
+        line-height: ${c.lineHeight};
+        color: #000;
+      }
+      h1, h2, h3 { text-align: center; margin: 6px 0; }
+      h1 { font-size: ${c.h1}px; }
+      h2 { font-size: ${c.h2}px; }
+      h3 { font-size: ${c.h3}px; }
+
+      .logo {
+        display:block; margin: 0 auto 2px;
+        height: ${c.logoHeight};
+        max-width: ${c.logoMaxWidth};
+        object-fit: contain;
+        image-rendering: -webkit-optimize-contrast;
+      }
+
+      .cabecalho { text-align:center; margin-bottom: 6px; }
+      .meta { text-align:center; font-size:${Math.max(c.font-3, 11)}px; white-space:nowrap; }
+      .contatos { text-align:center; font-size:${Math.max(c.font-3, 11)}px; margin-top:0; }
+
+      table { width: 100%; border-collapse: collapse; margin-top: 8px; table-layout: fixed; }
+      th, td {
+        border: 1px solid #000;
+        padding: ${c.cellPadV}px ${c.cellPadH}px;
+        font-size: ${c.table}px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      th { font-size: ${c.th}px; }
+      .nowrap{ white-space: nowrap; }
+
+      .assinatura {
+        margin-top: 14px; text-align:center;
+      }
+      .assinatura .linha {
+        margin: 18px auto 4px; border-top: 2px solid #000; width: 90%;
+      }
+
+      .nota-asterisco{
+        margin-top:10px; text-align:center; font-size:${Math.max(c.font-4, 12)}px;
+      }
+
+      table, tr, td, th { page-break-inside: avoid; }
+      h1, h2, h3, img, p { page-break-inside: avoid; }
+    </style>
+  </head>
+  <body>
     <img src="logo.png" class="logo" alt="Distribuidora Garcia">
     <div class="contatos">Tel.: ${tel} • ${endereco}</div>
     <div class="cabecalho">
@@ -1022,16 +1076,20 @@ const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
     </div>
     ${corpo}
     <div class="nota-asterisco">* CADA VASILHAME PERDIDO OU QUEBRADO VAI CUSTAR O VALOR DE R$ 1,00.</div>
-  </body></html>`;
+  </body>
+  </html>`;
 };
 
+/* ===================== IMPRESSÃO: RECIBO ===================== */
 window.imprimirRecibo = (registroId) => {
   const h = historico.find(x=>x.id===registroId);
   const cli = h ? clientes.find(c=>c.id===h.cliente_id) : null;
   if (!h || !cli) return;
+
   let itensHtml='';
   if (h.qtd_casco>0) itensHtml += `<tr><td>Casco ${h.marca_casco} ${h.tamanho_casco}</td><td class="nowrap">${h.qtd_casco}</td></tr>`;
   if (h.qtd_caixa>0) itensHtml += `<tr><td>Caixa ${h.tipo_caixa}</td><td class="nowrap">${h.qtd_caixa}</td></tr>`;
+
   const corpo = `
     <h2>Recibo de Empréstimo</h2>
     <p><strong>Cliente:</strong> ${cli.nome} (${cli.tipo==='fisico'?'F':'B'})</p>
@@ -1040,7 +1098,10 @@ window.imprimirRecibo = (registroId) => {
     <p><strong>Vendedor:</strong> ${h.vendedor || '-'}</p>
     ${h.data_devolucao ? `<p><strong>Devolução Prevista:</strong> <span class="nowrap">${formatarDataBR(h.data_devolucao)}</span></p>`:''}
     <table>
-      <colgroup><col style="width:72%"><col style="width:28%"></colgroup>
+      <colgroup>
+        <col style="width:72%">
+        <col style="width:28%">
+      </colgroup>
       <thead><tr><th>Item</th><th class="nowrap">Quantidade</th></tr></thead>
       <tbody>${itensHtml}</tbody>
     </table>
@@ -1083,8 +1144,12 @@ document.getElementById('btnImprimirRelatorioCliente').addEventListener('click',
     <p><strong>Endereço:</strong> ${cli.endereco}, ${cli.numero}</p>
     <table>
       <colgroup>
-        <col style="width:26%"><col style="width:19%"><col style="width:33%">
-        <col style="width:7%"><col style="width:7%"><col style="width:8%">
+        <col style="width:26%">
+        <col style="width:19%">
+        <col style="width:33%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:8%">
       </colgroup>
       <thead><tr>
         <th class="nowrap">Data Empréstimo</th>
@@ -1103,64 +1168,7 @@ document.getElementById('btnImprimirRelatorioCliente').addEventListener('click',
   win.onload=()=>win.print();
 });
 
-/* ===================== EDITAR ===================== */
-window.abrirEditar = (id)=>{
-  registroParaEditar = historico.find(h=>h.id===id);
-  if(!registroParaEditar) return;
-  document.getElementById('editEmprestimoId').value = registroParaEditar.id;
-  document.getElementById('editVendedor').value = registroParaEditar.vendedor || '';
-  document.getElementById('editDataEmprestimo').value = formatarDataParaInput(registroParaEditar.data_emprestimo);
-  document.getElementById('editDataDevolucao').value = registroParaEditar.data_devolucao ? registroParaEditar.data_devolucao.slice(0,10) : '';
-  document.getElementById('editMarcaCasco').value = registroParaEditar.marca_casco || 'Nenhuma';
-  document.getElementById('editTamanhoCasco').value = registroParaEditar.tamanho_casco || 'Nenhum';
-  document.getElementById('editQtdCasco').value = registroParaEditar.qtd_casco || 0;
-  document.getElementById('editTipoCaixa').value = registroParaEditar.tipo_caixa || 'Nenhuma';
-  document.getElementById('editQtdCaixa').value = registroParaEditar.qtd_caixa || 0;
-  document.getElementById('modalEditarEmprestimo').style.display='block';
-};
-
-document.getElementById('btnSalvarEdicaoEmprestimo').addEventListener('click', async ()=>{
-  const id = document.getElementById('editEmprestimoId').value;
-  const body = {
-    vendedor: document.getElementById('editVendedor').value,
-    data_emprestimo: document.getElementById('editDataEmprestimo').value,
-    data_devolucao: document.getElementById('editDataDevolucao').value,
-    marca_casco: document.getElementById('editMarcaCasco').value,
-    tamanho_casco: document.getElementById('editTamanhoCasco').value,
-    qtd_casco: parseInt(document.getElementById('editQtdCasco').value||0,10),
-    tipo_caixa: document.getElementById('editTipoCaixa').value,
-    qtd_caixa: parseInt(document.getElementById('editQtdCaixa').value||0,10),
-    alterado_por: document.getElementById('editAlteradoPor').value,
-    justificativa: document.getElementById('justificativaEdicao').value
-  };
-  if (!body.alterado_por || !body.justificativa) return alert('Informe quem alterou e a justificativa.');
-
-  try{
-    await api(`/historico/${id}`,{method:'PUT', body});
-    fecharModal('modalEditarEmprestimo');
-    await carregarDadosIniciais();
-    renderHistoricoCliente(clienteAtualParaHistorico.id);
-  }catch(e){ alert('Erro ao editar: '+e.message); }
-});
-
-/* ===================== APAGAR CLIENTE ===================== */
-window.abrirModalApagarCliente = (id)=>{
-  clienteParaApagarId = id;
-  document.getElementById('modalApagarCliente').style.display='block';
-};
-document.getElementById('formApagarCliente').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const justificativa = document.getElementById('justificativaApagarCliente').value.trim();
-  if (!justificativa) return alert('A justificativa é obrigatória.');
-  try{
-    await api(`/clientes/${clienteParaApagarId}`,{method:'DELETE', body:{justificativa}});
-    fecharModal('modalApagarCliente');
-    await carregarDadosIniciais();
-    mudarAba('tabHome');
-  }catch(e){ alert('Erro ao apagar cliente: '+e.message); }
-});
-
-/* ===================== RELATÓRIO / RESUMOS ===================== */
+/* ===================== RELATÓRIO GERAL ===================== */
 function agregacaoPorGrupoEVolume(pendentesApenas=true){
   const grupos=['Ambev','Brasil Kirin','Grupo Petrópolis','Outros'];
   const acc={
@@ -1207,6 +1215,7 @@ function htmlResumoGrupos(agg){
     </table>
   `;
 }
+
 document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click', ()=>{
   let corpo = '<h2>Extrato Geral de Dívidas</h2>' + htmlResumoGrupos(agregacaoPorGrupoEVolume(true));
   const cDeb=clientes.filter(c=>c.dividaTotal>0).sort((a,b)=>{
@@ -1244,7 +1253,7 @@ document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click
   win.onload=()=>win.print();
 });
 
-/* ===================== EXTRATO DE ESTOQUE ===================== */
+/* ===================== EXTRATO DE ESTOQUE (IMPRESSÃO) ===================== */
 document.getElementById('btnImprimirExtratoEstoque').addEventListener('click', ()=>{
   let linhas = '';
   if (!estoque.length) linhas = '<tr><td colspan="2" style="text-align:center;">Sem itens de estoque.</td></tr>';
@@ -1299,7 +1308,9 @@ function imprimirResumoDeLista(lista, titulo){
     <h2>Empréstimos</h2>
     <table>
       <colgroup>
-        <col style="width:48%"><col style="width:34%"><col style="width:18%">
+        <col style="width:48%">
+        <col style="width:34%">
+        <col style="width:18%">
       </colgroup>
       <thead><tr><th>Cliente</th><th>Itens</th><th class="nowrap">Horário</th></tr></thead>
       <tbody>${corpoTabela}</tbody>
