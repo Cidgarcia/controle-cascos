@@ -165,16 +165,6 @@ button.whatsapp{ background:#25D366; }
       <img src="volt.png?v=1" class="logo-volt" alt="VOLT">
     </div>
 
-    <!-- PERFIL DE IMPRESSÃO -->
-    <div class="box" style="margin-top:10px; display:flex; gap:12px; align-items:center;">
-      <label for="perfilImpressao" style="margin:0; min-width:190px; font-weight:700;">Perfil de impressão:</label>
-      <select id="perfilImpressao" style="max-width:360px;">
-        <option value="tx20" selected>Impressora comercial (TX20 – 80mm)</option>
-        <option value="a4">Impressora comum (A4)</option>
-        <option value="pdf">Salvar como PDF (A4)</option>
-      </select>
-    </div>
-
     <div class="tabs">
       <button id="tabHome" class="active">Home</button>
       <button id="tabNotificacoes">Notificações</button>
@@ -315,7 +305,7 @@ button.whatsapp{ background:#25D366; }
       </div>
     </div>
 
-    <!-- Cadastro de empréstimo -->
+    <!-- NOVO: Vendedor no cadastro de empréstimo -->
     <form id="formEmprestimo">
       <h3>Registar Novo Empréstimo</h3>
 
@@ -503,7 +493,7 @@ button.whatsapp{ background:#25D366; }
 </div>
 
 <!-- =========================
-     Scripts
+     Scripts (LÓGICA COMPLETA)
 ========================= -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -523,7 +513,7 @@ let historicoHoje = [];
 let estoque = [];
 let registrosApagados = [];
 let notificacoes = [];
-let clientesApagados = [];
+let clientesApagados = []; // apenas offline
 
 let clienteAtualParaHistorico = null;
 let editClienteId = null;
@@ -702,6 +692,7 @@ async function gerarNotificacoes(){
     });
     notificacoes = Object.values(porCli);
   }
+  // atrasos primeiro
   notificacoes = notificacoes.sort((a,b)=>{
     const A=a.status.startsWith('Atrasado'), B=b.status.startsWith('Atrasado');
     if (A!==B) return A? -1: 1;
@@ -922,68 +913,206 @@ document.getElementById('formApagar').addEventListener('submit', async e=>{
   }catch(e){ alert(`Erro: ${e.message}`); }
 });
 
-/* ===================== APAGADOS (AGORA FUNCIONA) ===================== */
-function renderizarRegistrosApagados(){
-  const box = document.getElementById('listaRegistrosApagados');
-  box.innerHTML = '';
-  if (!registrosApagados.length){
-    box.innerHTML = '<p>Nenhum registo apagado encontrado.</p>';
-    return;
-  }
-  registrosApagados
-    .sort((a,b)=> (parseDataSeguro(b.apagado_em)?.getTime()||0) - (parseDataSeguro(a.apagado_em)?.getTime()||0))
-    .forEach(r=>{
-      const itens = [
-        r.qtd_casco ? `${r.qtd_casco}x Casco ${r.marca_casco||'-'} ${r.tamanho_casco||''}`.trim() : null,
-        r.qtd_caixa ? `${r.qtd_caixa}x Caixa ${r.tipo_caixa||'-'}` : null
-      ].filter(Boolean).join(' | ') || '—';
-
-      const div = document.createElement('div');
-      div.className = 'apagado-item';
-      div.innerHTML = `
-        <p><strong>Cliente:</strong> ${r.cliente_nome||'—'}</p>
-        <p><strong>Itens:</strong> ${itens}</p>
-        <p><strong>Apagado em:</strong> ${formatarDataHoraBR(r.apagado_em)} | <strong>Por:</strong> ${r.apagado_por||'—'}</p>
-        <p><strong>Justificativa:</strong> ${r.justificativa||'—'}</p>
-      `;
-      box.appendChild(div);
-    });
-}
-
-/* ===================== IMPRESSÃO / PERFIL ===================== */
-function getPerfilImpressaoSelecionado(){
-  const v = (document.getElementById('perfilImpressao')?.value || localStorage.getItem('perfilImpressao') || 'tx20');
-  return v === 'tx20' ? 'tx20' : 'a4'; // 'pdf' usa layout A4 — selecionar "Salvar como PDF" no diálogo
-}
-document.getElementById('perfilImpressao').addEventListener('change', (e)=>{
-  localStorage.setItem('perfilImpressao', e.target.value);
+/* ===================== APAGAR CLIENTE ===================== */
+window.abrirModalApagarCliente = (id) => { clienteParaApagarId=id; document.getElementById('modalApagarCliente').style.display='block'; };
+document.getElementById('formApagarCliente').addEventListener('submit', async e=>{
+  e.preventDefault();
+  alert('No backend atual não existe rota de apagar cliente com histórico arquivado. (Se quiser, implemento depois.)');
+  fecharModal('modalApagarCliente');
 });
-(function(){ // restaura seleção no load
-  const salvo = localStorage.getItem('perfilImpressao');
-  if (salvo) document.getElementById('perfilImpressao').value = salvo;
-})();
 
+/* ===================== HISTÓRICO POR CLIENTE ===================== */
+function renderHistoricoCliente(clienteId){
+  const lista=document.getElementById('listaHistoricoCliente');
+  const resumo=document.getElementById('resumoDividaCliente');
+  lista.innerHTML='';
+  const regs = historico.filter(h=>h.cliente_id===clienteId)
+    .sort((a,b)=>(parseDataSeguro(b.data_emprestimo)?.getTime()||0)-(parseDataSeguro(a.data_emprestimo)?.getTime()||0));
+
+  if(!regs.length){ lista.innerHTML='<p>Nenhum empréstimo registado.</p>'; resumo.style.display='none'; return; }
+
+  const divida = regs.reduce((acc,h)=>{
+    const pc=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const px=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    if (pc>0) acc[`Casco ${h.marca_casco} ${h.tamanho_casco}`]=(acc[`Casco ${h.marca_casco} ${h.tamanho_casco}`]||0)+pc;
+    if (px>0) acc[`Caixa ${h.tipo_caixa}`]=(acc[`Caixa ${h.tipo_caixa}`]||0)+px;
+    return acc;
+  },{});
+  const resumoTexto = Object.entries(divida).map(([item,q])=>`${q}x ${item}`).join(' / ');
+  resumo.textContent = resumoTexto ? `Dívida Total: ${resumoTexto}` : 'Nenhuma dívida pendente.';
+  resumo.style.display='block';
+
+  regs.forEach(h=>{
+    const pc=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const px=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    const temPend=pc>0||px>0;
+
+    const itens=[];
+    if(h.qtd_casco>0) itens.push(`${h.qtd_casco} Casco(s) ${h.marca_casco} ${h.tamanho_casco} (Dev: ${h.qtd_casco_devolvido||0})`);
+    if(h.qtd_caixa>0) itens.push(`${h.qtd_caixa} Caixa(s) ${h.tipo_caixa} (Dev: ${h.qtd_caixa_devolvido||0})`);
+
+    const div=document.createElement('div');
+    div.className='item-lista';
+    div.innerHTML=`
+      <span>
+        <strong>Data: ${formatarDataHoraBR(h.data_emprestimo)}${h.data_devolucao? ' | Devolução: '+formatarDataBR(h.data_devolucao):''}</strong><br>
+        <small><strong>Vendedor:</strong> ${h.vendedor||'-'}</small>
+        <ul><li>${itens.join('</li><li>')}</li></ul>
+      </span>
+      <div class="botoes">
+        ${temPend? `<button class="devolver" onclick="abrirModal('modalDevolucao', ${h.id})">Devolver</button>`:''}
+        <button class="imprimir-recibo" onclick="imprimirRecibo(${h.id})">Recibo</button>
+        <button class="editar" onclick="abrirModalEditarEmprestimo(${h.id})">Editar</button>
+        <button class="apagar" onclick="registroParaApagarId=${h.id}; abrirModal('modalApagarRegistro')">Apagar</button>
+      </div>
+    `;
+    lista.appendChild(div);
+  });
+}
+
+/* ===================== EDITAR EMPRÉSTIMO ===================== */
+window.abrirModalEditarEmprestimo = (id) => {
+  const h = historico.find(x=>x.id===id); if(!h) return;
+  document.getElementById('editEmprestimoId').value = id;
+  document.getElementById('editVendedor').value = h.vendedor||'';
+  document.getElementById('editDataEmprestimo').value = formatarDataParaInput(h.data_emprestimo);
+  document.getElementById('editDataDevolucao').value = h.data_devolucao ? h.data_devolucao.slice(0,10) : '';
+
+  document.getElementById('editMarcaCasco').value = OPCOES_MARCA_CASCO.includes(h.marca_casco)? h.marca_casco : 'Nenhuma';
+  document.getElementById('editTamanhoCasco').value = OPCOES_TAMANHO_CASCO.includes(h.tamanho_casco)? h.tamanho_casco : 'Nenhum';
+  document.getElementById('editQtdCasco').value = h.qtd_casco||0;
+
+  document.getElementById('editTipoCaixa').value = OPCOES_TIPO_CAIXA.includes(h.tipo_caixa)? h.tipo_caixa : 'Nenhuma';
+  document.getElementById('editQtdCaixa').value = h.qtd_caixa||0;
+
+  document.getElementById('editAlteradoPor').value = '';
+
+  document.getElementById('modalEditarEmprestimo').style.display='block';
+};
+
+document.getElementById('btnSalvarEdicaoEmprestimo').addEventListener('click', async ()=>{
+  const id = document.getElementById('editEmprestimoId').value;
+  const payload = {
+    vendedor: document.getElementById('editVendedor').value,
+    data_emprestimo: document.getElementById('editDataEmprestimo').value,
+    data_devolucao: document.getElementById('editDataDevolucao').value,
+    marca_casco: document.getElementById('editMarcaCasco').value,
+    tamanho_casco: document.getElementById('editTamanhoCasco').value,
+    qtd_casco: parseInt(document.getElementById('editQtdCasco').value,10)||0,
+    tipo_caixa: document.getElementById('editTipoCaixa').value,
+    qtd_caixa: parseInt(document.getElementById('editQtdCaixa').value,10)||0,
+    justificativa: document.getElementById('justificativaEdicao').value.trim(),
+    alterado_por: document.getElementById('editAlteradoPor').value
+  };
+  if (!payload.justificativa) return alert('Informe a justificativa.');
+  if (!payload.alterado_por) return alert('Selecione quem alterou.');
+  if (payload.qtd_casco<0 || payload.qtd_caixa<0) return alert('Quantidades inválidas.');
+
+  try{
+    const r=await fetch(`${API_URL}/historico/${id}`,{
+      method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    });
+    if(!r.ok){ const d=await r.json(); throw new Error(d.error||'Falha ao editar.'); }
+    fecharModal('modalEditarEmprestimo');
+    await carregarDadosIniciais();
+    renderHistoricoCliente(clienteAtualParaHistorico.id);
+  }catch(e){ alert(e.message); }
+});
+
+/* ===================== WHATSAPP CONSOLIDADO ===================== */
+document.getElementById('btnNotificarWhatsapp').addEventListener('click', ()=>{
+  if(!clienteAtualParaHistorico) return;
+  const telefone = (clienteAtualParaHistorico.telefone||'').replace(/\D/g,'');
+  if (!telefone) return alert('Este cliente não possui um número de telefone cadastrado.');
+
+  const regs = historico.filter(h=>h.cliente_id===clienteAtualParaHistorico.id)
+    .sort((a,b)=>(parseDataSeguro(a.data_emprestimo)||0)-(parseDataSeguro(b.data_emprestimo)||0));
+
+  const linhasDetalhe=[];
+  const somaPorItem={};
+  let dataMin=null, dataMax=null;
+
+  regs.forEach(h=>{
+    const pendC=(h.qtd_casco||0)-(h.qtd_casco_devolvido||0);
+    const pendX=(h.qtd_caixa||0)-(h.qtd_caixa_devolvido||0);
+    const dataEmp= formatarDataBR(h.data_emprestimo);
+
+    if (pendC>0){
+      const key=`Casco ${h.marca_casco} ${h.tamanho_casco}`;
+      linhasDetalhe.push(`- ${pendC}x ${key} (em ${dataEmp})`);
+      somaPorItem[key]=(somaPorItem[key]||0)+pendC;
+    }
+    if (pendX>0){
+      const key=`Caixa ${h.tipo_caixa}`;
+      linhasDetalhe.push(`- ${pendX}x ${key} (em ${dataEmp})`);
+      somaPorItem[key]=(somaPorItem[key]||0)+pendX;
+    }
+
+    const d=parseDataSeguro(h.data_emprestimo);
+    if (d){
+      if(!dataMin || d<dataMin) dataMin=d;
+      if(!dataMax || d>dataMax) dataMax=d;
+    }
+  });
+
+  if (!linhasDetalhe.length) return alert('Este cliente não possui débitos pendentes.');
+
+  const intervaloDatas = dataMin && dataMax
+    ? (dataMin.toLocaleDateString('pt-BR')===dataMax.toLocaleDateString('pt-BR')
+        ? `(${dataMin.toLocaleDateString('pt-BR')})`
+        : `(${dataMin.toLocaleDateString('pt-BR')} até ${dataMax.toLocaleDateString('pt-BR')})`)
+    : '';
+
+  const totalConsolidado = Object.entries(somaPorItem)
+    .map(([k,q])=>`${q}x ${k}`).join('; ');
+
+  const mensagem = encodeURIComponent(
+`Olá ${clienteAtualParaHistorico.nome}, tudo bem?
+Da Distribuidora Garcia. Identificamos os seguintes itens pendentes ${intervaloDatas}:
+
+${linhasDetalhe.join('\n')}
+
+Totais: ${totalConsolidado}
+
+Por favor, verifique a possibilidade de devolução. Agradecemos a sua atenção!`
+  );
+  window.open(`https://wa.me/${telefone}?text=${mensagem}`,'_blank');
+});
+
+/* ===================== IMPRESSÃO / RECIBO ===================== */
 /**
  * Perfis de impressão:
- *  - "tx20": térmica 80mm (TX20)
- *  - "a4": papel A4 (serve para "Impressora comum" e "Salvar como PDF")
+ *  - "tx20": térmica 80mm (TX20) com logo e fontes ajustadas
+ *  - "termica58": térmica 58mm
+ *  - "a4": papel A4
  */
 const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
   const perfis = {
     tx20: {
       pageWidth: "80mm",
       margin: "4mm",
-      font: 18,
-      lineHeight: 1.45,
-      h1: 24,
-      h2: 21,
-      h3: 19,
+      font: 19,
+      lineHeight: 1.5,
+      h1: 26,
+      h2: 22,
+      h3: 20,
+      table: 17,
+      th: 18,
+      logoHeight: "230px",
+      logoMaxWidth: "74mm"
+    },
+    termica58: {
+      pageWidth: "58mm",
+      margin: "4mm",
+      font: 17,
+      lineHeight: 1.4,
+      h1: 22,
+      h2: 20,
+      h3: 18,
       table: 15,
       th: 16,
-      cellPadV: 4,
-      cellPadH: 6,
-      logoHeight: "210px",
-      logoMaxWidth: "74mm"
+      logoHeight: "160px",
+      logoMaxWidth: "54mm"
     },
     a4: {
       pageWidth: "210mm",
@@ -995,11 +1124,10 @@ const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
       h3: 22,
       table: 18,
       th: 18,
-      cellPadV: 8,
-      cellPadH: 10,
       logoHeight: "180px",
       logoMaxWidth: "180px"
     }
+    
   };
 
   const c = perfis[tipo] || perfis.tx20;
@@ -1030,7 +1158,7 @@ const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
       h3 { font-size: ${c.h3}px; }
 
       .logo {
-        display:block; margin: 0 auto 2px;
+        display:block; margin: 0 auto 4px;
         height: ${c.logoHeight};
         max-width: ${c.logoMaxWidth};
         object-fit: contain;
@@ -1039,30 +1167,30 @@ const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
 
       .cabecalho { text-align:center; margin-bottom: 6px; }
       .meta { text-align:center; font-size:${Math.max(c.font-3, 11)}px; white-space:nowrap; }
-      .contatos { text-align:center; font-size:${Math.max(c.font-3, 11)}px; margin-top:0; }
+      .contatos { text-align:center; font-size:${Math.max(c.font-3, 11)}px; margin-top:2px; }
 
-      table { width: 100%; border-collapse: collapse; margin-top: 8px; table-layout: fixed; }
+      table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
       th, td {
         border: 1px solid #000;
-        padding: ${c.cellPadV}px ${c.cellPadH}px;
+        padding: 6px 8px;
         font-size: ${c.table}px;
-        overflow-wrap: anywhere;
         word-break: break-word;
       }
       th { font-size: ${c.th}px; }
       .nowrap{ white-space: nowrap; }
 
       .assinatura {
-        margin-top: 14px; text-align:center;
+        margin-top: 18px; text-align:center;
       }
       .assinatura .linha {
-        margin: 18px auto 4px; border-top: 2px solid #000; width: 90%;
+        margin: 24px auto 4px; border-top: 2px solid #000; width: 90%;
       }
 
       .nota-asterisco{
         margin-top:10px; text-align:center; font-size:${Math.max(c.font-4, 12)}px;
       }
 
+      /* Evita cortes de linhas/tabelas na impressão */
       table, tr, td, th { page-break-inside: avoid; }
       h1, h2, h3, img, p { page-break-inside: avoid; }
     </style>
@@ -1072,7 +1200,7 @@ const gerarConteudoImpressao = (titulo, corpo, tipo = "tx20") => {
     <div class="contatos">Tel.: ${tel} • ${endereco}</div>
     <div class="cabecalho">
       <h1>${titulo}</h1>
-      <div class="meta">Data:&nbsp;${new Date().toLocaleDateString('pt-BR')} — Hora:&nbsp;<span class="nowrap">${new Date().toLocaleTimeString('pt-BR')}</span></div>
+      <div class="meta">Data:&nbsp;${new Date().toLocaleDateString('pt-BR')} — Hora:&nbsp;${new Date().toLocaleTimeString('pt-BR')}</div>
     </div>
     ${corpo}
     <div class="nota-asterisco">* CADA VASILHAME PERDIDO OU QUEBRADO VAI CUSTAR O VALOR DE R$ 1,00.</div>
@@ -1098,17 +1226,13 @@ window.imprimirRecibo = (registroId) => {
     <p><strong>Vendedor:</strong> ${h.vendedor || '-'}</p>
     ${h.data_devolucao ? `<p><strong>Devolução Prevista:</strong> <span class="nowrap">${formatarDataBR(h.data_devolucao)}</span></p>`:''}
     <table>
-      <colgroup>
-        <col style="width:72%">
-        <col style="width:28%">
-      </colgroup>
       <thead><tr><th>Item</th><th class="nowrap">Quantidade</th></tr></thead>
       <tbody>${itensHtml}</tbody>
     </table>
     <div class="assinatura"><div class="linha"></div>Assinatura do Cliente</div>
   `;
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo, getPerfilImpressaoSelecionado()));
+  win.document.write(gerarConteudoImpressao('Recibo de Empréstimo', corpo, 'tx20'));
   win.document.close();
   win.onload = ()=> win.print();
 };
@@ -1143,27 +1267,19 @@ document.getElementById('btnImprimirRelatorioCliente').addEventListener('click',
     <p><strong>Cliente:</strong> ${cli.nome} (${cli.tipo==='fisico'?'F':'B'})</p>
     <p><strong>Endereço:</strong> ${cli.endereco}, ${cli.numero}</p>
     <table>
-      <colgroup>
-        <col style="width:26%">
-        <col style="width:19%">
-        <col style="width:33%">
-        <col style="width:7%">
-        <col style="width:7%">
-        <col style="width:8%">
-      </colgroup>
       <thead><tr>
         <th class="nowrap">Data Empréstimo</th>
         <th class="nowrap">Devolução Prev.</th>
         <th>Itens</th>
-        <th class="nowrap">Cascos</th>
-        <th class="nowrap">Caixas</th>
-        <th class="nowrap">Vend.</th>
+        <th class="nowrap">Cascos Pend.</th>
+        <th class="nowrap">Caixas Pend.</th>
+        <th class="nowrap">Vendedor</th>
       </tr></thead>
       <tbody>${linhas}</tbody>
     </table>
   `;
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao('Relatório do Cliente', corpo, getPerfilImpressaoSelecionado()));
+  win.document.write(gerarConteudoImpressao('Relatório do Cliente', corpo, 'tx20'));
   win.document.close();
   win.onload=()=>win.print();
 });
@@ -1204,12 +1320,6 @@ function htmlResumoGrupos(agg){
   return `
     <h3>Resumo de Vasilhames por Grupo e Volume</h3>
     <table>
-      <colgroup>
-        <col style="width:18%">
-        <col style="width:32%">
-        <col style="width:12%">
-        <col style="width:38%">
-      </colgroup>
       <thead><tr><th class="nowrap">Volume</th><th>Grupo</th><th class="nowrap">Total</th><th>Detalhe (marca: quantidade)</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -1236,46 +1346,18 @@ document.getElementById('btnImprimirExtratoEmprestimos').addEventListener('click
     });
     corpo += `
       <table>
-        <colgroup>
-          <col style="width:56%">
-          <col style="width:12%">
-          <col style="width:16%">
-          <col style="width:16%">
-        </colgroup>
-        <thead><tr><th>Item</th><th class="nowrap">Qtd</th><th class="nowrap">Data</th><th class="nowrap">Vendedor</th></tr></thead>
+        <thead><tr><th>Item</th><th class="nowrap">Qtd. Pendente</th><th class="nowrap">Data Original</th><th class="nowrap">Vendedor</th></tr></thead>
         <tbody>${itensPend || '<tr><td colspan="4">—</td></tr>'}</tbody>
       </table>
     `;
   });
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao('Relatório Geral de Empréstimos', corpo, getPerfilImpressaoSelecionado()));
+  win.document.write(gerarConteudoImpressao('Relatório Geral de Empréstimos', corpo, 'tx20'));
   win.document.close();
   win.onload=()=>win.print();
 });
 
-/* ===================== EXTRATO DE ESTOQUE (IMPRESSÃO) ===================== */
-document.getElementById('btnImprimirExtratoEstoque').addEventListener('click', ()=>{
-  let linhas = '';
-  if (!estoque.length) linhas = '<tr><td colspan="2" style="text-align:center;">Sem itens de estoque.</td></tr>';
-  else {
-    estoque.sort((a,b)=>a.nome.localeCompare(b.nome))
-      .forEach(it=>linhas += `<tr><td>${it.nome}</td><td class="nowrap">${it.quantidade}</td></tr>`);
-  }
-  const corpo = `
-    <h2>Extrato de Estoque</h2>
-    <table>
-      <colgroup><col style="width:78%"><col style="width:22%"></colgroup>
-      <thead><tr><th>Item</th><th class="nowrap">Quantidade</th></tr></thead>
-      <tbody>${linhas}</tbody>
-    </table>
-  `;
-  const win = window.open('','_blank');
-  win.document.write(gerarConteudoImpressao('Extrato de Estoque', corpo, getPerfilImpressaoSelecionado()));
-  win.document.close();
-  win.onload=()=>win.print();
-});
-
-/* ===================== RESUMO POR DATA ===================== */
+/* ===================== BUSCA POR DATA (resumo) ===================== */
 function historicoPorData(dateStr){
   if(!dateStr) return [];
   const d=parseDataSeguro(dateStr); if(!d) return [];
@@ -1307,17 +1389,12 @@ function imprimirResumoDeLista(lista, titulo){
   const corpo = `
     <h2>Empréstimos</h2>
     <table>
-      <colgroup>
-        <col style="width:48%">
-        <col style="width:34%">
-        <col style="width:18%">
-      </colgroup>
       <thead><tr><th>Cliente</th><th>Itens</th><th class="nowrap">Horário</th></tr></thead>
       <tbody>${corpoTabela}</tbody>
     </table>
   `;
   const win=window.open('','_blank');
-  win.document.write(gerarConteudoImpressao(titulo, corpo, getPerfilImpressaoSelecionado()));
+  win.document.write(gerarConteudoImpressao(titulo, corpo, 'tx20'));
   win.document.close();
   win.onload=()=>win.print();
 }
